@@ -1,0 +1,218 @@
+import { useEffect, useRef, useState } from "react";
+import { Activity, Bot, Clipboard, GripHorizontal, Map, Satellite, SlidersHorizontal, X } from "lucide-react";
+
+const TABS = [
+  { label: "时间线", icon: Activity },
+  { label: "区域", icon: Map },
+  { label: "模型日志", icon: Bot },
+  { label: "参数", icon: SlidersHorizontal },
+  { label: "AIS", icon: Satellite },
+];
+const EVENT_NAMES = {
+  target_found: "发现目标",
+  ship_detected: "舰船确认",
+  target_lost: "目标丢失",
+  uav_returned: "UAV 返航",
+  search_complete: "搜索完成",
+  llm_decision: "模型决策",
+  route_plan_failed: "航路失败",
+  route_replanned: "航路重规划",
+  environment_reset: "环境重置",
+  mission_assignment_committed: "任务已提交",
+  contact_created: "创建接触",
+  probe_phase_changed: "调查阶段变化",
+  type_i_assessed: "I 类研判",
+  type_ii_assessed: "II 类研判",
+  assessment_applied: "研判完成",
+  probe_timed_out: "调查超时",
+  task_failed: "任务失败",
+  task_completed: "任务结束",
+  tool_started: "工具调用",
+  tool_completed: "工具完成",
+  tool_failed: "工具失败",
+  tool_result: "候选结果",
+  approval_requested: "等待审批",
+  approval_decided: "审批决定",
+  approval_expired: "审批过期",
+  agent_started: "模型开始",
+  agent_completed: "模型完成",
+  agent_failed: "模型异常",
+  safety_pause: "安全暂停",
+};
+
+export default function BottomDrawer({ frame, events = [], llmCycle, visible, onToggle }) {
+  const [activeTab, setActiveTab] = useState(0);
+  const [height, setHeight] = useState(220);
+  const [config, setConfig] = useState(null);
+  const [configError, setConfigError] = useState("");
+  const drag = useRef(null);
+
+  useEffect(() => {
+  if (activeTab !== 3 || config || configError) return;
+    fetch("/api/config")
+      .then((response) => {
+        if (!response.ok) throw new Error();
+        return response.json();
+      })
+      .then(setConfig)
+      .catch(() => setConfigError("参数接口不可用"));
+  }, [activeTab, config, configError]);
+
+  useEffect(() => {
+    const move = (event) => {
+      if (!drag.current) return;
+      setHeight(Math.max(180, Math.min(window.innerHeight * 0.58, drag.current.height + drag.current.y - event.clientY)));
+    };
+    const up = () => { drag.current = null; };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, []);
+
+  if (!visible) return null;
+  return (
+    <section className="bottom-drawer" style={{ height }} aria-label="任务详情">
+      <button className="drawer-grip" onPointerDown={(event) => { drag.current = { y: event.clientY, height }; }} aria-label="调整面板高度" title="拖动调整高度"><GripHorizontal size={20} /></button>
+      <div className="drawer-tabs" role="tablist">
+        {TABS.map(({ label, icon: Icon }, index) => (
+          <button key={label} role="tab" aria-selected={index === activeTab} className={index === activeTab ? "active" : ""} onClick={() => setActiveTab(index)}>
+            <Icon size={15} />{label}
+          </button>
+        ))}
+        <button className="drawer-close" onClick={onToggle} aria-label="关闭任务详情" title="关闭"><X size={16} /></button>
+      </div>
+      <div className="drawer-content">
+        {activeTab === 0 && <TimelineTab events={events} />}
+        {activeTab === 1 && <RegionTab frame={frame} />}
+        {activeTab === 2 && <LLMTab llm={llmCycle} />}
+        {activeTab === 3 && <ParamsTab config={config} error={configError} />}
+        {activeTab === 4 && <AisTab frame={frame} />}
+      </div>
+    </section>
+  );
+}
+
+function TimelineTab({ events }) {
+  if (!events.length) return <EmptyState text="暂无任务事件" />;
+  return (
+    <div className="timeline-list">
+      {[...events].reverse().slice(0, 120).map((event, index) => (
+        <details className="timeline-detail" key={event.id || `${event.time}-${event.type}-${index}`}>
+        <summary className={`timeline-item event-${event.type}`}>
+          <time>{Number(event.time || 0).toFixed(0).padStart(3, "0")} min</time>
+          <i />
+          <strong>{EVENT_NAMES[event.type] || event.type}</strong>
+          <span>{event.data?.tool || event.data?.plan_id || event.data?.uav_id || event.data?.ship_id || event.data?.group_id || ""}</span>
+        </summary><pre>{JSON.stringify(event.data || {}, null, 2)}</pre></details>
+      ))}
+    </div>
+  );
+}
+
+function RegionTab({ frame }) {
+  const rows = [
+    ...(frame?.search_regions || []).map((region) => ({ ...region, displayType: "搜索" })),
+    ...(frame?.track_regions || []).map((region) => ({ ...region, displayType: "跟踪" })),
+  ];
+  if (!rows.length) return <EmptyState text="尚未划分任务区域" />;
+  return (
+    <div className="table-wrap">
+      <table className="region-table">
+        <thead><tr><th>ID</th><th>类型</th><th>边界</th><th>优先级</th><th>信息素</th><th>价值</th><th>完成</th><th>执行单元</th></tr></thead>
+        <tbody>{rows.map((region) => (
+          <tr key={region.id}>
+            <td><b>{region.id}</b></td><td>{region.displayType}</td><td className="mono">[{region.bbox?.join(", ")}]</td>
+            <td><span className={`priority ${region.priority || "high"}`}>{region.priority || "持续"}</span></td>
+            <td>{Number(region.avg_info || 0).toFixed(2)}</td><td>{Number(region.info_value || 0).toFixed(2)}</td>
+            <td>{region.displayType === "搜索" ? `${Math.round(region.completion_pct || 0)}%` : "-"}</td><td>{region.assigned_uav_id || "待分配"}</td>
+          </tr>
+        ))}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function LLMTab({ llm }) {
+  const copy = (text) => navigator.clipboard?.writeText(text || "");
+  if (!llm) return <EmptyState text="等待 LongCat-2.0 首次决策" />;
+  const sections = [
+    ["System Prompt", llm.system_prompt],
+    ["User Prompt", llm.user_prompt],
+    ["Response", llm.response || llm.attempts?.at(-1)?.response],
+    ["Validation", JSON.stringify(llm.validation, null, 2)],
+  ];
+  return (
+    <div className="llm-log">
+      <div className="llm-log-head"><div><span className={llm.success ? "success" : "failed"}>{llm.success ? "VALID" : "FAILED"}</span><strong>{llm.model}</strong></div><small>{llm.attempts?.length || 0} attempts</small></div>
+      <div className="llm-sections">{sections.map(([label, content], index) => (
+        <details key={label} open={index === 2}>
+          <summary>{label}<button onClick={(event) => { event.preventDefault(); copy(content); }} aria-label={`复制 ${label}`} title="复制"><Clipboard size={14} /></button></summary>
+          <pre>{content || "无内容"}</pre>
+        </details>
+      ))}</div>
+    </div>
+  );
+}
+
+function AisTab({ frame }) {
+  const rows = frame?.contacts?.length
+    ? frame.contacts.map((contact) => {
+      const ais = [...(contact.samples || [])].reverse().find((sample) => sample.source === "ais");
+      return { id: contact.contact_id, mmsi: contact.ais_mmsi, aisPosition: ais?.position, position: contact.estimated_position, state: contact.vessel_class || "unknown" };
+    })
+    : (frame?.ships || []).map((ship) => ({
+      id: ship.id,
+      mmsi: ship.ais?.mmsi,
+      aisPosition: ship.ais?.reported_position,
+      position: ship.estimated_position,
+      state: "historical",
+    }));
+  return (
+    <div className="table-wrap">
+      <table className="region-table ais-table">
+        <thead><tr><th>接触</th><th>MMSI</th><th>AIS 位置</th><th>估计位置</th><th>样本</th><th>状态</th></tr></thead>
+        <tbody>{rows.map((contact) => (
+          <tr key={contact.id}>
+            <td><b>{contact.id}</b></td>
+            <td>{contact.mmsi || "无"}</td>
+            <td className="mono">{formatPosition(contact.aisPosition)}</td>
+            <td className="mono">{formatPosition(contact.position)}</td>
+            <td>{frame?.contacts?.length ? (frame.contacts.find((item) => item.contact_id === contact.id)?.samples?.length || 0) : "-"}</td>
+            <td>{contact.state === "unknown" ? "待核查" : contact.state === "type_i" ? "I 类船舶" : contact.state === "type_ii" ? "II 类船舶" : "历史帧"}</td>
+          </tr>
+        ))}</tbody>
+      </table>
+    </div>
+  );
+}
+
+function formatPosition(position) {
+  return Array.isArray(position) ? position.map((value) => Number(value).toFixed(1)).join(", ") : "-";
+}
+
+function ParamsTab({ config, error }) {
+  if (error) return <EmptyState text={error} />;
+  if (!config) return <div className="loading-state"><span />加载参数</div>;
+  return <div className="params-grid">{Object.entries(config).map(([section, values]) => (
+    <section key={section}><h3>{section}</h3>{Object.entries(values && typeof values === "object" && !Array.isArray(values) ? values : { value: values }).map(([key, value]) => (
+      <div key={key}><span>{key}</span><b>{formatParamValue(value)}</b></div>
+    ))}</section>
+  ))}</div>;
+}
+
+function formatParamValue(value) {
+  if (Array.isArray(value)) return value.join(" × ");
+  if (value && typeof value === "object") {
+    return Object.entries(value)
+      .map(([key, child]) => `${key}: ${formatParamValue(child)}`)
+      .join("; ");
+  }
+  return String(value);
+}
+
+function EmptyState({ text }) {
+  return <div className="tab-empty">{text}</div>;
+}

@@ -1,0 +1,89 @@
+:root { --topbar-height: 104px; --sidebar-width: 340px; }
+.top-bar { flex-wrap: wrap; align-content: center; row-gap: 4px; }
+.product-mark { font-size: 12px; }
+.mission-control { position: relative; display: flex; flex: 0 0 100%; min-width: 0; align-items: center; gap: 12px; border-top: 1px solid var(--line); padding-top: 5px; }
+.simulation-controls, .autonomy-control, .mission-actions { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.simulation-controls { flex-wrap: nowrap; }
+.autonomy-control { border: 1px solid var(--line); border-radius: 4px; gap: 0; flex-wrap: nowrap; }
+.autonomy-control button { padding: 7px 10px; background: var(--panel); color: var(--text-soft); cursor: pointer; font-size: 12px; white-space: nowrap; }
+.autonomy-control button.active { background: #e2f4ef; color: var(--teal); }
+.mission-statuses { display: flex; gap: 12px; flex-wrap: wrap; color: var(--text-muted); font-size: 11px; }
+.mission-statuses b { color: var(--text); }
+.mission-error { position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; background: #fff1f2; border: 1px solid #e1a0ad; color: var(--danger); font-size: 12px; overflow-wrap: anywhere; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+.danger-action { color: var(--danger) !important; }
+.sidebar-header { position: sticky; top: 0; z-index: 3; min-height: 48px; flex-shrink: 0; }
+.sidebar-tabs { position: sticky; top: 48px; z-index: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); min-height: 44px; flex-shrink: 0; border-bottom: 1px solid var(--line); background: var(--panel); }
+.sidebar-tabs button { background: transparent; font-size: 12px; color: var(--text-soft); border-bottom: 2px solid transparent; cursor: pointer; }
+.sidebar-tabs button.active { color: var(--teal); border-bottom-color: var(--teal); }
+.approval-count { margin-left: 4px; color: var(--danger); font-weight: 700; }
+.agent-panel { padding: 12px; display: flex; flex-direction: column; gap: 12px; font-size: 12px; min-width: 0; }
+.agent-panel .panel-empty, .agent-panel .panel-error { font-size: 12px; }
+.agent-panel .primary-action { min-height: 34px; font-size: 12px; }
+.agent-panel p { line-height: 1.6; }
+.agent-panel small { display: block; color: var(--text-muted); overflow-wrap: anywhere; font-size: 11px; }
+.agent-panel pre, .timeline-detail pre { margin: 8px 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.6 Consolas, monospace; }
+.agent-message { border-bottom: 1px solid var(--line); padding: 8px 0; }
+.agent-message header { display: flex; justify-content: space-between; gap: 8px; }
+.agent-message.user strong { color: var(--cyan); }
+.agent-message p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0; }
+.chat-composer, .mission-field { display: flex; flex-direction: column; gap: 6px; }
+.chat-composer textarea, .mission-field input, .mission-field select, .bounds-fields input { min-width: 0; width: 100%; padding: 7px; border: 1px solid var(--line-strong); border-radius: 3px; background: var(--panel); color: var(--text); font: inherit; }
+.chat-composer textarea { resize: vertical; min-height: 96px; max-height: 220px; }
+textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.mission-section { display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+.mission-list-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.mission-list-row > span { min-width: 0; overflow-wrap: anywhere; }
+.mission-list-row .icon-btn { flex-shrink: 0; }
+.member-picker, .bounds-fields { margin: 0; padding: 8px; border: 1px solid var(--line); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.member-picker label { display: flex; align-items: center; gap: 4px; min-height: 28px; }
+.bounds-fields label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; }
+.approval-item { border-bottom: 1px solid var(--line); padding: 8px 0 14px; }
+.approval-item > strong { line-height: 1.5; overflow-wrap: anywhere; }
+.plan-facts { display: grid; gap: 6px; }
+.plan-facts > div { display: grid; grid-template-columns: 65px minmax(0, 1fr); gap: 8px; }
+.plan-facts dt { color: var(--text-muted); }
+.plan-facts dd { margin: 0; overflow-wrap: anywhere; }
+.plan-facts .execution-domain { grid-template-columns: 1fr; gap: 4px; }
+.candidate-detail { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.candidate-detail p { margin: 0; }
+.task-row { display: flex; flex-direction: column; gap: 7px; }
+.timeline-list { grid-template-columns: 1fr; }
+.timeline-item { grid-template-columns: 64px 7px minmax(100px, .6fr) minmax(0, 1fr); cursor: pointer; }
+.timeline-detail summary::marker { content: ""; }
+.timeline-detail[open] { background: var(--panel-raised); }
+.timeline-detail pre { padding: 0 8px; }
+.map-candidate-label { position: absolute; left: 16px; bottom: 12px; max-width: calc(100% - 130px); padding: 5px 8px; border-left: 3px solid var(--teal); background: #fffffff0; color: var(--teal); font-size: 11px; overflow-wrap: anywhere; pointer-events: none; }
+@media (min-width: 901px) and (max-width: 1250px) {
+  .product-mark > span:last-child { display: none; }
+  .connection-state { max-width: 90px; }
+  .mission-statuses { gap: 4px; font-size: 10px; }
+  .mission-control { gap: 6px; }
+}
+@media (max-width: 620px) {
+  :root { --topbar-height: 186px; }
+  .top-bar { align-content: start; padding-top: 5px; gap: 4px; }
+  .product-mark { flex: 1 0 calc(100% - 125px); height: 34px; }
+  .product-mark > span:last-child { display: inline; font-size: 12px; }
+  .mode-switch button { font-size: 11px; padding: 0 6px; min-width: 44px; }
+  .top-actions { flex: 0 0 100%; justify-content: flex-end; }
+  .top-actions .icon-btn, .top-actions .trail-mode-compact { width: 40px; height: 40px; }
+  .mission-control { flex-wrap: wrap; gap: 4px 8px; padding-top: 3px; }
+  .simulation-controls .icon-btn { width: 36px; height: 36px; }
+  .autonomy-control button { padding: 9px 7px; }
+  .mission-statuses { flex: 0 0 100%; min-height: 24px; align-items: center; }
+  .mission-control .mission-error { top: 100%; }
+  .file-select { position: absolute; right: 8px; top: 86px; width: 140px; z-index: 3; }
+  .replay-active .mission-control .autonomy-control { visibility: hidden; }
+  .agent-panel button, .sidebar-tabs button { min-height: 44px; }
+  .member-picker label { min-height: 40px; }
+  .bottom-drawer { height: min(27vh, 210px) !important; }
+  .sidebar { width: min(360px, 96vw); }
+}
+@media (max-width: 900px) and (max-height: 500px) {
+  .bottom-drawer { height: 90px !important; }
+}
+@media (max-width: 900px) {
+  .sidebar { visibility: hidden; }
+  .sidebar.open { visibility: visible; }
+}

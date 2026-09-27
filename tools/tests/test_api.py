@@ -52,7 +52,8 @@ def test_scene_and_intent_receipts(client):
     assert response.status_code == 200
     assert client.get("/api/vessel-commands/scene-1").json()["status"] == "applied"
     assert client.post("/api/vessels", json=payload).json() == response.json()
-    assert len(client.get("/api/state").json()["scenario_vessels"]) == 1
+    assert client.get("/api/state").json()["scenario_vessels"] == []
+    assert len(client.get("/api/scene").json()["scenario_vessels"]) == 1
     payload = {"episode_id": episode, "command_id": "intent-1", "label": "sector", "bbox": [4, 4, 12, 12], "mode": "search_priority", "valid_duration_min": 20}
     assert client.post("/api/intents", json=payload).status_code == 200
     assert client.get("/api/intent-commands/intent-1").json()["status"] == "applied"
@@ -104,10 +105,11 @@ def test_algorithm_registry_advertises_actual_slot_assignment(client):
         "episode_id": episode, "tool": "compute_task_allocation", "algorithm_id": "slot_assignment",
     })
     assert response.status_code == 200
-    assert response.json()["algorithm"] == "scipy-linear-sum-assignment-slots-v1"
-    assert [team["bbox"] for team in response.json()["teams"]] == [
-        [600, 250, 3750, 1350], [600, 1450, 3750, 2550], [600, 2650, 3750, 3750],
-    ]
+    assert response.json()["algorithm"] == "connected-workload-assignment-v2"
+    teams = response.json()["teams"]
+    assert len(teams) == 8
+    assert all(len(team["members"]) == 1 for team in teams)
+    assert {member for team in teams for member in team["members"]} == {f"UUV-{i}" for i in range(1, 9)}
 
 
 @pytest.mark.parametrize("value", ["NaN", "Infinity", "-Infinity", "1e999"])

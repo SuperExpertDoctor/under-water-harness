@@ -5,7 +5,7 @@ import { layoutLabels } from "./labelLayout";
 
 const FONT = '"Fira Code", "Microsoft YaHei", monospace';
 const GROUP_COLORS = ["#0891B2", "#D97706", "#65A30D"];
-// Current task grid: 5 km per cell. R=2 therefore represents a 10 km scan radius.
+// Offline and historical frames omit the backend's per-boat sensor radius.
 const UUV_SCAN_RADIUS_CELLS = 2;
 
 function gridCenter(col, row, cellSize, ox, oy) {
@@ -296,25 +296,14 @@ function taskCells(region) {
 
 export function drawSearchRegions(ctx, regions, cellSize, ox, oy) {
   for (const region of regions || []) {
-    const color = "#F59E0B";
+    const ownerIndex = Number(String(region.assigned_uav_id || "").match(/\d+/)?.[0] || 0);
+    const color = ownerIndex ? GROUP_COLORS[(ownerIndex - 1) % GROUP_COLORS.length] : "#F59E0B";
     const cells = taskCells(region);
     const assigned = Boolean(region.assigned_uav_id);
-    ctx.fillStyle = `${color}${assigned ? "70" : "52"}`;
+    ctx.fillStyle = `${color}${assigned ? "32" : "26"}`;
     for (const [col, row] of cells) {
       const point = coordToPixel(col, row, cellSize, ox, oy);
       ctx.fillRect(point.x + 1, point.y + 1, Math.max(1, cellSize - 2), Math.max(1, cellSize - 2));
-    }
-    const fontSize = Math.max(8, Math.min(10, cellSize * 0.34));
-    const fullLabel = `${region.id} ${Math.round(region.completion_pct || 0)}%`;
-    ctx.font = `700 ${fontSize}px ${FONT}`;
-    const labelCell = cells[0];
-    if (labelCell) {
-      const point = coordToPixel(labelCell[0], labelCell[1], cellSize, ox, oy);
-      const label = cellSize >= 14 ? fullLabel : region.id;
-      const labelWidth = ctx.measureText(label).width + 8;
-      ctx.fillStyle = "rgba(255, 255, 255, .9)";
-      ctx.fillRect(point.x + 2, point.y + 2, labelWidth, fontSize + 6);
-      text(ctx, label, point.x + 6, point.y + fontSize + 4, color, fontSize, 700);
     }
   }
 }
@@ -790,9 +779,10 @@ export function drawUavTrails(ctx, uavs, cellSize, ox, oy, selectedId, trailMode
 }
 
 export function drawUavScanRanges(ctx, uavs, cellSize, ox, oy, baseCenters, selectedId) {
-  const radius = Math.max(1, UUV_SCAN_RADIUS_CELLS) * cellSize;
   for (const uav of uavs || []) {
     if (["idle", "failed"].includes(uav.status)) continue;
+    if (uav.sensor_mode && uav.sensor_mode !== "active") continue;
+    const radius = Math.max(0, uav.sensor_radius_cells ?? UUV_SCAN_RADIUS_CELLS) * cellSize;
     const center = resolveUavDisplayCenter(uav, cellSize, ox, oy, baseCenters);
     if (!center) continue;
     const selected = uav.id === selectedId;
@@ -1043,10 +1033,11 @@ export function drawUavs(ctx, uavs, cellSize, ox, oy, selectedId, assets, baseCe
       { x: 0, y: 0, width: 578, height: 900 },
       center,
       Math.max(10, cellSize * (uav.id === selectedId ? 0.875 : 0.725)),
-      0,
+      Number.isFinite(uav.heading_deg) ? Math.PI / 2 - uav.heading_deg * Math.PI / 180 : 0,
     );
     if (!renderedModel) {
       ctx.translate(center.x, center.y);
+      ctx.rotate(-(uav.heading_deg || 0) * Math.PI / 180);
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.moveTo(size * 1.25, 0);
@@ -1077,6 +1068,9 @@ export function drawUavs(ctx, uavs, cellSize, ox, oy, selectedId, assets, baseCe
 }
 
 function contactLabel(contact) {
+  if (contact.state === "tracking") return `${contact.contact_id} 持续跟踪`;
+  if (contact.state === "confirmed") return `${contact.contact_id} 已确认`;
+  if (contact.state === "degraded") return `${contact.contact_id} 跟踪降级`;
   if (contact.state === "lost") return `${contact.contact_id} 暂时丢失`;
   if (contact.state === "departed") return `${contact.contact_id} 已离场`;
   if (contact.vessel_class === "type_ii") return `${contact.contact_id} II 类`;
@@ -1089,7 +1083,7 @@ function legacyShipLabel(ship) {
   return `${ship.id} ${label}`;
 }
 
-function addLabel(ctx, labels, styles, id, anchor, value, priority, color, selected) {
+function addLabel(ctx, labels, styles, id, anchor, value, priority, color, selected, markerRadius = 0) {
   const fontSize = 9;
   ctx.font = `600 ${fontSize}px ${FONT}`;
   labels.push({
@@ -1099,6 +1093,7 @@ function addLabel(ctx, labels, styles, id, anchor, value, priority, color, selec
     width: ctx.measureText(value).width + 10,
     height: 17,
     priority,
+    markerRadius,
   });
   styles.set(id, { color, selected, fontSize });
 }
@@ -1128,26 +1123,37 @@ export function drawLabels(
 ) {
   const labels = [];
   const styles = new Map();
+  const compact = bounds.width < 500;
   const uavs = frame?.uavs || [];
   const contacts = Array.isArray(frame?.contacts) && frame.contacts.length
     ? frame.contacts
     : [];
   const legacyShips = contacts.length ? [] : (frame?.ships || []).filter((ship) => ship?.is_detected);
+  const teamMembers = new Set((frame?.teams || []).flatMap((team) => team.members || []));
 
   for (const uav of uavs) {
     const center = resolveUavDisplayCenter(uav, cellSize, ox, oy, baseCenters);
     const display = uavDisplayState(uav);
     const selected = uav.id === selectedUavId;
+    const size = Math.max(5, cellSize * (selected ? .42 : .32));
+    const spriteWidth = Math.max(10, cellSize * (selected ? .875 : .725));
+    const markerRadius = Math.max(
+      Math.hypot(spriteWidth, spriteWidth * 900 / 578) / 2,
+      size * Math.hypot(.85, 1),
+      selected ? size + 5 : 0,
+      teamMembers.has(uav.id) ? Math.max(8, cellSize * .6) : 0,
+    ) + 1;
     addLabel(
       ctx,
       labels,
       styles,
       `uav:${uav.id}`,
       center,
-      `${vehicleDisplayId(uav.id)} · ${display.label}`,
+      compact && !selected ? vehicleDisplayId(uav.id) : `${vehicleDisplayId(uav.id)} · ${display.label}`,
       selected ? "selected" : "uav",
       UAV_STATUS_COLORS[uav.status] || "#334155",
       selected,
+      markerRadius,
     );
   }
 
@@ -1164,15 +1170,20 @@ export function drawLabels(
       `contact:${contact.contact_id}`,
       center,
       contactLabel(contact),
-      selected ? "selected" : classified ? "classified" : "contact",
+      selected ? "selected" : contact.state === "tracking" ? 3.5 : classified ? "classified" : "contact",
       contactColor(contact),
       selected,
+      Math.max(4, cellSize * (selected ? .34 : .25)) + (selected ? 9.5 : 4),
     );
   }
 
   for (const ship of legacyShips) {
     const position = ship.position || ship.estimated_position;
     if (!Array.isArray(position) || position.length < 2) continue;
+    const carrier = ship.ship_type === "carrier";
+    const size = Math.max(4, cellSize * (carrier ? .38 : .28));
+    const spriteWidth = carrier ? Math.max(22, size * 4.6) : Math.max(6.5, size * .82);
+    const spriteHeight = spriteWidth * (carrier ? 842 / 1472 : 1290 / 224);
     addLabel(
       ctx,
       labels,
@@ -1183,6 +1194,7 @@ export function drawLabels(
       "contact",
       "#334155",
       false,
+      Math.max(Math.hypot(spriteWidth, spriteHeight) / 2, size + 9) + 1,
     );
   }
 
@@ -1201,6 +1213,7 @@ export function drawLabels(
         selected ? "selected" : "scenario",
         vessel.vessel_class === "type_ii" ? "#B45309" : "#0369A1",
         selected,
+        Math.max(4, cellSize * (selected ? .34 : .27)) + (selected ? 6 : 4),
       );
     }
   }
@@ -1218,10 +1231,42 @@ export function drawLabels(
       "uav",
       "#991B1B",
       false,
+      Math.max(8, cellSize * .48) + 1,
     );
   }
 
-  const placed = layoutLabels(labels, bounds);
+  for (const region of frame?.search_regions || []) {
+    const cell = taskCells(region)[0];
+    if (!cell) continue;
+    const ownerIndex = Number(String(region.assigned_uav_id || "").match(/\d+/)?.[0] || 0);
+    const color = ownerIndex ? GROUP_COLORS[(ownerIndex - 1) % GROUP_COLORS.length] : "#F59E0B";
+    const value = `${region.assigned_uav_id || region.id}${cellSize >= 14 ? ` ${Math.round(region.completion_pct || 0)}%` : ""}`;
+    const anchor = gridCenter(cell[0], cell[1], cellSize, ox, oy);
+    anchor.y = Math.max(anchor.y, oy + 24);
+    addLabel(ctx, labels, styles, `region:${region.id}`, anchor, value, -1, color, false);
+  }
+
+  // Reserve every symbol before priority placement, including later mission-overlay rings.
+  const reserved = labels.filter((label) => label.markerRadius > 0).map(({ anchor, markerRadius }) => ({
+    x: anchor.x - markerRadius, y: anchor.y - markerRadius, width: markerRadius * 2, height: markerRadius * 2,
+  }));
+  for (const marker of frame?.markers || []) {
+    if (frame.sim_time_min - marker.created_time_min > 60 || !Array.isArray(marker.position)) continue;
+    const center = gridCenter(marker.position[0], marker.position[1], cellSize, ox, oy);
+    reserved.push({ x: center.x - 6, y: center.y - 6, width: 12, height: 12 });
+  }
+  // Background annotations predate the object label pass and must also reserve screen space.
+  reserved.push({ x: ox, y: oy, width: Math.max(0, bounds.x + bounds.width - ox), height: 24 });
+  for (const obstacle of frame?.obstacles || []) {
+    const vertices = obstacle.vertices || [];
+    if (!vertices.length) continue;
+    const center = vertices.reduce((sum, point) => [sum[0] + point[0] / vertices.length, sum[1] + point[1] / vertices.length], [0, 0]);
+    const point = coordToPixel(center[0], center[1], cellSize, ox, oy);
+    const size = Math.max(7, cellSize * 0.25);
+    ctx.font = `700 ${size}px ${FONT}`;
+    reserved.push({ x: point.x + 1, y: point.y + 1, width: ctx.measureText(obstacle.label || obstacle.id || "ISLAND").width + 4, height: size + 5 });
+  }
+  const placed = layoutLabels(labels, bounds, reserved);
   for (const label of placed) {
     if (label.hidden) continue;
     const source = labels.find((item) => item.id === label.id);

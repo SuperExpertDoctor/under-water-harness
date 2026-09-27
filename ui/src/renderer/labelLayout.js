@@ -50,23 +50,25 @@ function overlaps(left, right) {
     || right.y + right.height <= left.y);
 }
 
-function candidates(anchor, width, height) {
+function candidates(anchor, width, height, markerRadius = 0) {
+  const gap = Math.max(8, markerRadius + 2);
+  const centerGap = Math.max(12, gap);
   return [
-    { x: anchor.x + 8, y: anchor.y - height - 8 },
-    { x: anchor.x + 8, y: anchor.y + 8 },
-    { x: anchor.x - width - 8, y: anchor.y - height - 8 },
-    { x: anchor.x - width - 8, y: anchor.y + 8 },
-    { x: anchor.x - width / 2, y: anchor.y - height - 12 },
-    { x: anchor.x - width / 2, y: anchor.y + 12 },
-    { x: anchor.x + 12, y: anchor.y - height / 2 },
-    { x: anchor.x - width - 12, y: anchor.y - height / 2 },
+    { x: anchor.x + gap, y: anchor.y - height - gap },
+    { x: anchor.x + gap, y: anchor.y + gap },
+    { x: anchor.x - width - gap, y: anchor.y - height - gap },
+    { x: anchor.x - width - gap, y: anchor.y + gap },
+    { x: anchor.x - width / 2, y: anchor.y - height - centerGap },
+    { x: anchor.x - width / 2, y: anchor.y + centerGap },
+    { x: anchor.x + centerGap, y: anchor.y - height / 2 },
+    { x: anchor.x - width - centerGap, y: anchor.y - height / 2 },
   ];
 }
 
 /** Place labels in screen space with stable priority and fixed offsets. */
-export function layoutLabels(labels = [], bounds = {}) {
+export function layoutLabels(labels = [], bounds = {}, reserved = []) {
   const mapBounds = boundsRect(bounds);
-  const placed = [];
+  const placed = [...reserved];
   const ordered = labels.map((label, index) => ({ label, index })).sort(
     (left, right) => priorityValue(right.label.priority) - priorityValue(left.label.priority)
       || left.index - right.index
@@ -78,7 +80,7 @@ export function layoutLabels(labels = [], bounds = {}) {
     const anchor = anchorPoint(label.anchor);
     const width = finiteDimension(label.width, 1);
     const height = finiteDimension(label.height, 1);
-    const choices = candidates(anchor, width, height);
+    const choices = candidates(anchor, width, height, label.markerRadius);
     const choice = choices
       .map((point) => ({ ...point, width, height }))
       .find((rect) => withinBounds(rect, mapBounds)
@@ -100,4 +102,3 @@ export function layoutLabels(labels = [], bounds = {}) {
   }
   return output;
 }
-

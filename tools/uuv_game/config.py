@@ -10,9 +10,11 @@ class Config:
     speed: float = 4.0
     radius: float = 60.0
     sensor_range: float = 350.0
+    range_capacity: float = 18000.0
+    exit_reserve: float = 1200.0
     separation: float = 40.0
     dt: float = 0.2
-    simulation_speed: float = 10.0
+    simulation_speed: float = 2.0
     seed: int = 42
     model: str = field(default_factory=lambda: os.environ.get("LONGCAT_MODEL", "LongCat-2.0"))
 

@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { Activity, Bot, Clipboard, GripHorizontal, Map, Satellite, SlidersHorizontal, X } from "lucide-react";
+import { Activity, ArrowDown, BarChart3, Bot, Clipboard, GripHorizontal, Map, Satellite, SlidersHorizontal, X } from "lucide-react";
+import { coalesceMissionEvents, filterMissionEvents } from "../state/missionState";
 
 const TABS = [
   { label: "时间线", icon: Activity },
+  { label: "Agent 运行", icon: Bot },
+  { label: "任务指标", icon: BarChart3 },
   { label: "区域", icon: Map },
-  { label: "模型日志", icon: Bot },
   { label: "参数", icon: SlidersHorizontal },
   { label: "AIS", icon: Satellite },
 ];
@@ -38,9 +40,35 @@ const EVENT_NAMES = {
   agent_completed: "模型完成",
   agent_failed: "模型异常",
   safety_pause: "安全暂停",
+  message_start: "消息开始",
+  message_update: "消息流式更新",
+  message_end: "消息完成",
+  tool_execution_start: "工具开始",
+  tool_execution_update: "工具进度",
+  tool_execution_end: "工具结束",
+  agent_start: "Agent 回合开始",
+  agent_end: "Agent 回合结束",
+  agent_settled: "Agent 已收尾",
+  compaction_start: "上下文压缩开始",
+  compaction_end: "上下文压缩完成",
+  auto_retry_start: "自动重试",
+  auto_retry_end: "重试结束",
+  turn_start: "模型轮次开始",
+  turn_end: "模型轮次结束",
+  queue_update: "队列更新",
+  agent_queued: "Agent 已排队",
+  tracking_established: "协同跟踪建立",
+  contact_state_changed: "接触状态变化",
+  tracking_position_reached: "跟踪入位",
+  tracking_relief_required: "请求跟踪接替",
+  coverage_repartitioned: "搜索区域调整",
+  energy_exit_started: "低能量退出",
+  uuv_replenished: "新代次补入",
+  energy_authorization_required: "能源轮换待授权",
+  allocation_blocked: "分区不可行",
 };
 
-export default function BottomDrawer({ frame, events = [], llmCycle, visible, onToggle }) {
+export default function BottomDrawer({ frame, events = [], llmCycle, visible, onToggle, mission, onSelectEvent }) {
   const [activeTab, setActiveTab] = useState(0);
   const [height, setHeight] = useState(220);
   const [config, setConfig] = useState(null);
@@ -48,7 +76,7 @@ export default function BottomDrawer({ frame, events = [], llmCycle, visible, on
   const drag = useRef(null);
 
   useEffect(() => {
-  if (activeTab !== 3 || config || configError) return;
+  if (activeTab !== 4 || config || configError) return;
     fetch("/api/config")
       .then((response) => {
         if (!response.ok) throw new Error();
@@ -75,7 +103,7 @@ export default function BottomDrawer({ frame, events = [], llmCycle, visible, on
   if (!visible) return null;
   return (
     <section className="bottom-drawer" style={{ height }} aria-label="任务详情">
-      <button className="drawer-grip" onPointerDown={(event) => { drag.current = { y: event.clientY, height }; }} aria-label="调整面板高度" title="拖动调整高度"><GripHorizontal size={20} /></button>
+      <button className="drawer-grip" onPointerDown={(event) => { drag.current = { y: event.clientY, height }; }} onKeyDown={(event) => { if (["ArrowUp", "ArrowDown"].includes(event.key)) { event.preventDefault(); setHeight((current) => Math.max(180, Math.min(window.innerHeight * .58, current + (event.key === "ArrowUp" ? 24 : -24)))); } }} aria-label="调整面板高度" title="拖动调整高度"><GripHorizontal size={20} /></button>
       <div className="drawer-tabs" role="tablist">
         {TABS.map(({ label, icon: Icon }, index) => (
           <button key={label} role="tab" aria-selected={index === activeTab} className={index === activeTab ? "active" : ""} onClick={() => setActiveTab(index)}>
@@ -85,31 +113,70 @@ export default function BottomDrawer({ frame, events = [], llmCycle, visible, on
         <button className="drawer-close" onClick={onToggle} aria-label="关闭任务详情" title="关闭"><X size={16} /></button>
       </div>
       <div className="drawer-content">
-        {activeTab === 0 && <TimelineTab events={events} />}
-        {activeTab === 1 && <RegionTab frame={frame} />}
-        {activeTab === 2 && <LLMTab llm={llmCycle} />}
-        {activeTab === 3 && <ParamsTab config={config} error={configError} />}
-        {activeTab === 4 && <AisTab frame={frame} />}
+        {activeTab === 0 && <TimelineTab events={events} frame={frame} onSelectEvent={onSelectEvent} />}
+        {activeTab === 1 && <AgentTab events={events} mission={mission} llm={llmCycle} onSelectEvent={onSelectEvent} />}
+        {activeTab === 2 && <MetricsTab frame={frame} />}
+        {activeTab === 3 && <RegionTab frame={frame} />}
+        {activeTab === 4 && <ParamsTab config={config} error={configError} />}
+        {activeTab === 5 && <AisTab frame={frame} />}
       </div>
     </section>
   );
 }
 
-function TimelineTab({ events }) {
+function TimelineTab({ events, frame, onSelectEvent }) {
+  const [filters, setFilters] = useState({ uuv: "", contact: "", task: "", level: "" });
+  const [following, setFollowing] = useState(true);
+  const [unseen, setUnseen] = useState(0);
+  const scroll = useRef(null);
+  const lastId = useRef(events.at(-1)?.id);
+  const visible = coalesceMissionEvents(filterMissionEvents(events, filters)).slice(-180);
+  useEffect(() => {
+    const changed = lastId.current !== events.at(-1)?.id;
+    lastId.current = events.at(-1)?.id;
+    if (following && scroll.current) { scroll.current.scrollTop = scroll.current.scrollHeight; setUnseen(0); }
+    else if (changed) setUnseen((count) => count + 1);
+  }, [events, following]);
   if (!events.length) return <EmptyState text="暂无任务事件" />;
   return (
-    <div className="timeline-list">
-      {[...events].reverse().slice(0, 120).map((event, index) => (
+    <div className="timeline-view">
+      <div className="event-filters">
+        <select aria-label="按艇筛选" value={filters.uuv} onChange={(event) => setFilters({ ...filters, uuv: event.target.value })}><option value="">全部艇</option>{(frame?.uavs || []).map((uuv) => <option key={uuv.id}>{uuv.id}</option>)}</select>
+        <select aria-label="按接触筛选" value={filters.contact} onChange={(event) => setFilters({ ...filters, contact: event.target.value })}><option value="">全部接触</option>{[...new Set(events.map((event) => event.data?.contact_id).filter(Boolean))].map((id) => <option key={id}>{id}</option>)}</select>
+        <select aria-label="按任务筛选" value={filters.task} onChange={(event) => setFilters({ ...filters, task: event.target.value })}><option value="">全部任务</option>{[...new Set(events.flatMap((event) => [event.data?.plan_id, event.data?.task_id, event.data?.run_id]).filter(Boolean))].map((id) => <option key={id}>{id}</option>)}</select>
+        <select aria-label="按级别筛选" value={filters.level} onChange={(event) => setFilters({ ...filters, level: event.target.value })}><option value="">全部级别</option><option value="info">信息</option><option value="warning">警告</option><option value="error">错误</option></select>
+        {!following && <button className="follow-latest" onClick={() => setFollowing(true)}><ArrowDown size={13} />{unseen ? `${unseen} 次更新` : "跟随最新"}</button>}
+      </div>
+      <div className="timeline-list" ref={scroll} onScroll={(event) => { const node = event.currentTarget; setFollowing(node.scrollHeight - node.scrollTop - node.clientHeight < 30); }}>
+      {!visible.length && <EmptyState text="没有符合筛选的事件" />}
+      {visible.map((event, index) => (
         <details className="timeline-detail" key={event.id || `${event.time}-${event.type}-${index}`}>
-        <summary className={`timeline-item event-${event.type}`}>
-          <time>{Number(event.time || 0).toFixed(0).padStart(3, "0")} min</time>
+        <summary className={`timeline-item event-${event.type}`} onClick={() => onSelectEvent?.(event)}>
+          <time>{Number(event.sim_time_s ?? event.time_s ?? (event.time || 0) * 60).toFixed(1)} s</time>
           <i />
-          <strong>{EVENT_NAMES[event.type] || event.type}</strong>
-          <span>{event.data?.tool || event.data?.plan_id || event.data?.uav_id || event.data?.ship_id || event.data?.group_id || ""}</span>
+          <strong>{EVENT_NAMES[event.type] || event.type}{event.repeat_count > 1 ? ` ×${event.repeat_count}` : ""}</strong>
+          <span>{event.data?.tool_name || event.data?.tool || event.data?.plan_id || event.data?.uuv_id || event.data?.uav_id || event.data?.contact_id || event.data?.ship_id || event.data?.group_id || ""}</span>
         </summary><pre>{JSON.stringify(event.data || {}, null, 2)}</pre></details>
-      ))}
+      ))}</div>
     </div>
   );
+}
+
+function AgentTab({ events, mission, llm, onSelectEvent }) {
+  const activity = coalesceMissionEvents(events.filter((event) => /agent|tool|message|turn|compaction|queue/.test(event.type))).slice(-100).reverse();
+  return <div className="agent-runtime"><div className="runtime-facts"><span>状态 <b>{mission?.state.agent?.status || "--"}</b></span><span>模型 <b>{mission?.state.agent?.model || "--"}</b></span><span>排队 <b>{mission?.state.jobs?.filter((job) => job.status === "queued").length || 0}</b></span></div>
+    {!activity.length && <EmptyState text="暂无 Agent 运行事件" />}
+    {activity.map((event) => <details className="tool-output" key={event.id}><summary onClick={() => onSelectEvent?.(event)}><time>{Number(event.sim_time_s ?? event.time_s ?? (event.time || 0) * 60).toFixed(1)} s</time> {EVENT_NAMES[event.type] || event.type} · {event.data?.tool_name || event.data?.tool || event.data?.reason || ""}{Number.isFinite(event.data?.duration_ms) && <span> · 墙钟 {event.data.duration_ms} ms</span>}</summary><pre>{JSON.stringify(event.data || {}, null, 2)}</pre></details>)}
+    {llm && <details className="workspace-details"><summary>历史模型记录</summary><LLMTab llm={llm} /></details>}
+  </div>;
+}
+
+export function MetricsTab({ frame }) {
+  const metrics = frame?.mission_metrics || {};
+  const names = { search_boats: "搜索艇", search_regions: "搜索区", effective_tracking_seconds: "有效协同跟踪 / s", lost_seconds: "丢失时长 / s", handoff_count: "已完成接替", handoff_attempts: "已发起接替", rotation_count: "轮换次数", coverage_pct: "覆盖率 / %", effective_coverage_pct: "有效覆盖率 / %", recent_coverage_pct: "近30分钟覆盖率 / %", revisit_timeliness_pct: "30分钟重访及时率 / %", unscanned_cells: "未扫描积压 / 格", handoff_success_rate: "接替成功率 / %" };
+  return <div className="mission-metrics"><dl>{Object.entries(metrics).map(([key, value]) => <div key={key}><dt>{names[key] || key}</dt><dd>{value == null ? "无数据" : typeof value === "number" ? Number(value.toFixed(2)) : String(value)}</dd></div>)}</dl>{!Object.keys(metrics).length && <EmptyState text="暂无任务指标" />}
+    {frame?.standing_policy && <details className="workspace-details"><summary>常驻授权策略 · {frame.standing_policy.enabled ? "已授权" : "未启用"}</summary><pre>{JSON.stringify(frame.standing_policy, null, 2)}</pre></details>}
+  </div>;
 }
 
 function RegionTab({ frame }) {
@@ -137,7 +204,7 @@ function RegionTab({ frame }) {
 
 function LLMTab({ llm }) {
   const copy = (text) => navigator.clipboard?.writeText(text || "");
-  if (!llm) return <EmptyState text="等待 LongCat-2.0 首次决策" />;
+  if (!llm) return <EmptyState text="暂无模型运行记录" />;
   const sections = [
     ["System Prompt", llm.system_prompt],
     ["User Prompt", llm.user_prompt],

@@ -1,9 +1,11 @@
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import { createAgentSession, DefaultResourceLoader, ModelRuntime, SessionManager, SettingsManager, type AgentSession } from "@earendil-works/pi-coding-agent";
+import { createAgentSession, ModelRuntime, SessionManager, SettingsManager, type AgentSession } from "@earendil-works/pi-coding-agent";
 import { longcatConfig, redact, TOOL_NAMES } from "./config.ts";
-import { missionExtension } from "./extension.ts";
+import { FeedbackDelivery, PublicEventProjector, runUntilSettled } from "./bridge.ts";
+import { createMissionResources } from "./resources.ts";
+import { RoutineCooldown } from "./scheduling.ts";
 
 const root = resolve(import.meta.dirname, "../..");
 const api = process.env.UUV_API_URL || "http://127.0.0.1:8765";
@@ -25,6 +27,10 @@ let session: AgentSession | undefined;
 let sessionEpisode = "";
 let running = true;
 let calls = 0;
+let feedback: FeedbackDelivery | undefined;
+let heartbeatTask: Promise<void> = Promise.resolve();
+let runFailure: Error | undefined;
+const schedule = new RoutineCooldown();
 
 async function request(path: string, data: unknown, signal?: AbortSignal): Promise<Record<string, unknown>> {
   const response = await fetch(`${api}${path}`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${workerToken}` },
@@ -35,51 +41,85 @@ async function request(path: string, data: unknown, signal?: AbortSignal): Promi
 }
 
 async function makeSession(episode: string): Promise<AgentSession> {
-  const skill = await readFile(resolve(root, ".pi/skills/multi-uuv-recon-tracking/SKILL.md"), "utf8");
   const settings = SettingsManager.inMemory({ compaction: { enabled: true }, retry: { enabled: true, maxRetries: 1, baseDelayMs: 2000 } });
-  const loader = new DefaultResourceLoader({ cwd: runtimeDir, agentDir: runtimeDir, settingsManager: settings,
-    noExtensions: true, noSkills: true, noPromptTemplates: true, noThemes: true, noContextFiles: true,
-    systemPrompt: `You coordinate a 2D eight-UUV reconnaissance GAME. Reply in concise Chinese. Only use registered mission tools. No real-world vehicle control. Never invent execution, observations or approvals. ${skill}`,
-    extensionFactories: [missionExtension(async (name, params, signal) => {
+  const loader = createMissionResources(runtimeDir, resolve(root, ".pi/skills/multi-uuv-recon-tracking"), settings, async (name, params, signal) => {
       if (!activeJob || ++calls > 24) throw new Error("turn_tool_budget_exceeded");
       const job = activeJob;
-      const heartbeat = await request("/internal/agent/heartbeat", { run_id: job.run_id, episode_id: job.episode_id }, signal);
-      if (heartbeat.cancel) throw new Error("run_cancelled");
+      await heartbeatRun(job, signal);
+      if (runFailure) throw runFailure;
       return request(`/internal/tools/${name}`, { ...params, run_id: job.run_id, episode_id: job.episode_id }, signal);
-    })],
   });
   await loader.reload();
   const { session: created } = await createAgentSession({ cwd: runtimeDir, agentDir: runtimeDir, modelRuntime, model,
-    thinkingLevel: "off", tools: [...TOOL_NAMES], resourceLoader: loader, settingsManager: settings,
+    thinkingLevel: "off", tools: [...TOOL_NAMES, "read"], resourceLoader: loader, settingsManager: settings,
     sessionManager: SessionManager.continueRecent(runtimeDir, resolve(runtimeDir, episode)) });
-  if (created.getActiveToolNames().length !== TOOL_NAMES.length) throw new Error("Mission tool registration incomplete");
+  if (created.getActiveToolNames().sort().join(",") !== [...TOOL_NAMES, "read"].sort().join(",")) throw new Error("Mission tool registration incomplete");
   return created;
+}
+
+function heartbeatRun(job: Job, signal?: AbortSignal): Promise<void> {
+  heartbeatTask = heartbeatTask.then(async () => {
+    if (activeJob !== job) return;
+    const ids = feedback?.acknowledgedIds() || [];
+    const response = await request("/internal/agent/heartbeat", { run_id: job.run_id, episode_id: job.episode_id, acknowledged_feedback_ids: ids }, signal);
+    feedback?.confirmAcknowledged(ids);
+    if (response.cancel) throw new Error("run_cancelled");
+    if (session?.isStreaming) await feedback?.deliver(response.feedback);
+  });
+  return heartbeatTask;
 }
 
 process.on("SIGTERM", () => { running = false; void session?.abort(); });
 process.on("SIGINT", () => { running = false; void session?.abort(); });
-console.log("PI worker ready: LongCat, mission tools only");
+console.log("PI worker ready: LongCat, ten mission tools and trusted skill read");
 while (running) {
   try {
-    const next = await request("/internal/agent/next", {});
+    const next = await request("/internal/agent/next", schedule.nextRequest(performance.now()));
     const job = next.job as Job | null;
     if (!job) { await delay(1000); continue; }
     activeJob = job;
     calls = 0;
+    runFailure = undefined;
+    heartbeatTask = Promise.resolve();
     if (!session || sessionEpisode !== job.episode_id) {
       session?.dispose();
       session = await makeSession(job.episode_id);
       sessionEpisode = job.episode_id;
     }
     const turnSession = session;
-    const deadline = setTimeout(() => { void turnSession.abort(); }, 90000);
+    feedback = new FeedbackDelivery(turnSession);
+    const projector = new PublicEventProjector(job.run_id, secrets);
+    let events: Promise<void> = Promise.resolve();
+    let eventCount = 0;
+    const unsubscribe = turnSession.subscribe((event) => {
+      const projected = projector.project(event);
+      if (!projected) return;
+      if (++eventCount > 12000) {
+        runFailure = new Error("turn_event_budget_exceeded");
+        void turnSession.abort();
+        return;
+      }
+      events = events.then(async () => {
+        if (runFailure) return;
+        await request("/internal/agent/event", { run_id: job.run_id, episode_id: job.episode_id, type: "session_event", event: projected });
+      }).catch((error: unknown) => {
+        runFailure = error instanceof Error ? error : new Error("event_delivery_failed");
+        void turnSession.abort();
+      });
+    });
+    const deadline = setTimeout(() => { runFailure = new Error("turn_deadline_exceeded"); void turnSession.abort(); }, 180000);
     const heartbeat = setInterval(() => {
-      void request("/internal/agent/heartbeat", { run_id: job.run_id, episode_id: job.episode_id }).then((value) => {
-        if (value.cancel) void turnSession.abort();
-      }).catch(() => { void turnSession.abort(); });
+      void heartbeatRun(job).catch((error: unknown) => {
+        runFailure = error instanceof Error ? error : new Error("heartbeat_failed");
+        void turnSession.abort();
+      });
     }, 3000);
     try {
-      await turnSession.prompt(`Episode ${job.episode_id}. Trigger: ${job.source}. ${job.text}\nFirst use get_mission_state. Preserve existing plans unless a change is needed.`);
+      await runUntilSettled(turnSession, `Episode ${job.episode_id}. Trigger: ${job.source}. ${job.text}\nFirst read the multi-uuv-recon-tracking Skill using read, then get_mission_state. Preserve existing plans unless a change is needed.`);
+      clearInterval(heartbeat);
+      await heartbeatRun(job);
+      await events;
+      if (runFailure) throw runFailure;
       const last = [...turnSession.messages].reverse().find((message) => message.role === "assistant");
       if (last?.role === "assistant" && (last.stopReason === "error" || last.stopReason === "aborted")) {
         throw new Error(last.errorMessage || last.stopReason);
@@ -88,9 +128,14 @@ while (running) {
     } finally {
       clearTimeout(deadline);
       clearInterval(heartbeat);
+      unsubscribe();
+      await turnSession.abort();
+      await heartbeatTask.catch(() => {});
+      await events;
+      feedback = undefined;
     }
     activeJob = undefined;
-    await delay(15000);
+    schedule.completed(performance.now());
   } catch (error) {
     const message = redact(error instanceof Error ? error.message : "worker_error", secrets).slice(0, 300);
     if (activeJob) {

@@ -18,11 +18,13 @@ from fastapi.responses import JSONResponse, Response
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .runtime import ALGORITHM_IDS, MissionRuntime, MissionError, identifier
+from .agent_events import session_event
 
 
-TOOL_NAMES = ("get_mission_state", "get_observations", "compute_task_allocation", "plan_path", "plan_search", "plan_tracking", "evaluate_plan", "submit_mission_plan", "get_action_status")
+TOOL_NAMES = ("get_mission_state", "get_observations", "partition_search_area", "compute_task_allocation", "plan_path", "plan_search", "plan_tracking", "evaluate_plan", "submit_mission_plan", "get_action_status")
 SKILL_ID = "multi-uuv-recon-tracking"
 WORKER_LEASE_SECONDS = 15
+WORKER_LIVENESS_SECONDS = 30  # Includes the healthy worker's 15-second success cooldown.
 
 
 def create_app(db_path=None, worker_token=None, ticking=True):
@@ -31,16 +33,65 @@ def create_app(db_path=None, worker_token=None, ticking=True):
     browser_secret = secrets.token_urlsafe(32)
     runtime = MissionRuntime(db_path)
 
+    def requeue_feedback(job):
+        if runtime.status == "stopped" or job["episode_id"] != runtime.episode:
+            return
+        if job["status"] == "failed" and job.get("accepted_feedback"):
+            job["feedback"] = job.pop("accepted_feedback") + job.get("feedback", [])
+        if job["status"] == "failed" and job.get("source_feedback_id") and not job.get("source_feedback_recovered"):
+            source = job.get("source_feedback", {"id": job["source_feedback_id"], "text": job["text"], "delivery": "followUp", "attempt": 1})
+            if source.get("attempt", 1) < 3:
+                job["feedback"] = [{**source, "attempt": source.get("attempt", 1)+1}] + job.get("feedback", [])
+            else:
+                for message in runtime.messages:
+                    if message.get("feedback_id") == source["id"]:
+                        message.update(status="failed", delivery_status="failed")
+                runtime.event("agent_feedback_failed", {"run_id": job["run_id"], "feedback_id": source["id"], "reason": "recovery_attempts_exhausted"})
+            job["source_feedback_recovered"] = True
+        while job.get("feedback"):
+            feedback = job["feedback"][0]
+            previous_count = len(runtime.agent_jobs)
+            retry_position = next((index+1 for index, current in enumerate(runtime.agent_jobs) if current is job), 0)
+            try:
+                queued = runtime.queue_agent(feedback["text"], "feedback", delivery=feedback.get("delivery", "followUp"))
+            except MissionError as error:
+                if error.code == "agent_queue_full":
+                    return
+                raise
+            if queued is None:
+                return
+            queued["source_feedback_id"] = feedback["id"]
+            queued["source_feedback"] = copy.deepcopy(feedback)
+            if feedback["id"] == job.get("source_feedback_id"):
+                # A retry of older feedback must precede already queued newer input.
+                trimmed = max(0, previous_count+1-len(runtime.agent_jobs))
+                runtime.agent_jobs.remove(queued)
+                runtime.agent_jobs.insert(max(0, retry_position-trimmed), queued)
+            for message in runtime.messages:
+                if message.get("feedback_id") == feedback["id"]:
+                    message.update(run_id=queued["run_id"], status="queued", delivery_status="requeued")
+            job["feedback"].pop(0)
+
     def expire_worker_leases(now):
-        expired = False
-        for job in runtime.agent_jobs:
-            if job["status"] == "running" and job.get("lease_deadline", 0) <= now:
-                job.update(status="failed", error="worker_lease_expired")
-                runtime.event("agent_failed", {"run_id": job["run_id"], "error": "worker_lease_expired"})
-                expired = True
-        if expired:
-            runtime.agent.update(status="degraded", error="worker_lease_expired")
+        jobs = [job for job in runtime.agent_jobs if
+            (job["status"] == "running" and job.get("lease_deadline", 0) <= now) or
+            (job["status"] in ("failed", "completed") and (job.get("feedback") or job.get("accepted_feedback"))) or
+            (job["status"] == "failed" and job.get("source_feedback_id") and not job.get("source_feedback_recovered"))]
+        if not jobs:
+            return
+        with runtime.transaction():
+            for job in jobs:
+                if job["status"] == "running":
+                    job.update(status="failed", error="worker_lease_expired")
+                    runtime.event("agent_failed", {"run_id": job["run_id"], "error": "worker_lease_expired"})
+                    runtime.agent.update(status="degraded", error="worker_lease_expired")
+                requeue_feedback(job)
             runtime.save()
+
+    def queue_user_input(text, delivery="followUp", annotation=None):
+        with runtime.lock:
+            expire_worker_leases(time.monotonic())
+            return runtime.queue_agent(text, delivery=delivery, annotation=annotation)
 
     def active_run(data):
         runtime.check_episode(data.get("episode_id"))
@@ -78,7 +129,7 @@ def create_app(db_path=None, worker_token=None, ticking=True):
                     last_save = now
                 with runtime.lock:
                     expire_worker_leases(now)
-                    if runtime.last_heartbeat and now-runtime.last_heartbeat > WORKER_LEASE_SECONDS:
+                    if runtime.last_heartbeat and now-runtime.last_heartbeat > WORKER_LIVENESS_SECONDS:
                         runtime.agent["status"] = "offline"
                 await asyncio.sleep(.05)
         task = asyncio.create_task(loop()) if ticking else None
@@ -147,7 +198,7 @@ def create_app(db_path=None, worker_token=None, ticking=True):
     async def invoke(name, data, worker=False):
         if name not in TOOL_NAMES:
             raise MissionError("unknown_tool", 404)
-        if name in ("compute_task_allocation", "plan_path", "plan_search", "plan_tracking"):
+        if name in ("partition_search_area", "compute_task_allocation", "plan_path", "plan_search", "plan_tracking"):
             with runtime.lock:
                 if worker:
                     active_run(data)
@@ -162,7 +213,9 @@ def create_app(db_path=None, worker_token=None, ticking=True):
             if name == "get_mission_state":
                 return runtime.mission_state()
             if name == "get_observations":
-                return {"observations": copy.deepcopy([o for o in runtime.observations if o["time_s"] > float(data.get("after_s", -1))][-min(100, max(1, int(data.get("limit", 50)))):])}
+                records = [o for o in runtime.observations if o["time_s"] > float(data.get("after_s", -1)) and o.get("sequence", 0) > int(data.get("cursor", -1))]
+                records = records[:min(100, max(1, int(data.get("limit", 50))))]
+                return {"observations": copy.deepcopy(records), "cursor": records[-1]["sequence"] if records else runtime.observation_cursor}
             if name == "evaluate_plan":
                 return runtime.evaluate(data.get("result_id"))
             if name == "submit_mission_plan":
@@ -189,6 +242,11 @@ def create_app(db_path=None, worker_token=None, ticking=True):
     @app.get("/api/state")
     async def state():
         return runtime.frame()
+
+    @app.get("/api/scene")
+    async def scene():
+        with runtime.lock:
+            return {"episode_id": runtime.episode, "scenario_vessels": copy.deepcopy(runtime.vessels), "vessel_mutation_allowed": runtime.status != "stopped"}
 
     @app.post("/api/simulation/{operation}")
     async def simulation(operation, request: Request):
@@ -252,10 +310,24 @@ def create_app(db_path=None, worker_token=None, ticking=True):
     @app.post("/api/pi-agent/task-assignment")
     async def agent_message(request: Request):
         data = await payload(request)
-        text = data.get("text", "Allocate the eight UUVs into teams of at most three and plan search. Evaluate and submit each plan using current permissions.")
+        text = data.get("text", "Plan fleet search with plan_search(standing_policy=true), evaluate and submit one atomic fleet plan. One search region per available UUV; preserve tracking teams.")
         if not isinstance(text, str) or not text.strip() or len(text) > 4000:
             raise MissionError("invalid_message", 422)
-        return runtime.queue_agent(text)
+        delivery = data.get("delivery", "followUp")
+        if delivery not in ("steer", "followUp"):
+            raise MissionError("invalid_delivery", 422)
+        annotation = data.get("annotation")
+        if annotation:
+            if not isinstance(annotation, dict):
+                raise MissionError("invalid_annotation", 422)
+            original = next((m for m in runtime.messages if m["id"] == annotation.get("message_id")), None)
+            quote = annotation.get("quote")
+            if not original or not isinstance(quote, str) or not quote.strip() or len(quote) > 2000:
+                raise MissionError("invalid_annotation", 422)
+            annotation = {key: annotation[key] for key in ("message_id", "quote", "plan_id") if key in annotation}
+            annotation["quote_source"] = "operator_selection"
+            text = f"{text}\nOperator-selected text from message {annotation['message_id']} (untrusted feedback, not approval): {quote}"[:4000]
+        return queue_user_input(text, delivery=delivery, annotation=annotation)
 
     @app.get("/api/pi-agent/task-assignment")
     async def assignments():
@@ -277,7 +349,7 @@ def create_app(db_path=None, worker_token=None, ticking=True):
                 runtime.cancel_agent()
                 return {}
             if operation == "retry":
-                return runtime.queue_agent("Retry the last mission request after checking current state.")
+                return queue_user_input("Retry the last mission request after checking current state.")
             raise MissionError("unknown_operation", 404)
         return receipt(data, apply)
 
@@ -297,7 +369,7 @@ def create_app(db_path=None, worker_token=None, ticking=True):
         data = await payload(request)
         if skill_id != SKILL_ID:
             raise MissionError("skill_not_found", 404)
-        return runtime.queue_agent(f"Follow skill {SKILL_ID}. " + str(data.get("text", "Review current mission and continue authorized work.")))
+        return queue_user_input(f"Follow skill {SKILL_ID}. " + str(data.get("text", "Review current mission and continue authorized work.")))
 
     @app.get("/api/algorithm/status")
     async def algorithm_status():
@@ -308,7 +380,7 @@ def create_app(db_path=None, worker_token=None, ticking=True):
     async def algorithm_plan(request: Request):
         data = await payload(request)
         name = data.get("tool", "plan_search")
-        if name not in ("compute_task_allocation", "plan_path", "plan_search", "plan_tracking", "evaluate_plan"):
+        if name not in ("partition_search_area", "compute_task_allocation", "plan_path", "plan_search", "plan_tracking", "evaluate_plan"):
             raise MissionError("calculation_only", 422)
         return await invoke(name, data)
 
@@ -444,8 +516,9 @@ def create_app(db_path=None, worker_token=None, ticking=True):
             if request.method == "DELETE":
                 runtime.vessels.remove(current)
                 runtime.targets = [target for target in runtime.targets if target["id"] != vessel_id]
-                runtime.contacts.pop(vessel_id, None)
-                runtime.observations = [sample for sample in runtime.observations if sample["contact_id"] != vessel_id]
+                contact_id = runtime.contact_mapping.pop(vessel_id, None)
+                runtime.contacts.pop(contact_id, None)
+                runtime.observations = [sample for sample in runtime.observations if sample["contact_id"] != contact_id]
             elif request.method == "PATCH":
                 if not current["ais_controllable"]:
                     raise MissionError("ais_fixed")
@@ -538,7 +611,7 @@ def create_app(db_path=None, worker_token=None, ticking=True):
         with runtime.lock:
             active_run(data)
             params = {key: copy.deepcopy(data[key]) for key in ("mission_revision", "algorithm_id", "members", "bbox", "goal",
-                "contact_id", "result_id", "command_id", "action_id", "mode", "after_s", "limit") if key in data}
+                "contact_id", "result_id", "command_id", "action_id", "mode", "after_s", "limit", "standing_policy", "cursor") if key in data}
             if isinstance(data.get("tasks"), list):
                 params["tasks"] = [{key: copy.deepcopy(task[key]) for key in ("id", "center", "size", "priority") if key in task}
                     for task in data["tasks"][:8] if isinstance(task, dict)]
@@ -561,13 +634,19 @@ def create_app(db_path=None, worker_token=None, ticking=True):
 
     @app.post("/internal/agent/next")
     async def next_job(request: Request):
-        await payload(request, episode=False)
+        data = await payload(request, episode=False)
+        defer_routine = data.get("defer_routine", False)
+        if not isinstance(defer_routine, bool):
+            raise MissionError("boolean_required", 422)
         with runtime.lock:
             now = time.monotonic()
             expire_worker_leases(now)
             runtime.last_heartbeat = now
             running = next((j for j in runtime.agent_jobs if j["status"] == "running"), None)
-            job = None if running else next((j for j in runtime.agent_jobs if j["status"] == "queued"), None)
+            priorities = {"human": 0, "feedback": 0, "target_found": 1, "target_lost": 1, "energy_exit": 1}
+            eligible = [job for job in runtime.agent_jobs if job["status"] == "queued"
+                and (not defer_routine or priorities.get(job["source"], 2) < 2)]
+            job = None if running else min(eligible, key=lambda job: priorities.get(job["source"], 2), default=None)
             if job:
                 job.update(status="running", lease_deadline=now+WORKER_LEASE_SECONDS)
                 runtime.agent.update(status="running", error=None, cycle=runtime.agent["cycle"]+1)
@@ -588,7 +667,20 @@ def create_app(db_path=None, worker_token=None, ticking=True):
             now = time.monotonic()
             runtime.last_heartbeat = now
             job["lease_deadline"] = now+WORKER_LEASE_SECONDS
-            return {"cancel": False}
+            acknowledged_ids = data.get("acknowledged_feedback_ids", [])
+            if not isinstance(acknowledged_ids, list) or len(acknowledged_ids) > 20 or not all(isinstance(value, str) and len(value) <= 160 for value in acknowledged_ids):
+                raise MissionError("invalid_feedback_acknowledgment", 422)
+            acknowledged = set(acknowledged_ids).intersection(f["id"] for f in job.get("feedback", []))
+            if acknowledged:
+                with runtime.transaction():
+                    job.setdefault("accepted_feedback", []).extend(f for f in job.get("feedback", []) if f["id"] in acknowledged)
+                    job["feedback"] = [f for f in job.get("feedback", []) if f["id"] not in acknowledged]
+                    for message in runtime.messages:
+                        if message.get("run_id") == job["run_id"] and message.get("feedback_id") in acknowledged:
+                            message.update(status="completed", delivery_status="delivered")
+                    runtime.event("agent_feedback_delivered", {"run_id": job["run_id"], "feedback_ids": sorted(acknowledged)})
+                    runtime.save()
+            return {"cancel": False, "feedback": copy.deepcopy(job.get("feedback", []))}
 
     @app.post("/internal/agent/event")
     async def worker_event(request: Request):
@@ -596,15 +688,31 @@ def create_app(db_path=None, worker_token=None, ticking=True):
         with runtime.lock:
             job = active_run(data)
             kind = data.get("type")
+            if kind == "session_event":
+                event = data.get("event")
+                if not isinstance(event, dict):
+                    raise MissionError("invalid_session_event", 422)
+                session_event(runtime, job, event)
+                return {"status": "ok"}
             if kind not in ("completed", "failed"):
                 raise MissionError("invalid_agent_event", 422)
-            job["status"] = kind
-            runtime.agent.update(status="idle" if kind == "completed" else "degraded", error=data.get("error"))
-            if kind == "completed":
-                runtime.messages.append({"id": identifier("message"), "role": "assistant", "text": str(data.get("text", ""))[:8000], "time": runtime.sim_time, "model": runtime.config.model})
-                runtime.messages = runtime.messages[-100:]
-            runtime.event(f"agent_{kind}", {"run_id": job["run_id"], "error": data.get("error")})
-            runtime.save()
+            with runtime.transaction():
+                job["status"] = kind
+                runtime.agent.update(status="idle" if kind == "completed" else "degraded", error=data.get("error"))
+                existing = [m for m in runtime.messages if m.get("run_id") == job["run_id"] and m["role"] == "assistant"]
+                if kind == "completed" and not existing:
+                    runtime.messages.append({"id": identifier("message"), "role": "assistant", "text": str(data.get("text", ""))[:8000], "time": runtime.sim_time, "model": runtime.config.model})
+                    runtime.messages = runtime.messages[-100:]
+                for message in existing:
+                    message["status"] = "completed" if kind == "completed" else "failed"
+                if kind == "completed":
+                    job["accepted_feedback"] = []
+                    for message in runtime.messages:
+                        if message.get("feedback_id") == job.get("source_feedback_id") and job.get("source_feedback_id"):
+                            message.update(status="completed", delivery_status="processed")
+                requeue_feedback(job)
+                runtime.event(f"agent_{kind}", {"run_id": job["run_id"], "error": data.get("error")})
+                runtime.save()
             return {"status": "ok"}
 
     return app

@@ -61,7 +61,7 @@ export default function useMissionControl(enabled) {
           missionApi.get("/api/task-assembly/tasks"), missionApi.get("/api/skills"),
         ]);
         if (disposed || episodeRef.current !== currentEpisode) return;
-        setState((current) => ({ ...current, messages: messages.messages, jobs: jobs.assignments }));
+        setState((current) => mergeMissionState(current, { episode_id: currentEpisode, messages: messages.messages, jobs: jobs.assignments }));
         setTasks(taskList.tasks || []);
         setSkills(skillList.skills || []);
       } catch (failure) {

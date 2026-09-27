@@ -1,5 +1,6 @@
 import json
 import sqlite3
+import zlib
 from pathlib import Path
 from collections.abc import MutableMapping
 from contextlib import contextmanager
@@ -90,7 +91,7 @@ class Store:
 
     def frame(self, episode, frame):
         with self.transaction():
-            self.db.execute("INSERT INTO frames(episode,data) VALUES(?,?)", (episode, json.dumps(frame, allow_nan=False)))
+            self.db.execute("INSERT INTO frames(episode,data) VALUES(?,?)", (episode, zlib.compress(json.dumps(frame, allow_nan=False).encode())))
             self.db.execute("DELETE FROM frames WHERE episode=? AND id NOT IN (SELECT id FROM frames WHERE episode=? ORDER BY id DESC LIMIT 7200)", (episode, episode))
             self.db.execute("DELETE FROM frames WHERE episode NOT IN (SELECT episode FROM frames GROUP BY episode ORDER BY MAX(id) DESC LIMIT 8)")
 
@@ -100,7 +101,7 @@ class Store:
     def replay(self, episode, offset, limit):
         total = self.db.execute("SELECT COUNT(*) FROM frames WHERE episode=?", (episode,)).fetchone()[0]
         rows = self.db.execute("SELECT data FROM frames WHERE episode=? ORDER BY id LIMIT ? OFFSET ?", (episode, limit, offset))
-        return {"total": total, "frames": [json.loads(row[0]) for row in rows]}
+        return {"total": total, "frames": [json.loads(zlib.decompress(row[0]) if isinstance(row[0], bytes) else row[0]) for row in rows]}
 
     def close(self):
         self.db.close()

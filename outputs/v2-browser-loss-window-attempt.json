@@ -1,0 +1,1901 @@
+{
+  "status": "failed",
+  "started_at": "2026-09-27T12:10:02.086727+00:00",
+  "ui": "http://127.0.0.1:5180",
+  "screenshots": {
+    "desktop": {
+      "path": "outputs/v2-accepted-desktop.png",
+      "canvas": {
+        "width": 1060,
+        "height": 576,
+        "sampled_colors": 10724,
+        "opaque_samples": 38160,
+        "bounds": {
+          "x": 380,
+          "y": 104,
+          "width": 1060,
+          "height": 576
+        }
+      },
+      "layout": {
+        "width": 1440,
+        "height": 900,
+        "documentWidth": 1440,
+        "brokenImages": []
+      }
+    },
+    "data": {
+      "path": "outputs/v2-accepted-data.png",
+      "canvas": {
+        "width": 1060,
+        "height": 576,
+        "sampled_colors": 10765,
+        "opaque_samples": 38160,
+        "bounds": {
+          "x": 380,
+          "y": 104,
+          "width": 1060,
+          "height": 576
+        }
+      },
+      "layout": {
+        "width": 1440,
+        "height": 900,
+        "documentWidth": 1440,
+        "brokenImages": []
+      }
+    },
+    "metrics": {
+      "path": "outputs/v2-accepted-metrics.png",
+      "canvas": {
+        "width": 1060,
+        "height": 576,
+        "sampled_colors": 10750,
+        "opaque_samples": 38160,
+        "bounds": {
+          "x": 380,
+          "y": 104,
+          "width": 1060,
+          "height": 576
+        }
+      },
+      "layout": {
+        "width": 1440,
+        "height": 900,
+        "documentWidth": 1440,
+        "brokenImages": []
+      }
+    },
+    "annotation": {
+      "path": "outputs/v2-accepted-annotation.png",
+      "canvas": {
+        "width": 1060,
+        "height": 796,
+        "sampled_colors": 10696,
+        "opaque_samples": 52735,
+        "bounds": {
+          "x": 380,
+          "y": 104,
+          "width": 1060,
+          "height": 796
+        }
+      },
+      "layout": {
+        "width": 1440,
+        "height": 900,
+        "documentWidth": 1440,
+        "brokenImages": []
+      }
+    },
+    "mobile-chat": {
+      "path": "outputs/v2-accepted-mobile-chat.png",
+      "canvas": {
+        "width": 390,
+        "height": 658,
+        "sampled_colors": 3319,
+        "opaque_samples": 16039,
+        "bounds": {
+          "x": 0,
+          "y": 186,
+          "width": 390,
+          "height": 658
+        }
+      },
+      "layout": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "brokenImages": []
+      }
+    },
+    "mobile-data": {
+      "path": "outputs/v2-accepted-mobile-data.png",
+      "canvas": {
+        "width": 390,
+        "height": 658,
+        "sampled_colors": 3319,
+        "opaque_samples": 16039,
+        "bounds": {
+          "x": 0,
+          "y": 186,
+          "width": 390,
+          "height": 658
+        }
+      },
+      "layout": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "brokenImages": []
+      }
+    },
+    "mobile": {
+      "path": "outputs/v2-accepted-mobile.png",
+      "canvas": {
+        "width": 390,
+        "height": 658,
+        "sampled_colors": 3319,
+        "opaque_samples": 16039,
+        "bounds": {
+          "x": 0,
+          "y": 186,
+          "width": 390,
+          "height": 658
+        }
+      },
+      "layout": {
+        "width": 390,
+        "height": 844,
+        "documentWidth": 390,
+        "brokenImages": []
+      }
+    }
+  },
+  "errors": [
+    {
+      "type": "AssertionError",
+      "message": "No real tracking contact with bearing lines observed"
+    }
+  ],
+  "console_errors": [],
+  "page_errors": [],
+  "blocked_writes": [],
+  "operator_actions": [],
+  "motion": {
+    "verified": true,
+    "before": {
+      "episode_id": "mission-840cff9d1fa8",
+      "frame_id": 19676,
+      "runtime_status": "running",
+      "sim_time_min": 65.58666666666666,
+      "mission_metrics": {
+        "effective_tracking_seconds": 2780.0,
+        "lost_seconds": 40.0,
+        "handoff_count": 1,
+        "handoff_attempts": 1,
+        "rotation_count": 1,
+        "search_boats": 3,
+        "search_regions": 3,
+        "coverage_pct": 100.0,
+        "unscanned_cells": 0,
+        "recent_coverage_pct": 87.24747474747475,
+        "revisit_timeliness_pct": 87.24747474747475,
+        "handoff_success_rate": 100.0
+      },
+      "contacts": [
+        {
+          "x": 2143.101856936021,
+          "y": 660.031535938021,
+          "vx": 1.8574891867927634,
+          "vy": -1.7629147568221073,
+          "covariance": [
+            [
+              270.9250916505535,
+              66.67676696330675,
+              3.5230855209827094,
+              0.991527789510073
+            ],
+            [
+              66.67676696330675,
+              130.96615217883064,
+              0.5564034298133894,
+              2.3847678427026247
+            ],
+            [
+              3.5230855209827094,
+              0.5564034298133894,
+              0.06481657467361683,
+              0.008139628808097838
+            ],
+            [
+              0.991527789510073,
+              2.3847678427026247,
+              0.008139628808097838,
+              0.05625611545924959
+            ]
+          ],
+          "estimate_time": 3935.0,
+          "uncertainty_m": 34.5024283171653,
+          "contact_id": "CONTACT-1",
+          "last_seen": 3880.0,
+          "state": "lost",
+          "hits": [
+            3875.0,
+            3876.0,
+            3877.0,
+            3878.0,
+            3879.0,
+            3880.0
+          ],
+          "samples": [
+            {
+              "mode": "passive",
+              "bearing_rad": 2.955931625230857,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2154.496501855887,
+                761.3550527332054,
+                0.5515819110165829
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6832",
+              "sequence": 6832,
+              "contact_id": "CONTACT-1",
+              "time_s": 3861.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 2.978279337207699,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2157.877060828695,
+                763.4930420325768,
+                0.5764231168877917
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6833",
+              "sequence": 6833,
+              "contact_id": "CONTACT-1",
+              "time_s": 3862.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 3.0283618897115345,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2161.2037407686216,
+                765.7139411660194,
+                0.6010341798336597
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6834",
+              "sequence": 6834,
+              "contact_id": "CONTACT-1",
+              "time_s": 3863.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 3.0319997859551946,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2164.4758305111854,
+                768.0145236123102,
+                0.624737068191794
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6835",
+              "sequence": 6835,
+              "contact_id": "CONTACT-1",
+              "time_s": 3864.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 3.0601410775289835,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2167.692263010428,
+                770.3922959254322,
+                0.6486240566705807
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6836",
+              "sequence": 6836,
+              "contact_id": "CONTACT-1",
+              "time_s": 3865.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 3.06946897850474,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2170.850691570983,
+                772.8465886101187,
+                0.6727553767308608
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6837",
+              "sequence": 6837,
+              "contact_id": "CONTACT-1",
+              "time_s": 3866.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.1215251745060466,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2173.9476612842554,
+                775.3779783384555,
+                0.6979242830868111
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6838",
+              "sequence": 6838,
+              "contact_id": "CONTACT-1",
+              "time_s": 3867.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.0924262270151166,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2176.981948632824,
+                777.9841927938911,
+                0.7215855394640278
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6839",
+              "sequence": 6839,
+              "contact_id": "CONTACT-1",
+              "time_s": 3868.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 3.1342732530601043,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2179.9552650994437,
+                780.6597697687448,
+                0.7441189049654104
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6840",
+              "sequence": 6840,
+              "contact_id": "CONTACT-1",
+              "time_s": 3869.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.0833447565387875,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2182.863638031789,
+                783.4057686346293,
+                0.7694730754764667
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6841",
+              "sequence": 6841,
+              "contact_id": "CONTACT-1",
+              "time_s": 3870.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.075499828005378,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2185.700182087788,
+                786.2258924296478,
+                0.7957353306439998
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6842",
+              "sequence": 6842,
+              "contact_id": "CONTACT-1",
+              "time_s": 3871.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.0481490496465926,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2188.458947339424,
+                789.1221240655489,
+                0.8238862610754457
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6843",
+              "sequence": 6843,
+              "contact_id": "CONTACT-1",
+              "time_s": 3872.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.0310642163105346,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2191.132325590457,
+                792.0973295994453,
+                0.8538965281052336
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6844",
+              "sequence": 6844,
+              "contact_id": "CONTACT-1",
+              "time_s": 3873.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.0239185942532236,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2193.7116043463107,
+                795.1544399807476,
+                0.8862691780108557
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6845",
+              "sequence": 6845,
+              "contact_id": "CONTACT-1",
+              "time_s": 3874.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.9655557212039994,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2196.1852794471447,
+                798.2975641200777,
+                0.9220004895638271
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6846",
+              "sequence": 6846,
+              "contact_id": "CONTACT-1",
+              "time_s": 3875.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.895266885252556,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2198.5426103485293,
+                801.5288391993581,
+                0.9592755038097683
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6847",
+              "sequence": 6847,
+              "contact_id": "CONTACT-1",
+              "time_s": 3876.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.852062376290145,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2200.779089982413,
+                804.8449173494145,
+                0.9958614631029818
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6848",
+              "sequence": 6848,
+              "contact_id": "CONTACT-1",
+              "time_s": 3877.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.838963053449946,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2202.8948024275883,
+                808.239337283539,
+                1.031297525703607
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6849",
+              "sequence": 6849,
+              "contact_id": "CONTACT-1",
+              "time_s": 3878.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.838783848063562,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2204.8884496151104,
+                811.7068533933439,
+                1.0670366070252335
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6850",
+              "sequence": 6850,
+              "contact_id": "CONTACT-1",
+              "time_s": 3879.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.768560273044753,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2206.7523834744825,
+                815.2457506067296,
+                1.1053502555520314
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6851",
+              "sequence": 6851,
+              "contact_id": "CONTACT-1",
+              "time_s": 3880.0
+            }
+          ],
+          "vessel_class": "underwater",
+          "tracking_streak": 0,
+          "observers": [
+            "UUV-6"
+          ],
+          "geometry_quality": 0,
+          "estimated_position": [
+            20.93101856936021,
+            32.89968464061979
+          ],
+          "estimated_velocity": [
+            0.018574891867927636,
+            0.017629147568221072
+          ]
+        }
+      ],
+      "bearing_lines": []
+    },
+    "after": {
+      "episode_id": "mission-840cff9d1fa8",
+      "frame_id": 19806,
+      "runtime_status": "running",
+      "sim_time_min": 66.02,
+      "mission_metrics": {
+        "effective_tracking_seconds": 2780.0,
+        "lost_seconds": 66.0,
+        "handoff_count": 1,
+        "handoff_attempts": 1,
+        "rotation_count": 1,
+        "search_boats": 3,
+        "search_regions": 3,
+        "coverage_pct": 100.0,
+        "unscanned_cells": 0,
+        "recent_coverage_pct": 86.61616161616162,
+        "revisit_timeliness_pct": 86.61616161616162,
+        "handoff_success_rate": 100.0
+      },
+      "contacts": [
+        {
+          "x": 2191.3965757926367,
+          "y": 614.1957522606475,
+          "vx": 1.8574891867927634,
+          "vy": -1.7629147568221073,
+          "covariance": [
+            [
+              501.60185572101847,
+              112.42536773999095,
+              5.419566462496743,
+              1.2031581385206191
+            ],
+            [
+              112.42536773999095,
+              296.66352654981984,
+              0.7680337788239328,
+              4.058676844643118
+            ],
+            [
+              5.419566462496743,
+              0.7680337788239328,
+              0.08106657467361685,
+              0.008139628808097838
+            ],
+            [
+              1.2031581385206191,
+              4.058676844643118,
+              0.008139628808097838,
+              0.0725061154592496
+            ]
+          ],
+          "estimate_time": 3961.0,
+          "uncertainty_m": 46.957387956816945,
+          "contact_id": "CONTACT-1",
+          "last_seen": 3880.0,
+          "state": "lost",
+          "hits": [
+            3875.0,
+            3876.0,
+            3877.0,
+            3878.0,
+            3879.0,
+            3880.0
+          ],
+          "samples": [
+            {
+              "mode": "passive",
+              "bearing_rad": 2.955931625230857,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2154.496501855887,
+                761.3550527332054,
+                0.5515819110165829
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6832",
+              "sequence": 6832,
+              "contact_id": "CONTACT-1",
+              "time_s": 3861.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 2.978279337207699,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2157.877060828695,
+                763.4930420325768,
+                0.5764231168877917
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6833",
+              "sequence": 6833,
+              "contact_id": "CONTACT-1",
+              "time_s": 3862.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 3.0283618897115345,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2161.2037407686216,
+                765.7139411660194,
+                0.6010341798336597
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6834",
+              "sequence": 6834,
+              "contact_id": "CONTACT-1",
+              "time_s": 3863.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 3.0319997859551946,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2164.4758305111854,
+                768.0145236123102,
+                0.624737068191794
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6835",
+              "sequence": 6835,
+              "contact_id": "CONTACT-1",
+              "time_s": 3864.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 3.0601410775289835,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2167.692263010428,
+                770.3922959254322,
+                0.6486240566705807
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6836",
+              "sequence": 6836,
+              "contact_id": "CONTACT-1",
+              "time_s": 3865.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 3.06946897850474,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2170.850691570983,
+                772.8465886101187,
+                0.6727553767308608
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6837",
+              "sequence": 6837,
+              "contact_id": "CONTACT-1",
+              "time_s": 3866.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.1215251745060466,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2173.9476612842554,
+                775.3779783384555,
+                0.6979242830868111
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6838",
+              "sequence": 6838,
+              "contact_id": "CONTACT-1",
+              "time_s": 3867.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.0924262270151166,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2176.981948632824,
+                777.9841927938911,
+                0.7215855394640278
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6839",
+              "sequence": 6839,
+              "contact_id": "CONTACT-1",
+              "time_s": 3868.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 3.1342732530601043,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2179.9552650994437,
+                780.6597697687448,
+                0.7441189049654104
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6840",
+              "sequence": 6840,
+              "contact_id": "CONTACT-1",
+              "time_s": 3869.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.0833447565387875,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2182.863638031789,
+                783.4057686346293,
+                0.7694730754764667
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6841",
+              "sequence": 6841,
+              "contact_id": "CONTACT-1",
+              "time_s": 3870.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.075499828005378,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2185.700182087788,
+                786.2258924296478,
+                0.7957353306439998
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6842",
+              "sequence": 6842,
+              "contact_id": "CONTACT-1",
+              "time_s": 3871.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.0481490496465926,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2188.458947339424,
+                789.1221240655489,
+                0.8238862610754457
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6843",
+              "sequence": 6843,
+              "contact_id": "CONTACT-1",
+              "time_s": 3872.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.0310642163105346,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2191.132325590457,
+                792.0973295994453,
+                0.8538965281052336
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6844",
+              "sequence": 6844,
+              "contact_id": "CONTACT-1",
+              "time_s": 3873.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -3.0239185942532236,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2193.7116043463107,
+                795.1544399807476,
+                0.8862691780108557
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6845",
+              "sequence": 6845,
+              "contact_id": "CONTACT-1",
+              "time_s": 3874.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.9655557212039994,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2196.1852794471447,
+                798.2975641200777,
+                0.9220004895638271
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6846",
+              "sequence": 6846,
+              "contact_id": "CONTACT-1",
+              "time_s": 3875.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.895266885252556,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2198.5426103485293,
+                801.5288391993581,
+                0.9592755038097683
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6847",
+              "sequence": 6847,
+              "contact_id": "CONTACT-1",
+              "time_s": 3876.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.852062376290145,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2200.779089982413,
+                804.8449173494145,
+                0.9958614631029818
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6848",
+              "sequence": 6848,
+              "contact_id": "CONTACT-1",
+              "time_s": 3877.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.838963053449946,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2202.8948024275883,
+                808.239337283539,
+                1.031297525703607
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6849",
+              "sequence": 6849,
+              "contact_id": "CONTACT-1",
+              "time_s": 3878.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.838783848063562,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2204.8884496151104,
+                811.7068533933439,
+                1.0670366070252335
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6850",
+              "sequence": 6850,
+              "contact_id": "CONTACT-1",
+              "time_s": 3879.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.768560273044753,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                2206.7523834744825,
+                815.2457506067296,
+                1.1053502555520314
+              ],
+              "observer_id": "UUV-6",
+              "generation": 1,
+              "observers": [
+                "UUV-6"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-6851",
+              "sequence": 6851,
+              "contact_id": "CONTACT-1",
+              "time_s": 3880.0
+            }
+          ],
+          "vessel_class": "underwater",
+          "tracking_streak": 0,
+          "observers": [
+            "UUV-6"
+          ],
+          "geometry_quality": 0,
+          "estimated_position": [
+            21.413965757926366,
+            33.358042477393525
+          ],
+          "estimated_velocity": [
+            0.018574891867927636,
+            0.017629147568221072
+          ]
+        }
+      ],
+      "bearing_lines": []
+    },
+    "moved_boats": [
+      "UUV-1",
+      "UUV-2",
+      "UUV-3",
+      "UUV-4",
+      "UUV-5",
+      "UUV-6",
+      "UUV-7",
+      "UUV-8"
+    ],
+    "positions_before": {
+      "UUV-1": [
+        9.635856743334623,
+        5.767380069881624
+      ],
+      "UUV-2": [
+        33.45355427448384,
+        20.76010167736146
+      ],
+      "UUV-3": [
+        1.662187461914543,
+        29.958320905722434
+      ],
+      "UUV-4": [
+        22.722595641705766,
+        7.202489049323058
+      ],
+      "UUV-5": [
+        13.823871089599614,
+        20.109050150944913
+      ],
+      "UUV-6": [
+        22.652731017807486,
+        32.21293943615585
+      ],
+      "UUV-7": [
+        19.326183435050066,
+        32.79708586076398
+      ],
+      "UUV-8": [
+        36.10524071819904,
+        13.771843807358486
+      ]
+    },
+    "positions_after": {
+      "UUV-1": [
+        9.73858424315119,
+        4.732466324189631
+      ],
+      "UUV-2": [
+        34.492108870306254,
+        20.814913642251284
+      ],
+      "UUV-3": [
+        2.568924744313253,
+        30.366692577181965
+      ],
+      "UUV-4": [
+        22.62875274838235,
+        6.166731591530788
+      ],
+      "UUV-5": [
+        14.837570812011807,
+        19.951930636246114
+      ],
+      "UUV-6": [
+        22.480668805091597,
+        33.23846001786746
+      ],
+      "UUV-7": [
+        19.41844842013012,
+        33.832985070360294
+      ],
+      "UUV-8": [
+        36.94144781942323,
+        13.201130875391309
+      ]
+    },
+    "canvas_sha256_before": "9e1d5428558168a52c62d26333b4fbcc9377a032edc311353363fda4f1bb6e72",
+    "canvas_sha256_after": "bf11affc8542ffbb14a85f25d2ad11f5ab53e8796176d6786fdbe9d73fc145db",
+    "elapsed_wall_s": 4.014,
+    "minimum_wait_ms": 2000
+  },
+  "tracking": {
+    "verified": false
+  },
+  "annotation": {
+    "submitted": false,
+    "quote": "CONTACT-1 再次丢失。",
+    "message_id": "run-d61695fe52b1:assistant:9",
+    "markdown_elements": 5,
+    "draft_opened": true
+  },
+  "discovered_controls": [
+    {
+      "role": null,
+      "label": "直播"
+    },
+    {
+      "role": null,
+      "label": "回放"
+    },
+    {
+      "role": null,
+      "label": "完整 UUV 轨迹"
+    },
+    {
+      "role": null,
+      "label": "渐变长尾 UUV 轨迹"
+    },
+    {
+      "role": null,
+      "label": "彗星拖尾 UUV 轨迹"
+    },
+    {
+      "role": null,
+      "label": "切换 UUV 轨迹显示模式"
+    },
+    {
+      "role": null,
+      "label": "切换网格"
+    },
+    {
+      "role": null,
+      "label": "切换场景真值图层"
+    },
+    {
+      "role": null,
+      "label": "切换任务详情面板"
+    },
+    {
+      "role": null,
+      "label": "框选重点区"
+    },
+    {
+      "role": null,
+      "label": "切换编队状态面板"
+    },
+    {
+      "role": null,
+      "label": "启动仿真"
+    },
+    {
+      "role": null,
+      "label": "暂停仿真"
+    },
+    {
+      "role": null,
+      "label": "停止任务"
+    },
+    {
+      "role": null,
+      "label": "重置回合"
+    },
+    {
+      "role": null,
+      "label": "请求"
+    },
+    {
+      "role": null,
+      "label": "辅助"
+    },
+    {
+      "role": null,
+      "label": "全自主"
+    },
+    {
+      "role": null,
+      "label": "关闭编队状态"
+    },
+    {
+      "role": "tab",
+      "label": "对话"
+    },
+    {
+      "role": "tab",
+      "label": "数据"
+    },
+    {
+      "role": null,
+      "label": "停止生成"
+    },
+    {
+      "role": null,
+      "label": "停止生成"
+    },
+    {
+      "role": null,
+      "label": "停止生成"
+    },
+    {
+      "role": null,
+      "label": "发送消息"
+    },
+    {
+      "role": null,
+      "label": "预览 plan-e4e47e055c2a"
+    },
+    {
+      "role": null,
+      "label": "预览 plan-287b5e9a6782"
+    },
+    {
+      "role": null,
+      "label": "预览 plan-a141dae61bb5"
+    },
+    {
+      "role": null,
+      "label": "计算候选"
+    },
+    {
+      "role": null,
+      "label": "执行技能"
+    },
+    {
+      "role": null,
+      "label": "取消技能运行"
+    },
+    {
+      "role": null,
+      "label": "取消技能运行"
+    },
+    {
+      "role": null,
+      "label": "取消技能运行"
+    },
+    {
+      "role": null,
+      "label": "调整面板高度"
+    },
+    {
+      "role": "tab",
+      "label": "时间线"
+    },
+    {
+      "role": "tab",
+      "label": "Agent 运行"
+    },
+    {
+      "role": "tab",
+      "label": "任务指标"
+    },
+    {
+      "role": "tab",
+      "label": "区域"
+    },
+    {
+      "role": "tab",
+      "label": "参数"
+    },
+    {
+      "role": "tab",
+      "label": "AIS"
+    },
+    {
+      "role": null,
+      "label": "关闭任务详情"
+    }
+  ],
+  "initial_state": {
+    "episode_id": "mission-840cff9d1fa8",
+    "frame_id": 19501,
+    "runtime_status": "running",
+    "sim_time_min": 65.00333333333333,
+    "mission_metrics": {
+      "effective_tracking_seconds": 2780.0,
+      "lost_seconds": 5.0,
+      "handoff_count": 1,
+      "handoff_attempts": 1,
+      "rotation_count": 1,
+      "search_boats": 3,
+      "search_regions": 3,
+      "coverage_pct": 100.0,
+      "unscanned_cells": 0,
+      "recent_coverage_pct": 88.06818181818181,
+      "revisit_timeliness_pct": 88.06818181818181,
+      "handoff_success_rate": 100.0
+    },
+    "contacts": [
+      {
+        "x": 2078.0897353982687,
+        "y": 721.7335524267929,
+        "vx": 1.8574891867927634,
+        "vy": -1.7629147568221073,
+        "covariance": [
+          [
+            94.77894040694451,
+            22.470219576905404,
+            1.6373179074061168,
+            0.7066407812266493
+          ],
+          [
+            22.470219576905404,
+            24.015675877227526,
+            0.27151642152996563,
+            0.7986163016288894
+          ],
+          [
+            1.6373179074061168,
+            0.27151642152996563,
+            0.04294157467361682,
+            0.008139628808097838
+          ],
+          [
+            0.7066407812266493,
+            0.7986163016288894,
+            0.008139628808097838,
+            0.03438111545924957
+          ]
+        ],
+        "estimate_time": 3900.0,
+        "uncertainty_m": 20.130688644525964,
+        "contact_id": "CONTACT-1",
+        "last_seen": 3880.0,
+        "state": "lost",
+        "hits": [
+          3875.0,
+          3876.0,
+          3877.0,
+          3878.0,
+          3879.0,
+          3880.0
+        ],
+        "samples": [
+          {
+            "mode": "passive",
+            "bearing_rad": 2.955931625230857,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2154.496501855887,
+              761.3550527332054,
+              0.5515819110165829
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6832",
+            "sequence": 6832,
+            "contact_id": "CONTACT-1",
+            "time_s": 3861.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": 2.978279337207699,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2157.877060828695,
+              763.4930420325768,
+              0.5764231168877917
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6833",
+            "sequence": 6833,
+            "contact_id": "CONTACT-1",
+            "time_s": 3862.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": 3.0283618897115345,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2161.2037407686216,
+              765.7139411660194,
+              0.6010341798336597
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6834",
+            "sequence": 6834,
+            "contact_id": "CONTACT-1",
+            "time_s": 3863.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": 3.0319997859551946,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2164.4758305111854,
+              768.0145236123102,
+              0.624737068191794
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6835",
+            "sequence": 6835,
+            "contact_id": "CONTACT-1",
+            "time_s": 3864.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": 3.0601410775289835,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2167.692263010428,
+              770.3922959254322,
+              0.6486240566705807
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6836",
+            "sequence": 6836,
+            "contact_id": "CONTACT-1",
+            "time_s": 3865.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": 3.06946897850474,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2170.850691570983,
+              772.8465886101187,
+              0.6727553767308608
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6837",
+            "sequence": 6837,
+            "contact_id": "CONTACT-1",
+            "time_s": 3866.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -3.1215251745060466,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2173.9476612842554,
+              775.3779783384555,
+              0.6979242830868111
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6838",
+            "sequence": 6838,
+            "contact_id": "CONTACT-1",
+            "time_s": 3867.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -3.0924262270151166,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2176.981948632824,
+              777.9841927938911,
+              0.7215855394640278
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6839",
+            "sequence": 6839,
+            "contact_id": "CONTACT-1",
+            "time_s": 3868.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": 3.1342732530601043,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2179.9552650994437,
+              780.6597697687448,
+              0.7441189049654104
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6840",
+            "sequence": 6840,
+            "contact_id": "CONTACT-1",
+            "time_s": 3869.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -3.0833447565387875,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2182.863638031789,
+              783.4057686346293,
+              0.7694730754764667
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6841",
+            "sequence": 6841,
+            "contact_id": "CONTACT-1",
+            "time_s": 3870.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -3.075499828005378,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2185.700182087788,
+              786.2258924296478,
+              0.7957353306439998
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6842",
+            "sequence": 6842,
+            "contact_id": "CONTACT-1",
+            "time_s": 3871.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -3.0481490496465926,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2188.458947339424,
+              789.1221240655489,
+              0.8238862610754457
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6843",
+            "sequence": 6843,
+            "contact_id": "CONTACT-1",
+            "time_s": 3872.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -3.0310642163105346,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2191.132325590457,
+              792.0973295994453,
+              0.8538965281052336
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6844",
+            "sequence": 6844,
+            "contact_id": "CONTACT-1",
+            "time_s": 3873.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -3.0239185942532236,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2193.7116043463107,
+              795.1544399807476,
+              0.8862691780108557
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6845",
+            "sequence": 6845,
+            "contact_id": "CONTACT-1",
+            "time_s": 3874.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -2.9655557212039994,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2196.1852794471447,
+              798.2975641200777,
+              0.9220004895638271
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6846",
+            "sequence": 6846,
+            "contact_id": "CONTACT-1",
+            "time_s": 3875.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -2.895266885252556,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2198.5426103485293,
+              801.5288391993581,
+              0.9592755038097683
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6847",
+            "sequence": 6847,
+            "contact_id": "CONTACT-1",
+            "time_s": 3876.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -2.852062376290145,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2200.779089982413,
+              804.8449173494145,
+              0.9958614631029818
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6848",
+            "sequence": 6848,
+            "contact_id": "CONTACT-1",
+            "time_s": 3877.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -2.838963053449946,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2202.8948024275883,
+              808.239337283539,
+              1.031297525703607
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6849",
+            "sequence": 6849,
+            "contact_id": "CONTACT-1",
+            "time_s": 3878.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -2.838783848063562,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2204.8884496151104,
+              811.7068533933439,
+              1.0670366070252335
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6850",
+            "sequence": 6850,
+            "contact_id": "CONTACT-1",
+            "time_s": 3879.0
+          },
+          {
+            "mode": "passive",
+            "bearing_rad": -2.768560273044753,
+            "bearing_sigma": 0.03490658503988659,
+            "observer_pose": [
+              2206.7523834744825,
+              815.2457506067296,
+              1.1053502555520314
+            ],
+            "observer_id": "UUV-6",
+            "generation": 1,
+            "observers": [
+              "UUV-6"
+            ],
+            "source": "sensor",
+            "sample_id": "obs-6851",
+            "sequence": 6851,
+            "contact_id": "CONTACT-1",
+            "time_s": 3880.0
+          }
+        ],
+        "vessel_class": "underwater",
+        "tracking_streak": 0,
+        "observers": [
+          "UUV-6"
+        ],
+        "geometry_quality": 0,
+        "estimated_position": [
+          20.280897353982688,
+          32.28266447573207
+        ],
+        "estimated_velocity": [
+          0.018574891867927636,
+          0.017629147568221072
+        ]
+      }
+    ],
+    "bearing_lines": []
+  },
+  "assets": [
+    {
+      "url": "http://127.0.0.1:5180/assets/background.png",
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "url": "http://127.0.0.1:5180/assets/uuv.png?v=20260922",
+      "width": 578,
+      "height": 900
+    },
+    {
+      "url": "http://127.0.0.1:5180/assets/carrier.png?v=20260801",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "url": "http://127.0.0.1:5180/assets/destroyer.png?v=20260801",
+      "width": 1024,
+      "height": 1536
+    }
+  ],
+  "metrics_text": "有效协同跟踪 / s\n2780\n丢失时长 / s\n34\n已完成接替\n1\n已发起接替\n1\n轮换次数\n1\n搜索艇\n3\n搜索区\n3\n覆盖率 / %\n100\n未扫描积压 / 格\n0\n近30分钟覆盖率 / %\n87.5\n30分钟重访及时率 / %\n87.5\n接替成功率 / %\n100\n常驻授权策略 · 已授权",
+  "elapsed_wall_s": 135.923
+}

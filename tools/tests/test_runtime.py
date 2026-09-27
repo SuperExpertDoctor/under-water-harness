@@ -64,7 +64,7 @@ def test_idempotency_stale_episode_and_stop(runtime):
 
 
 def test_invalid_members_rejected(runtime):
-    for members in [["UUV-1"] * 2, ["UUV-1", "UUV-2", "UUV-3", "UUV-4"], ["unknown"]]:
+    for members in [["UUV-1"] * 2, [f"UUV-{i}" for i in range(1, 10)], ["unknown"]]:
         with pytest.raises(MissionError):
             runtime.calculate("plan_search", {"members": members})
 

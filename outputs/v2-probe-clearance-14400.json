@@ -1,0 +1,1821 @@
+{
+  "schema": "uuv-v2-acceptance/v1",
+  "passed": false,
+  "run_completed": false,
+  "model_connected": false,
+  "requested_sim_seconds": 14400.0,
+  "requested_wall_seconds": 0,
+  "scenario": "default-eight-search-auto-cooperative-tracking",
+  "seed": 42,
+  "fault_injections": [],
+  "failures": [
+    {
+      "time_s": 2250.6,
+      "reason": "runtime_not_running"
+    }
+  ],
+  "pauses": [
+    {
+      "time_s": 2250.6,
+      "status": "safety_paused",
+      "recent_events": [
+        {
+          "id": 24,
+          "episode_id": "mission-4befc95a66c4",
+          "time": 31.133333333333333,
+          "type": "contact_state_changed",
+          "data": {
+            "contact_id": "CONTACT-1",
+            "state": "degraded",
+            "observers": [
+              "UUV-1",
+              "UUV-5"
+            ]
+          }
+        },
+        {
+          "id": 25,
+          "episode_id": "mission-4befc95a66c4",
+          "time": 33.9,
+          "type": "tracking_established",
+          "data": {
+            "contact_id": "CONTACT-1",
+            "state": "tracking",
+            "observers": [
+              "UUV-1",
+              "UUV-5"
+            ]
+          }
+        },
+        {
+          "id": 26,
+          "episode_id": "mission-4befc95a66c4",
+          "time": 37.18,
+          "type": "search_complete",
+          "data": {
+            "uav_id": "UUV-8",
+            "plan_id": "plan-126224d0e0d2"
+          }
+        },
+        {
+          "id": 27,
+          "episode_id": "mission-4befc95a66c4",
+          "time": 37.51,
+          "type": "control_infeasible",
+          "data": {
+            "uuv_id": "UUV-3",
+            "pose": [
+              1492.9234782427377,
+              3365.440277724881,
+              1.464128600091985
+            ],
+            "kind": "search",
+            "phase": "scanning",
+            "preferred_curvature": -0.0019247541497156343,
+            "route_index": 612,
+            "route_point": [
+              1493.0398848758016,
+              3365.790930848877,
+              1.4219063791853994
+            ],
+            "nearest_peer_m": 107.06925040707759,
+            "contacts": [
+              {
+                "x": 1691.4194464135305,
+                "y": 3465.940243622442,
+                "uncertainty_m": 3.447079972250491
+              }
+            ]
+          }
+        },
+        {
+          "id": 28,
+          "episode_id": "mission-4befc95a66c4",
+          "time": 37.51,
+          "type": "safety_infeasible",
+          "data": {}
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "id": 1,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 0.0,
+      "type": "permission_changed",
+      "data": {
+        "mode": "full"
+      }
+    },
+    {
+      "id": 2,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 0.0,
+      "type": "tool_result",
+      "data": {
+        "tool": "plan_search",
+        "result_id": "result-817701f564db",
+        "status": "succeeded"
+      }
+    },
+    {
+      "id": 3,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 0.0,
+      "type": "mission_assignment_committed",
+      "data": {
+        "plan_id": "plan-126224d0e0d2",
+        "members": [
+          "UUV-1",
+          "UUV-2",
+          "UUV-3",
+          "UUV-4",
+          "UUV-5",
+          "UUV-6",
+          "UUV-7",
+          "UUV-8"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 0.0,
+      "type": "simulation_started",
+      "data": {}
+    },
+    {
+      "id": 5,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 0.5,
+      "type": "agent_queued",
+      "data": {
+        "run_id": "run-0193c618d75a",
+        "source": "periodic"
+      }
+    },
+    {
+      "id": 6,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 12.066666666666666,
+      "type": "contact_created",
+      "data": {
+        "contact_id": "CONTACT-1"
+      }
+    },
+    {
+      "id": 7,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 12.1,
+      "type": "contact_state_changed",
+      "data": {
+        "contact_id": "CONTACT-1",
+        "state": "confirmed",
+        "observers": [
+          "UUV-5"
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 12.1,
+      "type": "target_found",
+      "data": {
+        "contact_id": "CONTACT-1"
+      }
+    },
+    {
+      "id": 9,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 12.1,
+      "type": "tool_result",
+      "data": {
+        "tool": "plan_tracking",
+        "result_id": "result-64ec98f6fc79",
+        "status": "succeeded"
+      }
+    },
+    {
+      "id": 10,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 12.1,
+      "type": "coverage_repartitioned",
+      "data": {
+        "regions": 6,
+        "reason": "tracking_assignment"
+      }
+    },
+    {
+      "id": 11,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 12.1,
+      "type": "mission_assignment_committed",
+      "data": {
+        "plan_id": "plan-a6a32eca5529",
+        "members": [
+          "UUV-1",
+          "UUV-5"
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 12.116666666666667,
+      "type": "contact_state_changed",
+      "data": {
+        "contact_id": "CONTACT-1",
+        "state": "degraded",
+        "observers": [
+          "UUV-5"
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 13.733333333333333,
+      "type": "tracking_position_reached",
+      "data": {
+        "uuv_id": "UUV-5",
+        "contact_id": "CONTACT-1"
+      }
+    },
+    {
+      "id": 14,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 13.75,
+      "type": "target_lost",
+      "data": {
+        "contact_id": "CONTACT-1",
+        "state": "lost",
+        "observers": [
+          "UUV-5"
+        ]
+      }
+    },
+    {
+      "id": 15,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 14.166666666666666,
+      "type": "contact_state_changed",
+      "data": {
+        "contact_id": "CONTACT-1",
+        "state": "degraded",
+        "observers": [
+          "UUV-5"
+        ]
+      }
+    },
+    {
+      "id": 16,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 16.0,
+      "type": "tracking_established",
+      "data": {
+        "contact_id": "CONTACT-1",
+        "state": "tracking",
+        "observers": [
+          "UUV-1",
+          "UUV-5"
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 22.383333333333333,
+      "type": "contact_state_changed",
+      "data": {
+        "contact_id": "CONTACT-1",
+        "state": "degraded",
+        "observers": [
+          "UUV-1",
+          "UUV-5"
+        ]
+      }
+    },
+    {
+      "id": 18,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 22.95,
+      "type": "tracking_established",
+      "data": {
+        "contact_id": "CONTACT-1",
+        "state": "tracking",
+        "observers": [
+          "UUV-1",
+          "UUV-5"
+        ]
+      }
+    },
+    {
+      "id": 19,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 25.6,
+      "type": "search_complete",
+      "data": {
+        "uav_id": "UUV-8",
+        "plan_id": "plan-126224d0e0d2"
+      }
+    },
+    {
+      "id": 20,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 26.31,
+      "type": "search_complete",
+      "data": {
+        "uav_id": "UUV-3",
+        "plan_id": "plan-126224d0e0d2"
+      }
+    },
+    {
+      "id": 21,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 26.586666666666666,
+      "type": "search_complete",
+      "data": {
+        "uav_id": "UUV-2",
+        "plan_id": "plan-126224d0e0d2"
+      }
+    },
+    {
+      "id": 22,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 26.703333333333333,
+      "type": "search_complete",
+      "data": {
+        "uav_id": "UUV-4",
+        "plan_id": "plan-126224d0e0d2"
+      }
+    },
+    {
+      "id": 23,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 30.59333333333333,
+      "type": "search_complete",
+      "data": {
+        "uav_id": "UUV-6",
+        "plan_id": "plan-126224d0e0d2"
+      }
+    },
+    {
+      "id": 24,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 31.133333333333333,
+      "type": "contact_state_changed",
+      "data": {
+        "contact_id": "CONTACT-1",
+        "state": "degraded",
+        "observers": [
+          "UUV-1",
+          "UUV-5"
+        ]
+      }
+    },
+    {
+      "id": 25,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 33.9,
+      "type": "tracking_established",
+      "data": {
+        "contact_id": "CONTACT-1",
+        "state": "tracking",
+        "observers": [
+          "UUV-1",
+          "UUV-5"
+        ]
+      }
+    },
+    {
+      "id": 26,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 37.18,
+      "type": "search_complete",
+      "data": {
+        "uav_id": "UUV-8",
+        "plan_id": "plan-126224d0e0d2"
+      }
+    },
+    {
+      "id": 27,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 37.51,
+      "type": "control_infeasible",
+      "data": {
+        "uuv_id": "UUV-3",
+        "pose": [
+          1492.9234782427377,
+          3365.440277724881,
+          1.464128600091985
+        ],
+        "kind": "search",
+        "phase": "scanning",
+        "preferred_curvature": -0.0019247541497156343,
+        "route_index": 612,
+        "route_point": [
+          1493.0398848758016,
+          3365.790930848877,
+          1.4219063791853994
+        ],
+        "nearest_peer_m": 107.06925040707759,
+        "contacts": [
+          {
+            "x": 1691.4194464135305,
+            "y": 3465.940243622442,
+            "uncertainty_m": 3.447079972250491
+          }
+        ]
+      }
+    },
+    {
+      "id": 28,
+      "episode_id": "mission-4befc95a66c4",
+      "time": 37.51,
+      "type": "safety_infeasible",
+      "data": {}
+    }
+  ],
+  "samples": [
+    {
+      "wall_s": 0.466,
+      "sim_s": 0.2,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 0,
+      "events_retained": 4,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 7700976
+    },
+    {
+      "wall_s": 1.075,
+      "sim_s": 60.2,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8030504
+    },
+    {
+      "wall_s": 1.635,
+      "sim_s": 120.2,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8162056
+    },
+    {
+      "wall_s": 2.193,
+      "sim_s": 180.4,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8162056
+    },
+    {
+      "wall_s": 2.744,
+      "sim_s": 240.4,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8396416
+    },
+    {
+      "wall_s": 3.29,
+      "sim_s": 300.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8396416
+    },
+    {
+      "wall_s": 3.849,
+      "sim_s": 360.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8602056
+    },
+    {
+      "wall_s": 4.412,
+      "sim_s": 420.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8602056
+    },
+    {
+      "wall_s": 4.99,
+      "sim_s": 480.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8622656
+    },
+    {
+      "wall_s": 5.559,
+      "sim_s": 540.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8622656
+    },
+    {
+      "wall_s": 6.129,
+      "sim_s": 600.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8622656
+    },
+    {
+      "wall_s": 6.696,
+      "sim_s": 660.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8622656
+    },
+    {
+      "wall_s": 7.26,
+      "sim_s": 720.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 8,
+      "jobs": 1,
+      "events_retained": 5,
+      "observations_retained": 0,
+      "peak_rss_kib": 151880,
+      "database_bytes": 8622656
+    },
+    {
+      "wall_s": 8.774,
+      "sim_s": 780.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 0.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 12,
+      "observations_retained": 57,
+      "peak_rss_kib": 151880,
+      "database_bytes": 10426944
+    },
+    {
+      "wall_s": 9.406,
+      "sim_s": 840.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 16.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 14,
+      "observations_retained": 86,
+      "peak_rss_kib": 151880,
+      "database_bytes": 11468056
+    },
+    {
+      "wall_s": 9.981,
+      "sim_s": 900.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 0.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 15,
+      "observations_retained": 137,
+      "peak_rss_kib": 151880,
+      "database_bytes": 11468056
+    },
+    {
+      "wall_s": 10.554,
+      "sim_s": 960.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 1.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 16,
+      "observations_retained": 200,
+      "peak_rss_kib": 151880,
+      "database_bytes": 11673648
+    },
+    {
+      "wall_s": 11.13,
+      "sim_s": 1020.6,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 61.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 16,
+      "observations_retained": 320,
+      "peak_rss_kib": 151880,
+      "database_bytes": 11673648
+    },
+    {
+      "wall_s": 11.715,
+      "sim_s": 1080.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 121.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 16,
+      "observations_retained": 440,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12076544
+    },
+    {
+      "wall_s": 12.294,
+      "sim_s": 1140.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 181.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 16,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12076544
+    },
+    {
+      "wall_s": 12.88,
+      "sim_s": 1200.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 241.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 16,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12385064
+    },
+    {
+      "wall_s": 13.47,
+      "sim_s": 1260.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 301.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 16,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12385064
+    },
+    {
+      "wall_s": 14.059,
+      "sim_s": 1320.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 361.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 16,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12385064
+    },
+    {
+      "wall_s": 14.643,
+      "sim_s": 1380.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 387.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 18,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12385064
+    },
+    {
+      "wall_s": 15.24,
+      "sim_s": 1440.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 447.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 18,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12385064
+    },
+    {
+      "wall_s": 15.831,
+      "sim_s": 1500.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 507.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 18,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12385064
+    },
+    {
+      "wall_s": 16.434,
+      "sim_s": 1560.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 567.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 19,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12385064
+    },
+    {
+      "wall_s": 17.01,
+      "sim_s": 1620.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 627.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 22,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12385064
+    },
+    {
+      "wall_s": 17.592,
+      "sim_s": 1680.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 687.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 22,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12385064
+    },
+    {
+      "wall_s": 18.182,
+      "sim_s": 1740.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 747.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 22,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12385064
+    },
+    {
+      "wall_s": 18.76,
+      "sim_s": 1800.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 807.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 22,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12389160
+    },
+    {
+      "wall_s": 19.343,
+      "sim_s": 1860.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 867.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 23,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12393256
+    },
+    {
+      "wall_s": 19.936,
+      "sim_s": 1920.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 874.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 24,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12393256
+    },
+    {
+      "wall_s": 20.515,
+      "sim_s": 1980.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 874.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 24,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12393256
+    },
+    {
+      "wall_s": 21.125,
+      "sim_s": 2040.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 881.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 25,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12393256
+    },
+    {
+      "wall_s": 21.707,
+      "sim_s": 2100.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 941.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 25,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12393256
+    },
+    {
+      "wall_s": 22.293,
+      "sim_s": 2160.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 1001.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 25,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12393256
+    },
+    {
+      "wall_s": 22.865,
+      "sim_s": 2220.8,
+      "status": "running",
+      "metrics": {
+        "effective_tracking_seconds": 1061.0,
+        "lost_seconds": 25.0,
+        "handoff_count": 0,
+        "rotation_count": 0
+      },
+      "search_regions": 6,
+      "jobs": 1,
+      "events_retained": 25,
+      "observations_retained": 500,
+      "peak_rss_kib": 151880,
+      "database_bytes": 12393256
+    }
+  ],
+  "calculations": [
+    {
+      "time_s": 0,
+      "tool": "plan_search",
+      "status": "succeeded",
+      "diagnostics": {
+        "free_cells": 1584,
+        "masked_cells": 16,
+        "unowned_cells": 0,
+        "method": "connected-workload-bisection",
+        "coverage_guarantee": false,
+        "local_repair": false
+      }
+    },
+    {
+      "time_s": 726.0,
+      "tool": "plan_tracking",
+      "status": "succeeded",
+      "members": [
+        "UUV-1",
+        "UUV-5"
+      ],
+      "diagnostics": {
+        "candidate_routes": 346,
+        "candidate_teams": 10036,
+        "geometry_quality": 0.9938150775336202,
+        "score": 173.26445450383733,
+        "energy_horizon_s": 600,
+        "solution_quality": "feasible",
+        "arrival_is_tracking_success": false
+      },
+      "assessment": {
+        "result_id": "result-64ec98f6fc79",
+        "valid": true,
+        "errors": [],
+        "risk": 0.6464880815323807,
+        "requires_approval": false
+      },
+      "receipt_status": "active"
+    }
+  ],
+  "fleet_size_min": 8,
+  "fleet_size_max": 8,
+  "search_region_counts": [
+    [
+      6,
+      6
+    ],
+    [
+      8,
+      8
+    ]
+  ],
+  "tracking_phases": [
+    "acquiring",
+    "reacquiring",
+    "tracking",
+    "transit"
+  ],
+  "confirmed_contact_time_s": 726.0,
+  "first_tracking_time_s": 960.0,
+  "min_remaining_range_m": 8997.603665888306,
+  "min_tracking_geometry": 0.3026970955531096,
+  "max_tracking_uncertainty_m": 16.666123337318037,
+  "invariant_ticks": 11254,
+  "peak_rss_kib_start": 151880,
+  "config": {
+    "width": 4000.0,
+    "height": 4000.0,
+    "cell": 100.0,
+    "speed": 4.0,
+    "radius": 60.0,
+    "sensor_range": 350.0,
+    "range_capacity": 18000.0,
+    "exit_reserve": 1200.0,
+    "separation": 40.0,
+    "dt": 0.2,
+    "simulation_speed": 10.0,
+    "seed": 42,
+    "model": "LongCat-2.0"
+  },
+  "sim_seconds": 2250.6,
+  "wall_seconds": 23.19182791514322,
+  "metrics": {
+    "effective_tracking_seconds": 1091.0,
+    "lost_seconds": 25.0,
+    "handoff_count": 0,
+    "rotation_count": 0
+  },
+  "final_status": "safety_paused",
+  "final_telemetry": [
+    {
+      "id": "UUV-1",
+      "pose": [
+        1611.0914141215155,
+        3703.4087113517335,
+        -2.4393122103448803
+      ],
+      "generation": 1,
+      "remaining_range_m": 8997.603665888306,
+      "capabilities": [
+        "active",
+        "passive"
+      ],
+      "sensor_mode": "passive",
+      "phase": "tracking",
+      "task": "track"
+    },
+    {
+      "id": "UUV-2",
+      "pose": [
+        849.9999999994386,
+        793.8197032936398,
+        -1.5707963266969232
+      ],
+      "generation": 1,
+      "remaining_range_m": 8997.60824064813,
+      "capabilities": [
+        "active",
+        "passive"
+      ],
+      "sensor_mode": "active",
+      "phase": "scanning",
+      "task": "search"
+    },
+    {
+      "id": "UUV-3",
+      "pose": [
+        1492.9234782427377,
+        3365.440277724881,
+        1.464128600091985
+      ],
+      "generation": 1,
+      "remaining_range_m": 8997.606150443591,
+      "capabilities": [
+        "active",
+        "passive"
+      ],
+      "sensor_mode": "active",
+      "phase": "scanning",
+      "task": "search"
+    },
+    {
+      "id": "UUV-4",
+      "pose": [
+        849.9999999999754,
+        2747.4237666688223,
+        -1.5707963267939775
+      ],
+      "generation": 1,
+      "remaining_range_m": 8997.609193155298,
+      "capabilities": [
+        "active",
+        "passive"
+      ],
+      "sensor_mode": "active",
+      "phase": "scanning",
+      "task": "search"
+    },
+    {
+      "id": "UUV-5",
+      "pose": [
+        1528.6769834127847,
+        3466.363571620735,
+        -2.0088964593308534
+      ],
+      "generation": 1,
+      "remaining_range_m": 8997.60714850641,
+      "capabilities": [
+        "active",
+        "passive"
+      ],
+      "sensor_mode": "passive",
+      "phase": "tracking",
+      "task": "track"
+    },
+    {
+      "id": "UUV-6",
+      "pose": [
+        2244.9723998258123,
+        1430.5665179141936,
+        -1.5241680854655166
+      ],
+      "generation": 1,
+      "remaining_range_m": 8997.609320532894,
+      "capabilities": [
+        "active",
+        "passive"
+      ],
+      "sensor_mode": "active",
+      "phase": "scanning",
+      "task": "search"
+    },
+    {
+      "id": "UUV-7",
+      "pose": [
+        2902.1313781580106,
+        3225.468616916451,
+        0.6240230529154722
+      ],
+      "generation": 1,
+      "remaining_range_m": 8997.606926398737,
+      "capabilities": [
+        "active",
+        "passive"
+      ],
+      "sensor_mode": "active",
+      "phase": "scanning",
+      "task": "search"
+    },
+    {
+      "id": "UUV-8",
+      "pose": [
+        3798.4638815801213,
+        1583.6660981214993,
+        -1.5059948440346136
+      ],
+      "generation": 1,
+      "remaining_range_m": 8997.608637232712,
+      "capabilities": [
+        "active",
+        "passive"
+      ],
+      "sensor_mode": "active",
+      "phase": "scanning",
+      "task": "search"
+    }
+  ],
+  "final_contacts": [
+    {
+      "x": 1691.4194464135305,
+      "y": 3465.940243622442,
+      "vx": -2.0642205710291575,
+      "vy": -1.4218021339352844,
+      "covariance": [
+        [
+          2.1041750309521783,
+          -0.815496664137303,
+          0.10571383360498601,
+          -0.025890945615464303
+        ],
+        [
+          -0.815496664137303,
+          2.20301938303953,
+          -0.02420896543134135,
+          0.11002429359161522
+        ],
+        [
+          0.10571383360498601,
+          -0.02420896543134135,
+          0.012384209837936935,
+          -0.0018528063574004235
+        ],
+        [
+          -0.025890945615464303,
+          0.11002429359161522,
+          -0.0018528063574004235,
+          0.012271644290882943
+        ]
+      ],
+      "estimate_time": 2250.0,
+      "uncertainty_m": 3.447079972250491,
+      "contact_id": "CONTACT-1",
+      "last_seen": 2250.0,
+      "state": "tracking",
+      "hits": [
+        2245.0,
+        2246.0,
+        2247.0,
+        2248.0,
+        2249.0,
+        2250.0
+      ],
+      "samples": [
+        {
+          "mode": "active",
+          "bearing_rad": 0.5030564609465298,
+          "bearing_sigma": 0.03490658503988659,
+          "range_m": 253.25619416706004,
+          "range_sigma": 4.0,
+          "observer_pose": [
+            1489.06981670046,
+            3339.323809898069,
+            1.4219063754453791
+          ],
+          "observer_id": "UUV-3",
+          "generation": 1,
+          "observers": [
+            "UUV-3"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2785",
+          "sequence": 2785,
+          "contact_id": "CONTACT-1",
+          "time_s": 2244.0,
+          "x": 1710.9508910230525,
+          "y": 3461.420037282194
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -0.10344546399499782,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1540.1691842848268,
+            3490.130172756245,
+            -2.0346777915094334
+          ],
+          "observer_id": "UUV-5",
+          "generation": 1,
+          "observers": [
+            "UUV-5"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2786",
+          "sequence": 2786,
+          "contact_id": "CONTACT-1",
+          "time_s": 2244.0
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -1.2637899476621306,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1628.2069937574004,
+            3717.8592033159953,
+            -2.4418999759635645
+          ],
+          "observer_id": "UUV-1",
+          "generation": 1,
+          "observers": [
+            "UUV-1"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2787",
+          "sequence": 2787,
+          "contact_id": "CONTACT-1",
+          "time_s": 2245.0
+        },
+        {
+          "mode": "active",
+          "bearing_rad": 0.5241712342248792,
+          "bearing_sigma": 0.03490658503988659,
+          "range_m": 251.07647860492634,
+          "range_sigma": 4.0,
+          "observer_pose": [
+            1489.6631785259435,
+            3343.279555307478,
+            1.421906375967048
+          ],
+          "observer_id": "UUV-3",
+          "generation": 1,
+          "observers": [
+            "UUV-3"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2788",
+          "sequence": 2788,
+          "contact_id": "CONTACT-1",
+          "time_s": 2245.0,
+          "x": 1707.02988621814,
+          "y": 3468.942248640484
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -0.06636400367402574,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1538.3868316828084,
+            3486.54922400613,
+            -2.030332248307489
+          ],
+          "observer_id": "UUV-5",
+          "generation": 1,
+          "observers": [
+            "UUV-5"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2789",
+          "sequence": 2789,
+          "contact_id": "CONTACT-1",
+          "time_s": 2245.0
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -1.300619883764802,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1625.1480246328642,
+            3715.281858425597,
+            -2.4409471423696063
+          ],
+          "observer_id": "UUV-1",
+          "generation": 1,
+          "observers": [
+            "UUV-1"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2790",
+          "sequence": 2790,
+          "contact_id": "CONTACT-1",
+          "time_s": 2246.0
+        },
+        {
+          "mode": "active",
+          "bearing_rad": 0.571012790859618,
+          "bearing_sigma": 0.03490658503988659,
+          "range_m": 242.11080422091914,
+          "range_sigma": 4.0,
+          "observer_pose": [
+            1490.2565403494252,
+            3347.235300717187,
+            1.4219063764498154
+          ],
+          "observer_id": "UUV-3",
+          "generation": 1,
+          "observers": [
+            "UUV-3"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2791",
+          "sequence": 2791,
+          "contact_id": "CONTACT-1",
+          "time_s": 2246.0,
+          "x": 1693.9574361177342,
+          "y": 3478.092423502646
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -0.09153135928138632,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1536.6207213641358,
+            3482.960237428194,
+            -2.0256195610153545
+          ],
+          "observer_id": "UUV-5",
+          "generation": 1,
+          "observers": [
+            "UUV-5"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2792",
+          "sequence": 2792,
+          "contact_id": "CONTACT-1",
+          "time_s": 2246.0
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -1.2609993769873946,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1622.0909693820533,
+            3712.702243569752,
+            -2.4404077804203115
+          ],
+          "observer_id": "UUV-1",
+          "generation": 1,
+          "observers": [
+            "UUV-1"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2793",
+          "sequence": 2793,
+          "contact_id": "CONTACT-1",
+          "time_s": 2247.0
+        },
+        {
+          "mode": "active",
+          "bearing_rad": 0.5241361316124277,
+          "bearing_sigma": 0.03490658503988659,
+          "range_m": 234.8488383560647,
+          "range_sigma": 4.0,
+          "observer_pose": [
+            1490.8499021710668,
+            3351.191046127172,
+            1.4219063768933773
+          ],
+          "observer_id": "UUV-3",
+          "generation": 1,
+          "observers": [
+            "UUV-3"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2794",
+          "sequence": 2794,
+          "contact_id": "CONTACT-1",
+          "time_s": 2247.0,
+          "x": 1694.1718341580013,
+          "y": 3468.7247385319174
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -0.03201072371559309,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1534.8703529056158,
+            3479.3635461457416,
+            -2.021557363817113
+          ],
+          "observer_id": "UUV-5",
+          "generation": 1,
+          "observers": [
+            "UUV-5"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2795",
+          "sequence": 2795,
+          "contact_id": "CONTACT-1",
+          "time_s": 2247.0
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -1.26501436732239,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1619.0346873603246,
+            3710.121712578737,
+            -2.4403388793411085
+          ],
+          "observer_id": "UUV-1",
+          "generation": 1,
+          "observers": [
+            "UUV-1"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2796",
+          "sequence": 2796,
+          "contact_id": "CONTACT-1",
+          "time_s": 2248.0
+        },
+        {
+          "mode": "active",
+          "bearing_rad": 0.484235067221993,
+          "bearing_sigma": 0.03490658503988659,
+          "range_m": 226.48427214378708,
+          "range_sigma": 4.0,
+          "observer_pose": [
+            1491.4432639910312,
+            3355.1467915374087,
+            1.4219063772979281
+          ],
+          "observer_id": "UUV-3",
+          "generation": 1,
+          "observers": [
+            "UUV-3"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2797",
+          "sequence": 2797,
+          "contact_id": "CONTACT-1",
+          "time_s": 2248.0,
+          "x": 1691.8889356775937,
+          "y": 3460.582355891301
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -0.025096219847591094,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1533.1337081046142,
+            3475.7602077295137,
+            -2.0179851656319214
+          ],
+          "observer_id": "UUV-5",
+          "generation": 1,
+          "observers": [
+            "UUV-5"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2798",
+          "sequence": 2798,
+          "contact_id": "CONTACT-1",
+          "time_s": 2248.0
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -1.2561414280065175,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1615.978369072741,
+            3707.541224541299,
+            -2.4404322418875033
+          ],
+          "observer_id": "UUV-1",
+          "generation": 1,
+          "observers": [
+            "UUV-1"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2799",
+          "sequence": 2799,
+          "contact_id": "CONTACT-1",
+          "time_s": 2249.0
+        },
+        {
+          "mode": "active",
+          "bearing_rad": 0.5003165695528593,
+          "bearing_sigma": 0.03490658503988659,
+          "range_m": 234.08592860662853,
+          "range_sigma": 4.0,
+          "observer_pose": [
+            1492.036625809476,
+            3359.1025369478734,
+            1.4219063776734422
+          ],
+          "observer_id": "UUV-3",
+          "generation": 1,
+          "observers": [
+            "UUV-3"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2800",
+          "sequence": 2800,
+          "contact_id": "CONTACT-1",
+          "time_s": 2249.0,
+          "x": 1697.4308168663015,
+          "y": 3471.3943365226414
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -0.11313495815811736,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1531.4089612453713,
+            3472.15115856086,
+            -2.014949332049983
+          ],
+          "observer_id": "UUV-5",
+          "generation": 1,
+          "observers": [
+            "UUV-5"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2801",
+          "sequence": 2801,
+          "contact_id": "CONTACT-1",
+          "time_s": 2249.0
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": -1.2101655084842835,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1612.9234735787347,
+            3704.9590526507836,
+            -2.439255005996856
+          ],
+          "observer_id": "UUV-1",
+          "generation": 1,
+          "observers": [
+            "UUV-1"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2802",
+          "sequence": 2802,
+          "contact_id": "CONTACT-1",
+          "time_s": 2250.0
+        },
+        {
+          "mode": "active",
+          "bearing_rad": 0.5285506270660426,
+          "bearing_sigma": 0.03490658503988659,
+          "range_m": 219.7916889620331,
+          "range_sigma": 4.0,
+          "observer_pose": [
+            1492.6247111817386,
+            3363.0590591776763,
+            1.4307952667586517
+          ],
+          "observer_id": "UUV-3",
+          "generation": 1,
+          "observers": [
+            "UUV-3"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2803",
+          "sequence": 2803,
+          "contact_id": "CONTACT-1",
+          "time_s": 2250.0,
+          "x": 1682.4233779822534,
+          "y": 3473.8961135301365
+        },
+        {
+          "mode": "passive",
+          "bearing_rad": 0.02311751628745342,
+          "bearing_sigma": 0.03490658503988659,
+          "observer_pose": [
+            1529.6972577616907,
+            3468.5359064350937,
+            -2.010780456187409
+          ],
+          "observer_id": "UUV-5",
+          "generation": 1,
+          "observers": [
+            "UUV-5"
+          ],
+          "source": "sensor",
+          "sample_id": "obs-2804",
+          "sequence": 2804,
+          "contact_id": "CONTACT-1",
+          "time_s": 2250.0
+        }
+      ],
+      "vessel_class": "underwater",
+      "tracking_streak": 219.0,
+      "observers": [
+        "UUV-1",
+        "UUV-3",
+        "UUV-5"
+      ],
+      "geometry_quality": 0.9449478766118763
+    }
+  ],
+  "final_generations": {
+    "UUV-1": 1,
+    "UUV-2": 1,
+    "UUV-3": 1,
+    "UUV-4": 1,
+    "UUV-5": 1,
+    "UUV-6": 1,
+    "UUV-7": 1,
+    "UUV-8": 1
+  },
+  "peak_rss_kib_end": 151880,
+  "acceptance_checks": {
+    "four_hours_simulated": false,
+    "thirty_minutes_wall": false,
+    "cooperative_tracking_established": true,
+    "tracking_transit_observed": true,
+    "at_least_two_rotations": false,
+    "invariants_and_continuation": false
+  }
+}

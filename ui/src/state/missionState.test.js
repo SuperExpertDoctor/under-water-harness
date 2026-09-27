@@ -3,6 +3,52 @@ import test from "node:test";
 import { mergeMissionState, mergeTelemetryFrame, mutationPayload, selectionToMeters, routeToCells } from "./missionState.js";
 import { applyInformationField, createInformationField, createInformationFieldModel, updateInformationField } from "./informationField.js";
 import { DEMO_FRAME } from "./demoFrame.js";
+import * as missionState from "./missionState.js";
+
+test("streamed messages merge by id without dropping prior messages or duplicating text", () => {
+  const prior = { episode_id: "a", cursor: 1, messages: [{ id: "user", text: "search" }, { id: "answer", text: "Plan", status: "streaming" }] };
+  const next = mergeMissionState(prior, { episode_id: "a", cursor: 2, messages: [{ id: "answer", text: "Plan ready", status: "completed" }] });
+  assert.equal(next.messages.length, 2);
+  assert.equal(next.messages[1].text, "Plan ready");
+  assert.equal(next.messages[1].status, "completed");
+});
+
+test("annotations preserve source identity and reject quotes outside the selected message", () => {
+  const message = { id: "m1", text: "Approve this search plan", plan_id: "p1" };
+  assert.equal(typeof missionState.annotationPayload, "function");
+  assert.deepEqual(missionState.annotationPayload(message, "this search"), { message_id: "m1", quote: "this search", plan_id: "p1" });
+  assert.equal(missionState.annotationPayload(message, "another message"), null);
+});
+
+test("generation rollover never interpolates a replacement from the departed boat", () => {
+  const previous = { id: "UUV-1", generation: 1, position: [39, 12] };
+  const current = { id: "UUV-1", generation: 2, position: [0, 20] };
+  assert.equal(typeof missionState.interpolateUuv, "function");
+  assert.deepEqual(missionState.interpolateUuv(previous, current, 0.5), current);
+  assert.deepEqual(missionState.interpolateUuv({ ...previous, generation: 2 }, current, 0.5).position, [19.5, 16]);
+});
+
+test("event filters use boat contact task and severity associations", () => {
+  const events = [{ id: 1, type: "tracking_established", data: { members: ["UUV-1"], contact_id: "c1", plan_id: "p1" } }, { id: 2, type: "tool_failed", level: "error", data: { uav_id: "UUV-2" } }];
+  assert.equal(typeof missionState.filterMissionEvents, "function");
+  assert.deepEqual(missionState.filterMissionEvents(events, { uuv: "UUV-1", contact: "c1", task: "p1" }), [events[0]]);
+  assert.deepEqual(missionState.filterMissionEvents(events, { level: "error" }), [events[1]]);
+});
+
+test("high frequency tool progress is grouped without merging approval decisions", () => {
+  assert.equal(typeof missionState.coalesceMissionEvents, "function");
+  const events = [
+    { id: 1, type: "tool_execution_update", data: { tool_call_id: "t1", text: "A" } },
+    { id: 2, type: "tool_execution_update", data: { tool_call_id: "t1", text: "B" } },
+    { id: 3, type: "approval_decided", data: { plan_id: "p1" } },
+    { id: 4, type: "approval_decided", data: { plan_id: "p1" } },
+  ];
+  const result = missionState.coalesceMissionEvents(events);
+  assert.equal(result.length, 3);
+  assert.equal(result[0].repeat_count, 2);
+  assert.equal(result[0].data.text, "B");
+  assert.equal(events[0].repeat_count, undefined);
+});
 
 test("reconnect deduplicates events and ignores older cursors", () => {
   const current = { episode_id: "a", cursor: 4, messages: [{ id: "m" }], events: [{ id: 4 }] };

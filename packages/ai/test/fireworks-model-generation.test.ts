@@ -65,7 +65,7 @@ function generateFireworksModels(
 
 describe("Fireworks model generation", () => {
 	// Regression for #9323: import catalog efforts and correct only the known omissions.
-	it("combines upstream effort and toggle metadata with narrow corrections", () => {
+	it("combines upstream effort and toggle metadata with narrow corrections", async () => {
 		const models = generateFireworksModels({
 			"deepseek-v4-flash-0731": [{ type: "toggle" }, { type: "effort", values: ["low", "high", "max"] }],
 			"deepseek-v4-flash-vision-exp": [{ type: "toggle" }, { type: "effort", values: ["low", "high", "max"] }],
@@ -100,6 +100,32 @@ describe("Fireworks model generation", () => {
 			if (!hasApi(model, "anthropic-messages")) throw new Error("Expected Messages model");
 			expect(model.compat?.allowEmptySignature).toBe(true);
 			expect(model.compat?.forceAdaptiveThinking).toBe(model.id.endsWith("kimi-k2p6") ? undefined : true);
+			// Keep historical transport coverage independent of the current provider catalog.
+			for (const level of getSupportedThinkingLevels(model)) {
+				let payload: Record<string, unknown> | undefined;
+				await streamSimple(
+					model,
+					normalizeContext({ messages: [{ role: "user", content: "test", timestamp: 0 }] }),
+					{
+						apiKey: "test-fireworks-key",
+						reasoning: level === "off" ? undefined : level,
+						onPayload: (value) => {
+							payload = value as Record<string, unknown>;
+							throw new Error("payload captured");
+						},
+					},
+				).result();
+				expect(payload).toBeDefined();
+				if (model.id.endsWith("kimi-k2p6")) {
+					expect(payload?.thinking).toMatchObject({ type: level === "off" ? "disabled" : "enabled" });
+					expect(payload?.output_config).toBeUndefined();
+				} else {
+					expect(payload?.thinking).toEqual(
+						level === "off" ? { type: "disabled" } : { type: "adaptive", display: "summarized" },
+					);
+					expect(payload?.output_config).toEqual(level === "off" ? undefined : { effort: level });
+				}
+			}
 		}
 		expect(models["accounts/fireworks/models/kimi-k2p6"].thinkingLevelMap).toBeUndefined();
 	});

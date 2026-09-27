@@ -1,0 +1,6032 @@
+{
+  "status": "failed",
+  "started_at": "2026-09-27T12:25:50.254689+00:00",
+  "events": [
+    {
+      "id": 4758,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.20666666666666,
+      "type": "message_start",
+      "data": {
+        "type": "message_start",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": ""
+      }
+    },
+    {
+      "id": 4759,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.20666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "**"
+      }
+    },
+    {
+      "id": 4760,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.20666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "周期性"
+      }
+    },
+    {
+      "id": 4761,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.20666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "审查：无变化"
+      }
+    },
+    {
+      "id": 4762,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.20666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "，维持现状。"
+      }
+    },
+    {
+      "id": 4763,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.20666666666666,
+      "type": "agent_queued",
+      "data": {
+        "run_id": "run-4eee555a1489",
+        "source": "human"
+      }
+    },
+    {
+      "id": 4764,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.20666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "**\n\n- **CON"
+      }
+    },
+    {
+      "id": 4765,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.25666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "TACT-1:**"
+      }
+    },
+    {
+      "id": 4766,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.25666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": " tracking，tracking_st"
+      }
+    },
+    {
+      "id": 4767,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.25666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "reak=26"
+      }
+    },
+    {
+      "id": 4768,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.25666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "6，geometry_qu"
+      }
+    },
+    {
+      "id": 4769,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.25666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "ality=0."
+      }
+    },
+    {
+      "id": 4770,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.25666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "49\n-"
+      }
+    },
+    {
+      "id": 4771,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.25666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": " **目标位置:**"
+      }
+    },
+    {
+      "id": 4772,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.25666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": " (185"
+      }
+    },
+    {
+      "id": 4773,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.25666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "2, 3"
+      }
+    },
+    {
+      "id": 4774,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.25666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "629)"
+      }
+    },
+    {
+      "id": 4775,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.25666666666666,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "，速度 (-2"
+      }
+    },
+    {
+      "id": 4776,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.28999999999999,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": ".08,"
+      }
+    },
+    {
+      "id": 4777,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.28999999999999,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": " 0.0"
+      }
+    },
+    {
+      "id": 4778,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.28999999999999,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "9) m/s（几乎"
+      }
+    },
+    {
+      "id": 4779,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.28999999999999,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "水平"
+      }
+    },
+    {
+      "id": 4780,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.28999999999999,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "向左），不确定度"
+      }
+    },
+    {
+      "id": 4781,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.28999999999999,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": " 4.6"
+      }
+    },
+    {
+      "id": 4782,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.28999999999999,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "m\n- **"
+      }
+    },
+    {
+      "id": 4783,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.28999999999999,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "跟踪"
+      }
+    },
+    {
+      "id": 4784,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.28999999999999,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "团队:** UUV"
+      }
+    },
+    {
+      "id": 4785,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.28999999999999,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "-5 + U"
+      }
+    },
+    {
+      "id": 4786,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.28999999999999,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "UV-8，"
+      }
+    },
+    {
+      "id": 4787,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.32333333333332,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "双船被动跟踪"
+      }
+    },
+    {
+      "id": 4788,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.32333333333332,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "（hits 5"
+      }
+    },
+    {
+      "id": 4789,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.32333333333332,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "876-"
+      }
+    },
+    {
+      "id": 4790,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.32333333333332,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "5885"
+      }
+    },
+    {
+      "id": 4791,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.32333333333332,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "）\n- **"
+      }
+    },
+    {
+      "id": 4792,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.32333333333332,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "搜索计划:** plan"
+      }
+    },
+    {
+      "id": 4793,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.32333333333332,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "-7aead"
+      }
+    },
+    {
+      "id": 4794,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.32333333333332,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "4d22"
+      }
+    },
+    {
+      "id": 4795,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.32333333333332,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "174 "
+      }
+    },
+    {
+      "id": 4796,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.32333333333332,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "正常 active\n"
+      }
+    },
+    {
+      "id": 4797,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.32333333333332,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "- **有效跟踪"
+      }
+    },
+    {
+      "id": 4798,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.35666666666665,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "时间:** 3"
+      }
+    },
+    {
+      "id": 4799,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.35666666666665,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "129秒"
+      }
+    },
+    {
+      "id": 4800,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.35666666666665,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "（累计52"
+      }
+    },
+    {
+      "id": 4801,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.35666666666665,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "分0"
+      }
+    },
+    {
+      "id": 4802,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.35666666666665,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "9秒）\n"
+      }
+    },
+    {
+      "id": 4803,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.35666666666665,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "- **模拟状态"
+      }
+    },
+    {
+      "id": 4804,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.35666666666665,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": ":** running\n\n一切"
+      }
+    },
+    {
+      "id": 4805,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.35666666666665,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "正常，无需变更"
+      }
+    },
+    {
+      "id": 4806,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.35666666666665,
+      "type": "message_update",
+      "data": {
+        "type": "message_update",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "run_id": "run-4eee555a1489",
+        "text": "。"
+      }
+    },
+    {
+      "id": 4807,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.35666666666665,
+      "type": "message_end",
+      "data": {
+        "type": "message_end",
+        "message_id": "run-4eee555a1489:assistant:2",
+        "status": "completed",
+        "run_id": "run-4eee555a1489",
+        "text": "**周期性审查：无变化，维持现状。**\n\n- **CONTACT-1:** tracking，tracking_streak=266，geometry_quality=0.49\n- **目标位置:** (1852, 3629)，速度 (-2.08, 0.09) m/s（几乎水平向左），不确定度 4.6m\n- **跟踪团队:** UUV-5 + UUV-8，双船被动跟踪（hits 5876-5885）\n- **搜索计划:** plan-7aead4d22174 正常 active\n- **有效跟踪时间:** 3129秒（累计52分09秒）\n- **模拟状态:** running\n\n一切正常，无需变更。"
+      }
+    },
+    {
+      "id": 4808,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.35666666666665,
+      "type": "agent_end",
+      "data": {
+        "type": "agent_end",
+        "will_retry": false,
+        "run_id": "run-4eee555a1489",
+        "text": ""
+      }
+    },
+    {
+      "id": 4809,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.39,
+      "type": "agent_settled",
+      "data": {
+        "type": "agent_settled",
+        "run_id": "run-4eee555a1489",
+        "text": ""
+      }
+    },
+    {
+      "id": 4810,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.39,
+      "type": "agent_queued",
+      "data": {
+        "run_id": "run-1f00d6a95430",
+        "source": "feedback"
+      }
+    },
+    {
+      "id": 4811,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.39,
+      "type": "agent_completed",
+      "data": {
+        "run_id": "run-4eee555a1489",
+        "error": null
+      }
+    },
+    {
+      "id": 4812,
+      "episode_id": "mission-840cff9d1fa8",
+      "time": 98.40666666666667,
+      "type": "agent_started",
+      "data": {
+        "run_id": "run-1f00d6a95430"
+      }
+    }
+  ],
+  "states": [
+    {
+      "episode_id": "mission-840cff9d1fa8",
+      "frame_id": 29472,
+      "sim_time_min": 98.24,
+      "runtime_status": "running",
+      "mission_revision": 21,
+      "autonomy_mode": "full",
+      "agent_status": {
+        "status": "running",
+        "model": "LongCat-2.0",
+        "cycle": 47,
+        "error": null
+      },
+      "standing_policy": {
+        "enabled": true,
+        "energy_rotation": true,
+        "local_repair": true,
+        "lost_reacquire": true,
+        "plan_id": "plan-7aead4d22174"
+      },
+      "mission_metrics": {
+        "effective_tracking_seconds": 3138.0,
+        "lost_seconds": 1366.0,
+        "handoff_count": 1,
+        "handoff_attempts": 1,
+        "rotation_count": 8,
+        "search_boats": 6,
+        "search_regions": 6,
+        "coverage_pct": 100.0,
+        "unscanned_cells": 0,
+        "recent_coverage_pct": 93.56060606060606,
+        "revisit_timeliness_pct": 93.56060606060606,
+        "handoff_success_rate": 100.0
+      },
+      "teams": [
+        {
+          "id": "plan-b6477a6efe19",
+          "members": [
+            "UUV-5",
+            "UUV-8"
+          ],
+          "task": "track"
+        },
+        {
+          "id": "region-UUV-1",
+          "members": [
+            "UUV-1"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-2",
+          "members": [
+            "UUV-2"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-3",
+          "members": [
+            "UUV-3"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-4",
+          "members": [
+            "UUV-4"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-6",
+          "members": [
+            "UUV-6"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-7",
+          "members": [
+            "UUV-7"
+          ],
+          "task": "search"
+        }
+      ],
+      "contacts": [
+        {
+          "x": 1840.190273282785,
+          "y": 3622.4931286848905,
+          "vx": -1.8226330485721676,
+          "vy": -0.2015332835854448,
+          "covariance": [
+            [
+              5.656018440961108,
+              3.15769567641674,
+              0.2175978484165601,
+              0.11735182798997448
+            ],
+            [
+              3.15769567641674,
+              6.432507000652018,
+              0.09664766933449437,
+              0.27367842202624393
+            ],
+            [
+              0.2175978484165601,
+              0.09664766933449437,
+              0.015681795040246506,
+              0.0036495286728986604
+            ],
+            [
+              0.11735182798997448,
+              0.27367842202624393,
+              0.0036495286728986604,
+              0.01782141441441955
+            ]
+          ],
+          "estimate_time": 5894.0,
+          "uncertainty_m": 6.074779512416032,
+          "contact_id": "CONTACT-1",
+          "last_seen": 5894.0,
+          "state": "tracking",
+          "hits": [
+            5889.0,
+            5890.0,
+            5891.0,
+            5892.0,
+            5893.0,
+            5894.0
+          ],
+          "samples": [
+            {
+              "mode": "passive",
+              "bearing_rad": -2.083603451590955,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1955.1168604339337,
+                3803.1732563560663,
+                2.985775659460723
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7939",
+              "sequence": 7939,
+              "contact_id": "CONTACT-1",
+              "time_s": 5885.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.4784105002157728,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1636.4905920159658,
+                3503.9555803013086,
+                -1.7742611322293853
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7940",
+              "sequence": 7940,
+              "contact_id": "CONTACT-1",
+              "time_s": 5885.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.040435949103795,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1951.16126694249,
+                3803.767432667302,
+                2.999042368097016
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7941",
+              "sequence": 7941,
+              "contact_id": "CONTACT-1",
+              "time_s": 5886.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5132775049438189,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1635.7311048031322,
+                3500.028450966468,
+                -1.7492458956456405
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7942",
+              "sequence": 7942,
+              "contact_id": "CONTACT-1",
+              "time_s": 5886.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.9677295226393592,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1947.1982975212136,
+                3804.3102576092842,
+                3.0117254016075328
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7943",
+              "sequence": 7943,
+              "contact_id": "CONTACT-1",
+              "time_s": 5887.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.49383481948253605,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1635.0722157955533,
+                3496.0832060044318,
+                -1.72315767284145
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7944",
+              "sequence": 7944,
+              "contact_id": "CONTACT-1",
+              "time_s": 5887.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.0295436855357067,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1943.22883471161,
+                3804.8033704443906,
+                3.0241179017496362
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7945",
+              "sequence": 7945,
+              "contact_id": "CONTACT-1",
+              "time_s": 5888.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.4929784801167182,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1634.521788297079,
+                3492.121397334594,
+                -1.6944132805984664
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7946",
+              "sequence": 7946,
+              "contact_id": "CONTACT-1",
+              "time_s": 5888.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.0354102889834507,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1939.2535738908553,
+                3805.247327426607,
+                3.036476157725302
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7947",
+              "sequence": 7947,
+              "contact_id": "CONTACT-1",
+              "time_s": 5889.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.47698649653022246,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1634.0862186218687,
+                3488.1453254042713,
+                -1.665287474750462
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7948",
+              "sequence": 7948,
+              "contact_id": "CONTACT-1",
+              "time_s": 5889.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.025937970283356,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1935.2730650087356,
+                3805.6414521339448,
+                3.0491682612616953
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7949",
+              "sequence": 7949,
+              "contact_id": "CONTACT-1",
+              "time_s": 5890.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.497280007388637,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.7662108457023,
+                3484.1582864100046,
+                -1.6363682493754905
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7950",
+              "sequence": 7950,
+              "contact_id": "CONTACT-1",
+              "time_s": 5890.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.0514266921376194,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1931.2878258447968,
+                3805.984445147289,
+                3.062148000869442
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7951",
+              "sequence": 7951,
+              "contact_id": "CONTACT-1",
+              "time_s": 5891.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5368853941936165,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.5607418715465,
+                3480.163702463031,
+                -1.6078867189027848
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7952",
+              "sequence": 7952,
+              "contact_id": "CONTACT-1",
+              "time_s": 5891.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.0137355390014093,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1927.2984554629188,
+                3806.2754704522545,
+                3.0752321702213488
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7953",
+              "sequence": 7953,
+              "contact_id": "CONTACT-1",
+              "time_s": 5892.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5502514969067113,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.4658540442074,
+                3476.164948475261,
+                -1.5810143812619326
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7954",
+              "sequence": 7954,
+              "contact_id": "CONTACT-1",
+              "time_s": 5892.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.9915891826287602,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1923.3056099158723,
+                3806.514119846329,
+                3.088392818255035
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7955",
+              "sequence": 7955,
+              "contact_id": "CONTACT-1",
+              "time_s": 5893.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5727314327044153,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.4769122010212,
+                3472.1650774372865,
+                -1.5548987127441847
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7956",
+              "sequence": 7956,
+              "contact_id": "CONTACT-1",
+              "time_s": 5893.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.9190119198092808,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1919.3099718857954,
+                3806.700256253,
+                3.1015268381951837
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7957",
+              "sequence": 7957,
+              "contact_id": "CONTACT-1",
+              "time_s": 5894.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5858144335244411,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.5914899296895,
+                3468.166828561585,
+                -1.5292398077956448
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7958",
+              "sequence": 7958,
+              "contact_id": "CONTACT-1",
+              "time_s": 5894.0
+            }
+          ],
+          "vessel_class": "underwater",
+          "tracking_streak": 275.0,
+          "observers": [
+            "UUV-5",
+            "UUV-8"
+          ],
+          "geometry_quality": 0.49994799461393424,
+          "estimated_position": [
+            17.90190273282785,
+            3.2750687131510947
+          ],
+          "estimated_velocity": [
+            -0.018226330485721677,
+            0.002015332835854448
+          ]
+        }
+      ],
+      "bearing_lines": [
+        {
+          "from": [
+            18.733056099158723,
+            1.4348588015367114
+          ],
+          "to": [
+            17.303361144661025,
+            4.629537554883254
+          ],
+          "observer_id": "UUV-5",
+          "contact_id": "CONTACT-1"
+        },
+        {
+          "from": [
+            15.834769122010211,
+            4.778349225627135
+          ],
+          "to": [
+            18.77625265922308,
+            2.8815955251415697
+          ],
+          "observer_id": "UUV-8",
+          "contact_id": "CONTACT-1"
+        },
+        {
+          "from": [
+            18.693099718857955,
+            1.4329974374699987
+          ],
+          "to": [
+            17.49882608164968,
+            4.722938239288369
+          ],
+          "observer_id": "UUV-5",
+          "contact_id": "CONTACT-1"
+        },
+        {
+          "from": [
+            15.835914899296895,
+            4.818331714384149
+          ],
+          "to": [
+            18.75233217840857,
+            2.8832580067185063
+          ],
+          "observer_id": "UUV-8",
+          "contact_id": "CONTACT-1"
+        }
+      ],
+      "plans": [
+        {
+          "status": "superseded",
+          "algorithm": "strip-sweep-dubins-loops-v1",
+          "diagnostics": {
+            "solution_quality": "feasible",
+            "coverage_guarantee": false
+          },
+          "kind": "search",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "fleet_plan": true,
+          "regions": [
+            {
+              "id": "region-UUV-1",
+              "owner": "UUV-1",
+              "bbox_m": [
+                0.0,
+                0,
+                500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-2",
+              "owner": "UUV-2",
+              "bbox_m": [
+                500.0,
+                0,
+                1000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-3",
+              "owner": "UUV-3",
+              "bbox_m": [
+                1000.0,
+                0,
+                1500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-4",
+              "owner": "UUV-4",
+              "bbox_m": [
+                1500.0,
+                0,
+                2000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-5",
+              "owner": "UUV-5",
+              "bbox_m": [
+                2000.0,
+                0,
+                2500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-6",
+              "owner": "UUV-6",
+              "bbox_m": [
+                2500.0,
+                0,
+                3000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-7",
+              "owner": "UUV-7",
+              "bbox_m": [
+                3000.0,
+                0,
+                3500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-8",
+              "owner": "UUV-8",
+              "bbox_m": [
+                3500.0,
+                0,
+                4000.0,
+                4000
+              ]
+            }
+          ],
+          "partial_region_update": true,
+          "standing_policy": true,
+          "result_id": "result-40186eea0b89",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 0,
+          "snapshot_id": 0,
+          "members": [
+            "UUV-1",
+            "UUV-2",
+            "UUV-3",
+            "UUV-4",
+            "UUV-5",
+            "UUV-6",
+            "UUV-7",
+            "UUV-8"
+          ],
+          "created_at_s": 0.0,
+          "assignments": {
+            "UUV-1": null,
+            "UUV-2": null,
+            "UUV-3": null,
+            "UUV-4": null,
+            "UUV-5": null,
+            "UUV-6": null,
+            "UUV-7": null,
+            "UUV-8": null
+          },
+          "generations": {
+            "UUV-1": 1,
+            "UUV-2": 1,
+            "UUV-3": 1,
+            "UUV-4": 1,
+            "UUV-5": 1,
+            "UUV-6": 1,
+            "UUV-7": 1,
+            "UUV-8": 1
+          },
+          "region_signatures": {
+            "UUV-4": null,
+            "UUV-7": null,
+            "UUV-2": null,
+            "UUV-6": null,
+            "UUV-5": null,
+            "UUV-1": null,
+            "UUV-8": null,
+            "UUV-3": null
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-a141dae61bb5",
+          "risk": 0.2,
+          "policy_version": 1,
+          "expires_at_s": 600.0,
+          "fallback": "repeat_approved_closed_route",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "risk_threshold",
+          "active_members": []
+        },
+        {
+          "status": "expired",
+          "members": [
+            "UUV-5",
+            "UUV-6"
+          ],
+          "slots": {
+            "UUV-5": {
+              "index": 1,
+              "pose": [
+                2409.2282825863895,
+                1646.2987278281526,
+                1.8631924714902808
+              ],
+              "eta_s": 163.21031397689032,
+              "angle_rad": 0.7853981633974483,
+              "radius_m": 220.0,
+              "length_m": 652.8412559075613,
+              "endurance_s": 3280.8972179914826,
+              "generation": 1
+            },
+            "UUV-6": {
+              "index": 7,
+              "pose": [
+                2489.625473732383,
+                1316.984845806467,
+                0.7139044700359708
+              ],
+              "eta_s": 175.40296678945003,
+              "angle_rad": 5.497787143782138,
+              "radius_m": 280.0,
+              "length_m": 701.6118671578001,
+              "endurance_s": 3337.151291331139,
+              "generation": 1
+            }
+          },
+          "diagnostics": {
+            "candidate_routes": 384,
+            "candidate_teams": 10410,
+            "geometry_quality": 0.9899636402092391,
+            "score": 209.1817347735695,
+            "energy_horizon_s": 600,
+            "solution_quality": "feasible",
+            "arrival_is_tracking_success": false
+          },
+          "acquisition_mode": "active_until_cooperative_geometry",
+          "acquisition_requirements": {
+            "min_active_observers": 2,
+            "eligible_members": [
+              "UUV-5",
+              "UUV-6"
+            ]
+          },
+          "kind": "track",
+          "contact_id": "CONTACT-1",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "repair_assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "repair_generations": {
+            "UUV-1": 1,
+            "UUV-2": 1,
+            "UUV-3": 1,
+            "UUV-4": 1,
+            "UUV-7": 1,
+            "UUV-8": 1
+          },
+          "result_id": "result-887d62dce10b",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 1,
+          "snapshot_id": 2541,
+          "created_at_s": 508.2,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-5": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-5": 1,
+            "UUV-6": 1
+          },
+          "region_signatures": {
+            "UUV-4": "f4e214fc80e029ebdb0a6b90ce20a9bf435f5f090550a9115a88e3c73939c3cf",
+            "UUV-7": "188b777b7c99d79da96b167db75d6e47cf05673b0edf7f7c03555b6471138edb",
+            "UUV-6": "af279ca024fc88806e0e89d76ae751191cb71911d81f1a01b5c78e8942ab2f25",
+            "UUV-2": "8552cd0f09f7c9a0d72e303838f3d095d182f2e05ea77e47a7200e92266d3316",
+            "UUV-5": "9ffab5bfc70fcf8709ca2c97e4fa64d81392c593691ee808f009cad5d8509e04",
+            "UUV-1": "10806cece569c14073bea9ab32bee5eac11ee5052e52233e5de51ff2385a33d1",
+            "UUV-3": "1edfa9720ac138ffe91e6bfb8148d5379782eed1770e39032ab6a802091fdd65",
+            "UUV-8": "3385f7b33cef913e879cf2749d7d65f802823d90bc63f1123b61d77d68227100"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-287b5e9a6782",
+          "risk": 0.6332861388525146,
+          "policy_version": 2,
+          "expires_at_s": 1108.2,
+          "fallback": "authorized_active_reacquisition",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "human_required"
+        },
+        {
+          "status": "superseded",
+          "members": [
+            "UUV-5",
+            "UUV-6"
+          ],
+          "slots": {
+            "UUV-5": {
+              "index": 1,
+              "pose": [
+                2409.2282825863895,
+                1646.2987278281526,
+                1.8631924714902808
+              ],
+              "eta_s": 163.21031397689032,
+              "angle_rad": 0.7853981633974483,
+              "radius_m": 220.0,
+              "length_m": 652.8412559075613,
+              "endurance_s": 3280.8972179914826,
+              "generation": 1
+            },
+            "UUV-6": {
+              "index": 7,
+              "pose": [
+                2489.625473732383,
+                1316.984845806467,
+                0.7139044700359708
+              ],
+              "eta_s": 175.40296678945003,
+              "angle_rad": 5.497787143782138,
+              "radius_m": 280.0,
+              "length_m": 701.6118671578001,
+              "endurance_s": 3337.151291331139,
+              "generation": 1
+            }
+          },
+          "diagnostics": {
+            "candidate_routes": 384,
+            "candidate_teams": 10410,
+            "geometry_quality": 0.9899636402092391,
+            "score": 209.1817347735695,
+            "energy_horizon_s": 600,
+            "solution_quality": "feasible",
+            "arrival_is_tracking_success": false
+          },
+          "acquisition_mode": "active_until_cooperative_geometry",
+          "acquisition_requirements": {
+            "min_active_observers": 2,
+            "eligible_members": [
+              "UUV-5",
+              "UUV-6"
+            ]
+          },
+          "kind": "track",
+          "contact_id": "CONTACT-1",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "repair_assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "repair_generations": {
+            "UUV-1": 1,
+            "UUV-2": 1,
+            "UUV-3": 1,
+            "UUV-4": 1,
+            "UUV-7": 1,
+            "UUV-8": 1
+          },
+          "result_id": "result-71486511963e",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 1,
+          "snapshot_id": 2541,
+          "created_at_s": 508.2,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-5": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-5": 1,
+            "UUV-6": 1
+          },
+          "region_signatures": {
+            "UUV-4": "f4e214fc80e029ebdb0a6b90ce20a9bf435f5f090550a9115a88e3c73939c3cf",
+            "UUV-7": "188b777b7c99d79da96b167db75d6e47cf05673b0edf7f7c03555b6471138edb",
+            "UUV-6": "af279ca024fc88806e0e89d76ae751191cb71911d81f1a01b5c78e8942ab2f25",
+            "UUV-2": "8552cd0f09f7c9a0d72e303838f3d095d182f2e05ea77e47a7200e92266d3316",
+            "UUV-5": "9ffab5bfc70fcf8709ca2c97e4fa64d81392c593691ee808f009cad5d8509e04",
+            "UUV-1": "10806cece569c14073bea9ab32bee5eac11ee5052e52233e5de51ff2385a33d1",
+            "UUV-3": "1edfa9720ac138ffe91e6bfb8148d5379782eed1770e39032ab6a802091fdd65",
+            "UUV-8": "3385f7b33cef913e879cf2749d7d65f802823d90bc63f1123b61d77d68227100"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-e4e47e055c2a",
+          "risk": 0.6332861388525146,
+          "policy_version": 2,
+          "expires_at_s": 1108.2,
+          "fallback": "authorized_active_reacquisition",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "human_required",
+          "active_members": [],
+          "active_generations": {
+            "UUV-7": 1,
+            "UUV-6": 1
+          }
+        },
+        {
+          "status": "active",
+          "members": [
+            "UUV-5",
+            "UUV-8"
+          ],
+          "slots": {
+            "UUV-5": {
+              "index": 2,
+              "pose": [
+                2459.5767853692614,
+                3251.479971597057,
+                2.849719967289843
+              ],
+              "eta_s": 77.344734809349,
+              "angle_rad": 1.5707963267948966,
+              "radius_m": 280.0,
+              "length_m": 309.378939237396,
+              "endurance_s": 2218.926694194721,
+              "generation": 2
+            },
+            "UUV-8": {
+              "index": 0,
+              "pose": [
+                2751.5410200745605,
+                2959.5606104667154,
+                1.864019186864066
+              ],
+              "eta_s": 73.27860457005147,
+              "angle_rad": 0.0,
+              "radius_m": 280.0,
+              "length_m": 293.1144182802059,
+              "endurance_s": 2691.4134057538927,
+              "generation": 2
+            }
+          },
+          "diagnostics": {
+            "candidate_routes": 295,
+            "candidate_teams": 1013,
+            "geometry_quality": 0.9826568089984281,
+            "score": 95.00309181622404,
+            "energy_horizon_s": 600,
+            "solution_quality": "feasible",
+            "arrival_is_tracking_success": false
+          },
+          "acquisition_mode": "active_until_cooperative_geometry",
+          "acquisition_requirements": {
+            "min_active_observers": 2,
+            "eligible_members": [
+              "UUV-5",
+              "UUV-8"
+            ]
+          },
+          "kind": "track",
+          "contact_id": "CONTACT-1",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "repair_assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5"
+          },
+          "repair_generations": {
+            "UUV-1": 2,
+            "UUV-2": 2,
+            "UUV-3": 2,
+            "UUV-4": 2,
+            "UUV-6": 2,
+            "UUV-7": 2
+          },
+          "result_id": "result-be2e6d1e7e15",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 19,
+          "snapshot_id": 27183,
+          "created_at_s": 5436.6,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-5": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-5": 2,
+            "UUV-8": 2
+          },
+          "region_signatures": {
+            "UUV-4": "5284fe255bacc8814ce3fd4e8d4e7a7743bf38afcf01168fc067627c3d296863",
+            "UUV-7": "1757101bfcbcf5c8aa299839c4baa56a8fd1c609e98c9f03698a90ce34ea5c34",
+            "UUV-6": "1fe3c2fcf9864ecdb27ebe01469d89d1a3ba236b75ed8b0eb65f21e704a08372",
+            "UUV-2": "085ae0f78d5017a510dd5800275d1812d35619d7793aece9770d889a6253f927",
+            "UUV-5": "5b8d11f0a1cd2115d01b825472fd8a048729c20fb1d0952dfde3c9cb90105b73",
+            "UUV-1": "ede5d4556283ad1ed0b12055145c99bbb86af82aaf3bff526502a91296e6efd8",
+            "UUV-3": "27a3b4f3aa93c5a85412dc6949bd4c432c2d3084422c416034417ab4b31cf754",
+            "UUV-8": "45dfa262d35c135cd50948b8aad67a27e4a0a5688d4050c3423dcb7643dbe1c7"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-b6477a6efe19",
+          "risk": 0.6899126187519528,
+          "policy_version": 3,
+          "expires_at_s": 6036.6,
+          "fallback": "authorized_active_reacquisition",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "risk_threshold",
+          "active_members": [
+            "UUV-5",
+            "UUV-8"
+          ]
+        },
+        {
+          "status": "active",
+          "algorithm": "strip-sweep-dubins-loops-v1",
+          "diagnostics": {
+            "solution_quality": "feasible",
+            "coverage_guarantee": false
+          },
+          "kind": "search",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "fleet_plan": true,
+          "regions": [
+            {
+              "id": "region-UUV-1",
+              "owner": "UUV-1",
+              "bbox_m": [
+                0.0,
+                0,
+                666.6666666666666,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-2",
+              "owner": "UUV-2",
+              "bbox_m": [
+                666.6666666666666,
+                0,
+                1333.3333333333333,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-3",
+              "owner": "UUV-3",
+              "bbox_m": [
+                1333.3333333333333,
+                0,
+                2000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-4",
+              "owner": "UUV-4",
+              "bbox_m": [
+                2000.0,
+                0,
+                2666.6666666666665,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-6",
+              "owner": "UUV-6",
+              "bbox_m": [
+                2666.6666666666665,
+                0,
+                3333.333333333333,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-7",
+              "owner": "UUV-7",
+              "bbox_m": [
+                3333.333333333333,
+                0,
+                4000.0,
+                4000
+              ]
+            }
+          ],
+          "partial_region_update": true,
+          "standing_policy": true,
+          "result_id": "result-f1733689e7f6",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 20,
+          "snapshot_id": 28993,
+          "members": [
+            "UUV-1",
+            "UUV-2",
+            "UUV-3",
+            "UUV-4",
+            "UUV-6",
+            "UUV-7"
+          ],
+          "created_at_s": 5799.8,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-1": 2,
+            "UUV-2": 2,
+            "UUV-3": 2,
+            "UUV-4": 2,
+            "UUV-6": 2,
+            "UUV-7": 2
+          },
+          "region_signatures": {
+            "UUV-4": "ba0c5cafd78a40edd8ae571cb4f6a0361af21c30e000db093ebfd37595fa8cf4",
+            "UUV-1": "ede5d4556283ad1ed0b12055145c99bbb86af82aaf3bff526502a91296e6efd8",
+            "UUV-2": "085ae0f78d5017a510dd5800275d1812d35619d7793aece9770d889a6253f927",
+            "UUV-7": "1757101bfcbcf5c8aa299839c4baa56a8fd1c609e98c9f03698a90ce34ea5c34",
+            "UUV-3": "27a3b4f3aa93c5a85412dc6949bd4c432c2d3084422c416034417ab4b31cf754",
+            "UUV-6": "28f9b27aae9ec10977e3efb1f663247155bef4bc49af83586445e7889bc34c44"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-7aead4d22174",
+          "risk": 0.2767376670676967,
+          "policy_version": 4,
+          "expires_at_s": 6413.2,
+          "fallback": "repeat_approved_closed_route",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "risk_threshold",
+          "active_members": [
+            "UUV-1",
+            "UUV-2",
+            "UUV-3",
+            "UUV-4",
+            "UUV-6",
+            "UUV-7"
+          ]
+        }
+      ],
+      "pending_approvals": [],
+      "event_cursor": 4764,
+      "uavs": [
+        {
+          "id": "UUV-1",
+          "position": [
+            2.294738544345175,
+            30.7744158080117
+          ],
+          "heading_rad": 1.624129119343379,
+          "generation": 2,
+          "remaining_range_m": 10793.606171358431,
+          "energy_pct": 59.964478729769056,
+          "speed_mps": 4,
+          "heading_deg": 266.9442560773252,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-1",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-2",
+          "position": [
+            29.458990046720572,
+            25.54437841670506
+          ],
+          "heading_rad": 2.568509657778948,
+          "generation": 2,
+          "remaining_range_m": 10768.811217649054,
+          "energy_pct": 59.82672898693918,
+          "speed_mps": 4,
+          "heading_deg": 212.83523697067486,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-2",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-3",
+          "position": [
+            2.967421890438984,
+            18.12807890098172
+          ],
+          "heading_rad": 1.1089340653509925,
+          "generation": 2,
+          "remaining_range_m": 10804.006803706989,
+          "energy_pct": 60.02226002059439,
+          "speed_mps": 4,
+          "heading_deg": 296.4627582971035,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-3",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-4",
+          "position": [
+            17.29202991196891,
+            7.422891736726224
+          ],
+          "heading_rad": 1.4937904074892032,
+          "generation": 2,
+          "remaining_range_m": 10936.808346079459,
+          "energy_pct": 60.760046367108096,
+          "speed_mps": 4,
+          "heading_deg": 274.4121141737412,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-4",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-5",
+          "position": [
+            18.677110929495086,
+            1.4323990936777682
+          ],
+          "heading_rad": -3.106827521174568,
+          "generation": 2,
+          "remaining_range_m": 8702.407393697638,
+          "energy_pct": 48.34670774276466,
+          "speed_mps": 4,
+          "heading_deg": 178.00810463839414,
+          "sensor_mode": "passive",
+          "task_phase": "tracking",
+          "status": "tracking",
+          "operation_mode": "track",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": null,
+          "team_id": "plan-b6477a6efe19",
+          "target_group_id": "CONTACT-1",
+          "task_visual": {
+            "task_type": "track",
+            "phase": "track",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-6",
+          "position": [
+            29.17962682012535,
+            22.967056559029405
+          ],
+          "heading_rad": 1.6284615013963453,
+          "generation": 2,
+          "remaining_range_m": 10900.009613271044,
+          "energy_pct": 60.55560896261691,
+          "speed_mps": 4,
+          "heading_deg": 266.696028870452,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-6",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-7",
+          "position": [
+            6.004662343817862,
+            31.375190624512353
+          ],
+          "heading_rad": 0.24420317184321957,
+          "generation": 2,
+          "remaining_range_m": 10836.806857550677,
+          "energy_pct": 60.20448254194821,
+          "speed_mps": 4,
+          "heading_deg": 346.00818890967554,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-7",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-8",
+          "position": [
+            15.836664899602482,
+            4.834314050322105
+          ],
+          "heading_rad": 1.5185506395561954,
+          "generation": 2,
+          "remaining_range_m": 10868.008363148747,
+          "energy_pct": 60.37782423971526,
+          "speed_mps": 4,
+          "heading_deg": 272.99345737653806,
+          "sensor_mode": "passive",
+          "task_phase": "tracking",
+          "status": "tracking",
+          "operation_mode": "track",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": null,
+          "team_id": "plan-b6477a6efe19",
+          "target_group_id": "CONTACT-1",
+          "task_visual": {
+            "task_type": "track",
+            "phase": "track",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        }
+      ],
+      "search_regions": [
+        {
+          "id": "region-UUV-1",
+          "bbox": [
+            0.0,
+            0.0,
+            6.666666666666666,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-1",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-2",
+          "bbox": [
+            6.666666666666666,
+            0.0,
+            13.333333333333332,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-2",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-3",
+          "bbox": [
+            13.333333333333332,
+            0.0,
+            20.0,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-3",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-4",
+          "bbox": [
+            20.0,
+            0.0,
+            26.666666666666664,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-4",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-6",
+          "bbox": [
+            26.666666666666664,
+            0.0,
+            33.33333333333333,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-6",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-7",
+          "bbox": [
+            33.33333333333333,
+            0.0,
+            40.0,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-7",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        }
+      ],
+      "phase": "moving_human_replan"
+    },
+    {
+      "episode_id": "mission-840cff9d1fa8",
+      "frame_id": 29492,
+      "sim_time_min": 98.30666666666666,
+      "runtime_status": "running",
+      "mission_revision": 21,
+      "autonomy_mode": "full",
+      "agent_status": {
+        "status": "running",
+        "model": "LongCat-2.0",
+        "cycle": 47,
+        "error": null
+      },
+      "standing_policy": {
+        "enabled": true,
+        "energy_rotation": true,
+        "local_repair": true,
+        "lost_reacquire": true,
+        "plan_id": "plan-7aead4d22174"
+      },
+      "mission_metrics": {
+        "effective_tracking_seconds": 3142.0,
+        "lost_seconds": 1366.0,
+        "handoff_count": 1,
+        "handoff_attempts": 1,
+        "rotation_count": 8,
+        "search_boats": 6,
+        "search_regions": 6,
+        "coverage_pct": 100.0,
+        "unscanned_cells": 0,
+        "recent_coverage_pct": 93.56060606060606,
+        "revisit_timeliness_pct": 93.56060606060606,
+        "handoff_success_rate": 100.0
+      },
+      "teams": [
+        {
+          "id": "plan-b6477a6efe19",
+          "members": [
+            "UUV-5",
+            "UUV-8"
+          ],
+          "task": "track"
+        },
+        {
+          "id": "region-UUV-1",
+          "members": [
+            "UUV-1"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-2",
+          "members": [
+            "UUV-2"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-3",
+          "members": [
+            "UUV-3"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-4",
+          "members": [
+            "UUV-4"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-6",
+          "members": [
+            "UUV-6"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-7",
+          "members": [
+            "UUV-7"
+          ],
+          "task": "search"
+        }
+      ],
+      "contacts": [
+        {
+          "x": 1834.0808130082662,
+          "y": 3617.9697533661333,
+          "vx": -1.7567552856032627,
+          "vy": -0.3556174638214662,
+          "covariance": [
+            [
+              5.941068873369065,
+              4.004865429872668,
+              0.21901783985045137,
+              0.136460386476948
+            ],
+            [
+              4.004865429872668,
+              8.167482002082451,
+              0.11255390798827475,
+              0.32006522833576906
+            ],
+            [
+              0.21901783985045137,
+              0.11255390798827475,
+              0.015600063084379131,
+              0.003982028901031139
+            ],
+            [
+              0.136460386476948,
+              0.32006522833576906,
+              0.003982028901031139,
+              0.01910219541511113
+            ]
+          ],
+          "estimate_time": 5898.0,
+          "uncertainty_m": 6.696559705683855,
+          "contact_id": "CONTACT-1",
+          "last_seen": 5898.0,
+          "state": "tracking",
+          "hits": [
+            5893.0,
+            5894.0,
+            5895.0,
+            5896.0,
+            5897.0,
+            5898.0
+          ],
+          "samples": [
+            {
+              "mode": "passive",
+              "bearing_rad": -2.0354102889834507,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1939.2535738908553,
+                3805.247327426607,
+                3.036476157725302
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7947",
+              "sequence": 7947,
+              "contact_id": "CONTACT-1",
+              "time_s": 5889.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.47698649653022246,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1634.0862186218687,
+                3488.1453254042713,
+                -1.665287474750462
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7948",
+              "sequence": 7948,
+              "contact_id": "CONTACT-1",
+              "time_s": 5889.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.025937970283356,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1935.2730650087356,
+                3805.6414521339448,
+                3.0491682612616953
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7949",
+              "sequence": 7949,
+              "contact_id": "CONTACT-1",
+              "time_s": 5890.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.497280007388637,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.7662108457023,
+                3484.1582864100046,
+                -1.6363682493754905
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7950",
+              "sequence": 7950,
+              "contact_id": "CONTACT-1",
+              "time_s": 5890.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.0514266921376194,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1931.2878258447968,
+                3805.984445147289,
+                3.062148000869442
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7951",
+              "sequence": 7951,
+              "contact_id": "CONTACT-1",
+              "time_s": 5891.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5368853941936165,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.5607418715465,
+                3480.163702463031,
+                -1.6078867189027848
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7952",
+              "sequence": 7952,
+              "contact_id": "CONTACT-1",
+              "time_s": 5891.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -2.0137355390014093,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1927.2984554629188,
+                3806.2754704522545,
+                3.0752321702213488
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7953",
+              "sequence": 7953,
+              "contact_id": "CONTACT-1",
+              "time_s": 5892.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5502514969067113,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.4658540442074,
+                3476.164948475261,
+                -1.5810143812619326
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7954",
+              "sequence": 7954,
+              "contact_id": "CONTACT-1",
+              "time_s": 5892.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.9915891826287602,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1923.3056099158723,
+                3806.514119846329,
+                3.088392818255035
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7955",
+              "sequence": 7955,
+              "contact_id": "CONTACT-1",
+              "time_s": 5893.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5727314327044153,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.4769122010212,
+                3472.1650774372865,
+                -1.5548987127441847
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7956",
+              "sequence": 7956,
+              "contact_id": "CONTACT-1",
+              "time_s": 5893.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.9190119198092808,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1919.3099718857954,
+                3806.700256253,
+                3.1015268381951837
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7957",
+              "sequence": 7957,
+              "contact_id": "CONTACT-1",
+              "time_s": 5894.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5858144335244411,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.5914899296895,
+                3468.166828561585,
+                -1.5292398077956448
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7958",
+              "sequence": 7958,
+              "contact_id": "CONTACT-1",
+              "time_s": 5894.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.9696126087291115,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1915.3122454215047,
+                3806.834268938924,
+                3.114481056140109
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7959",
+              "sequence": 7959,
+              "contact_id": "CONTACT-1",
+              "time_s": 5895.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5670883706705827,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.8112854535284,
+                3464.172993401639,
+                -1.5022589665261825
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7960",
+              "sequence": 7960,
+              "contact_id": "CONTACT-1",
+              "time_s": 5895.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.937803250236258,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1911.3131001080012,
+                3806.915482660457,
+                3.1279289222187376
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7961",
+              "sequence": 7961,
+              "contact_id": "CONTACT-1",
+              "time_s": 5896.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5782638525150191,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1634.136780984823,
+                3460.1863718925138,
+                -1.4762555559800217
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7962",
+              "sequence": 7962,
+              "contact_id": "CONTACT-1",
+              "time_s": 5896.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.945463731898812,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1907.3132201831033,
+                3806.941998546558,
+                -3.1413586429487514
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7963",
+              "sequence": 7963,
+              "contact_id": "CONTACT-1",
+              "time_s": 5897.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.6458454541925924,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1634.564969712687,
+                3456.2094657810208,
+                -1.4506798259377909
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7964",
+              "sequence": 7964,
+              "contact_id": "CONTACT-1",
+              "time_s": 5897.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.911745920060702,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1903.3133541514637,
+                3806.9133337957323,
+                -3.1276629619055996
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7965",
+              "sequence": 7965,
+              "contact_id": "CONTACT-1",
+              "time_s": 5898.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.6026851474293645,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1635.0927945378899,
+                3452.2445454912568,
+                -1.426062720541781
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7966",
+              "sequence": 7966,
+              "contact_id": "CONTACT-1",
+              "time_s": 5898.0
+            }
+          ],
+          "vessel_class": "underwater",
+          "tracking_streak": 279.0,
+          "observers": [
+            "UUV-5",
+            "UUV-8"
+          ],
+          "geometry_quality": 0.5013191068014471,
+          "estimated_position": [
+            17.840808130082664,
+            3.3203024663386667
+          ],
+          "estimated_velocity": [
+            -0.017567552856032627,
+            0.003556174638214662
+          ]
+        }
+      ],
+      "bearing_lines": [
+        {
+          "from": [
+            18.573132201831033,
+            1.430580014534421
+          ],
+          "to": [
+            17.292261608214712,
+            4.687782882396505
+          ],
+          "observer_id": "UUV-5",
+          "contact_id": "CONTACT-1"
+        },
+        {
+          "from": [
+            15.84564969712687,
+            4.937905342189793
+          ],
+          "to": [
+            18.6407188819639,
+            2.8313469518349303
+          ],
+          "observer_id": "UUV-8",
+          "contact_id": "CONTACT-1"
+        },
+        {
+          "from": [
+            18.533133541514637,
+            1.4308666620426767
+          ],
+          "to": [
+            17.36279592855699,
+            4.729398134030871
+          ],
+          "observer_id": "UUV-5",
+          "contact_id": "CONTACT-1"
+        },
+        {
+          "from": [
+            15.8509279453789,
+            4.977554545087433
+          ],
+          "to": [
+            18.734285671248628,
+            2.993556504597641
+          ],
+          "observer_id": "UUV-8",
+          "contact_id": "CONTACT-1"
+        }
+      ],
+      "plans": [
+        {
+          "status": "superseded",
+          "algorithm": "strip-sweep-dubins-loops-v1",
+          "diagnostics": {
+            "solution_quality": "feasible",
+            "coverage_guarantee": false
+          },
+          "kind": "search",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "fleet_plan": true,
+          "regions": [
+            {
+              "id": "region-UUV-1",
+              "owner": "UUV-1",
+              "bbox_m": [
+                0.0,
+                0,
+                500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-2",
+              "owner": "UUV-2",
+              "bbox_m": [
+                500.0,
+                0,
+                1000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-3",
+              "owner": "UUV-3",
+              "bbox_m": [
+                1000.0,
+                0,
+                1500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-4",
+              "owner": "UUV-4",
+              "bbox_m": [
+                1500.0,
+                0,
+                2000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-5",
+              "owner": "UUV-5",
+              "bbox_m": [
+                2000.0,
+                0,
+                2500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-6",
+              "owner": "UUV-6",
+              "bbox_m": [
+                2500.0,
+                0,
+                3000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-7",
+              "owner": "UUV-7",
+              "bbox_m": [
+                3000.0,
+                0,
+                3500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-8",
+              "owner": "UUV-8",
+              "bbox_m": [
+                3500.0,
+                0,
+                4000.0,
+                4000
+              ]
+            }
+          ],
+          "partial_region_update": true,
+          "standing_policy": true,
+          "result_id": "result-40186eea0b89",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 0,
+          "snapshot_id": 0,
+          "members": [
+            "UUV-1",
+            "UUV-2",
+            "UUV-3",
+            "UUV-4",
+            "UUV-5",
+            "UUV-6",
+            "UUV-7",
+            "UUV-8"
+          ],
+          "created_at_s": 0.0,
+          "assignments": {
+            "UUV-1": null,
+            "UUV-2": null,
+            "UUV-3": null,
+            "UUV-4": null,
+            "UUV-5": null,
+            "UUV-6": null,
+            "UUV-7": null,
+            "UUV-8": null
+          },
+          "generations": {
+            "UUV-1": 1,
+            "UUV-2": 1,
+            "UUV-3": 1,
+            "UUV-4": 1,
+            "UUV-5": 1,
+            "UUV-6": 1,
+            "UUV-7": 1,
+            "UUV-8": 1
+          },
+          "region_signatures": {
+            "UUV-4": null,
+            "UUV-7": null,
+            "UUV-2": null,
+            "UUV-6": null,
+            "UUV-5": null,
+            "UUV-1": null,
+            "UUV-8": null,
+            "UUV-3": null
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-a141dae61bb5",
+          "risk": 0.2,
+          "policy_version": 1,
+          "expires_at_s": 600.0,
+          "fallback": "repeat_approved_closed_route",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "risk_threshold",
+          "active_members": []
+        },
+        {
+          "status": "expired",
+          "members": [
+            "UUV-5",
+            "UUV-6"
+          ],
+          "slots": {
+            "UUV-5": {
+              "index": 1,
+              "pose": [
+                2409.2282825863895,
+                1646.2987278281526,
+                1.8631924714902808
+              ],
+              "eta_s": 163.21031397689032,
+              "angle_rad": 0.7853981633974483,
+              "radius_m": 220.0,
+              "length_m": 652.8412559075613,
+              "endurance_s": 3280.8972179914826,
+              "generation": 1
+            },
+            "UUV-6": {
+              "index": 7,
+              "pose": [
+                2489.625473732383,
+                1316.984845806467,
+                0.7139044700359708
+              ],
+              "eta_s": 175.40296678945003,
+              "angle_rad": 5.497787143782138,
+              "radius_m": 280.0,
+              "length_m": 701.6118671578001,
+              "endurance_s": 3337.151291331139,
+              "generation": 1
+            }
+          },
+          "diagnostics": {
+            "candidate_routes": 384,
+            "candidate_teams": 10410,
+            "geometry_quality": 0.9899636402092391,
+            "score": 209.1817347735695,
+            "energy_horizon_s": 600,
+            "solution_quality": "feasible",
+            "arrival_is_tracking_success": false
+          },
+          "acquisition_mode": "active_until_cooperative_geometry",
+          "acquisition_requirements": {
+            "min_active_observers": 2,
+            "eligible_members": [
+              "UUV-5",
+              "UUV-6"
+            ]
+          },
+          "kind": "track",
+          "contact_id": "CONTACT-1",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "repair_assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "repair_generations": {
+            "UUV-1": 1,
+            "UUV-2": 1,
+            "UUV-3": 1,
+            "UUV-4": 1,
+            "UUV-7": 1,
+            "UUV-8": 1
+          },
+          "result_id": "result-887d62dce10b",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 1,
+          "snapshot_id": 2541,
+          "created_at_s": 508.2,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-5": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-5": 1,
+            "UUV-6": 1
+          },
+          "region_signatures": {
+            "UUV-4": "f4e214fc80e029ebdb0a6b90ce20a9bf435f5f090550a9115a88e3c73939c3cf",
+            "UUV-7": "188b777b7c99d79da96b167db75d6e47cf05673b0edf7f7c03555b6471138edb",
+            "UUV-6": "af279ca024fc88806e0e89d76ae751191cb71911d81f1a01b5c78e8942ab2f25",
+            "UUV-2": "8552cd0f09f7c9a0d72e303838f3d095d182f2e05ea77e47a7200e92266d3316",
+            "UUV-5": "9ffab5bfc70fcf8709ca2c97e4fa64d81392c593691ee808f009cad5d8509e04",
+            "UUV-1": "10806cece569c14073bea9ab32bee5eac11ee5052e52233e5de51ff2385a33d1",
+            "UUV-3": "1edfa9720ac138ffe91e6bfb8148d5379782eed1770e39032ab6a802091fdd65",
+            "UUV-8": "3385f7b33cef913e879cf2749d7d65f802823d90bc63f1123b61d77d68227100"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-287b5e9a6782",
+          "risk": 0.6332861388525146,
+          "policy_version": 2,
+          "expires_at_s": 1108.2,
+          "fallback": "authorized_active_reacquisition",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "human_required"
+        },
+        {
+          "status": "superseded",
+          "members": [
+            "UUV-5",
+            "UUV-6"
+          ],
+          "slots": {
+            "UUV-5": {
+              "index": 1,
+              "pose": [
+                2409.2282825863895,
+                1646.2987278281526,
+                1.8631924714902808
+              ],
+              "eta_s": 163.21031397689032,
+              "angle_rad": 0.7853981633974483,
+              "radius_m": 220.0,
+              "length_m": 652.8412559075613,
+              "endurance_s": 3280.8972179914826,
+              "generation": 1
+            },
+            "UUV-6": {
+              "index": 7,
+              "pose": [
+                2489.625473732383,
+                1316.984845806467,
+                0.7139044700359708
+              ],
+              "eta_s": 175.40296678945003,
+              "angle_rad": 5.497787143782138,
+              "radius_m": 280.0,
+              "length_m": 701.6118671578001,
+              "endurance_s": 3337.151291331139,
+              "generation": 1
+            }
+          },
+          "diagnostics": {
+            "candidate_routes": 384,
+            "candidate_teams": 10410,
+            "geometry_quality": 0.9899636402092391,
+            "score": 209.1817347735695,
+            "energy_horizon_s": 600,
+            "solution_quality": "feasible",
+            "arrival_is_tracking_success": false
+          },
+          "acquisition_mode": "active_until_cooperative_geometry",
+          "acquisition_requirements": {
+            "min_active_observers": 2,
+            "eligible_members": [
+              "UUV-5",
+              "UUV-6"
+            ]
+          },
+          "kind": "track",
+          "contact_id": "CONTACT-1",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "repair_assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "repair_generations": {
+            "UUV-1": 1,
+            "UUV-2": 1,
+            "UUV-3": 1,
+            "UUV-4": 1,
+            "UUV-7": 1,
+            "UUV-8": 1
+          },
+          "result_id": "result-71486511963e",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 1,
+          "snapshot_id": 2541,
+          "created_at_s": 508.2,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-5": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-5": 1,
+            "UUV-6": 1
+          },
+          "region_signatures": {
+            "UUV-4": "f4e214fc80e029ebdb0a6b90ce20a9bf435f5f090550a9115a88e3c73939c3cf",
+            "UUV-7": "188b777b7c99d79da96b167db75d6e47cf05673b0edf7f7c03555b6471138edb",
+            "UUV-6": "af279ca024fc88806e0e89d76ae751191cb71911d81f1a01b5c78e8942ab2f25",
+            "UUV-2": "8552cd0f09f7c9a0d72e303838f3d095d182f2e05ea77e47a7200e92266d3316",
+            "UUV-5": "9ffab5bfc70fcf8709ca2c97e4fa64d81392c593691ee808f009cad5d8509e04",
+            "UUV-1": "10806cece569c14073bea9ab32bee5eac11ee5052e52233e5de51ff2385a33d1",
+            "UUV-3": "1edfa9720ac138ffe91e6bfb8148d5379782eed1770e39032ab6a802091fdd65",
+            "UUV-8": "3385f7b33cef913e879cf2749d7d65f802823d90bc63f1123b61d77d68227100"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-e4e47e055c2a",
+          "risk": 0.6332861388525146,
+          "policy_version": 2,
+          "expires_at_s": 1108.2,
+          "fallback": "authorized_active_reacquisition",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "human_required",
+          "active_members": [],
+          "active_generations": {
+            "UUV-7": 1,
+            "UUV-6": 1
+          }
+        },
+        {
+          "status": "active",
+          "members": [
+            "UUV-5",
+            "UUV-8"
+          ],
+          "slots": {
+            "UUV-5": {
+              "index": 2,
+              "pose": [
+                2459.5767853692614,
+                3251.479971597057,
+                2.849719967289843
+              ],
+              "eta_s": 77.344734809349,
+              "angle_rad": 1.5707963267948966,
+              "radius_m": 280.0,
+              "length_m": 309.378939237396,
+              "endurance_s": 2218.926694194721,
+              "generation": 2
+            },
+            "UUV-8": {
+              "index": 0,
+              "pose": [
+                2751.5410200745605,
+                2959.5606104667154,
+                1.864019186864066
+              ],
+              "eta_s": 73.27860457005147,
+              "angle_rad": 0.0,
+              "radius_m": 280.0,
+              "length_m": 293.1144182802059,
+              "endurance_s": 2691.4134057538927,
+              "generation": 2
+            }
+          },
+          "diagnostics": {
+            "candidate_routes": 295,
+            "candidate_teams": 1013,
+            "geometry_quality": 0.9826568089984281,
+            "score": 95.00309181622404,
+            "energy_horizon_s": 600,
+            "solution_quality": "feasible",
+            "arrival_is_tracking_success": false
+          },
+          "acquisition_mode": "active_until_cooperative_geometry",
+          "acquisition_requirements": {
+            "min_active_observers": 2,
+            "eligible_members": [
+              "UUV-5",
+              "UUV-8"
+            ]
+          },
+          "kind": "track",
+          "contact_id": "CONTACT-1",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "repair_assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5"
+          },
+          "repair_generations": {
+            "UUV-1": 2,
+            "UUV-2": 2,
+            "UUV-3": 2,
+            "UUV-4": 2,
+            "UUV-6": 2,
+            "UUV-7": 2
+          },
+          "result_id": "result-be2e6d1e7e15",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 19,
+          "snapshot_id": 27183,
+          "created_at_s": 5436.6,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-5": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-5": 2,
+            "UUV-8": 2
+          },
+          "region_signatures": {
+            "UUV-4": "5284fe255bacc8814ce3fd4e8d4e7a7743bf38afcf01168fc067627c3d296863",
+            "UUV-7": "1757101bfcbcf5c8aa299839c4baa56a8fd1c609e98c9f03698a90ce34ea5c34",
+            "UUV-6": "1fe3c2fcf9864ecdb27ebe01469d89d1a3ba236b75ed8b0eb65f21e704a08372",
+            "UUV-2": "085ae0f78d5017a510dd5800275d1812d35619d7793aece9770d889a6253f927",
+            "UUV-5": "5b8d11f0a1cd2115d01b825472fd8a048729c20fb1d0952dfde3c9cb90105b73",
+            "UUV-1": "ede5d4556283ad1ed0b12055145c99bbb86af82aaf3bff526502a91296e6efd8",
+            "UUV-3": "27a3b4f3aa93c5a85412dc6949bd4c432c2d3084422c416034417ab4b31cf754",
+            "UUV-8": "45dfa262d35c135cd50948b8aad67a27e4a0a5688d4050c3423dcb7643dbe1c7"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-b6477a6efe19",
+          "risk": 0.6899126187519528,
+          "policy_version": 3,
+          "expires_at_s": 6036.6,
+          "fallback": "authorized_active_reacquisition",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "risk_threshold",
+          "active_members": [
+            "UUV-5",
+            "UUV-8"
+          ]
+        },
+        {
+          "status": "active",
+          "algorithm": "strip-sweep-dubins-loops-v1",
+          "diagnostics": {
+            "solution_quality": "feasible",
+            "coverage_guarantee": false
+          },
+          "kind": "search",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "fleet_plan": true,
+          "regions": [
+            {
+              "id": "region-UUV-1",
+              "owner": "UUV-1",
+              "bbox_m": [
+                0.0,
+                0,
+                666.6666666666666,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-2",
+              "owner": "UUV-2",
+              "bbox_m": [
+                666.6666666666666,
+                0,
+                1333.3333333333333,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-3",
+              "owner": "UUV-3",
+              "bbox_m": [
+                1333.3333333333333,
+                0,
+                2000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-4",
+              "owner": "UUV-4",
+              "bbox_m": [
+                2000.0,
+                0,
+                2666.6666666666665,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-6",
+              "owner": "UUV-6",
+              "bbox_m": [
+                2666.6666666666665,
+                0,
+                3333.333333333333,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-7",
+              "owner": "UUV-7",
+              "bbox_m": [
+                3333.333333333333,
+                0,
+                4000.0,
+                4000
+              ]
+            }
+          ],
+          "partial_region_update": true,
+          "standing_policy": true,
+          "result_id": "result-f1733689e7f6",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 20,
+          "snapshot_id": 28993,
+          "members": [
+            "UUV-1",
+            "UUV-2",
+            "UUV-3",
+            "UUV-4",
+            "UUV-6",
+            "UUV-7"
+          ],
+          "created_at_s": 5799.8,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-1": 2,
+            "UUV-2": 2,
+            "UUV-3": 2,
+            "UUV-4": 2,
+            "UUV-6": 2,
+            "UUV-7": 2
+          },
+          "region_signatures": {
+            "UUV-4": "ba0c5cafd78a40edd8ae571cb4f6a0361af21c30e000db093ebfd37595fa8cf4",
+            "UUV-1": "ede5d4556283ad1ed0b12055145c99bbb86af82aaf3bff526502a91296e6efd8",
+            "UUV-2": "085ae0f78d5017a510dd5800275d1812d35619d7793aece9770d889a6253f927",
+            "UUV-7": "1757101bfcbcf5c8aa299839c4baa56a8fd1c609e98c9f03698a90ce34ea5c34",
+            "UUV-3": "27a3b4f3aa93c5a85412dc6949bd4c432c2d3084422c416034417ab4b31cf754",
+            "UUV-6": "28f9b27aae9ec10977e3efb1f663247155bef4bc49af83586445e7889bc34c44"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-7aead4d22174",
+          "risk": 0.2767376670676967,
+          "policy_version": 4,
+          "expires_at_s": 6413.2,
+          "fallback": "repeat_approved_closed_route",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "risk_threshold",
+          "active_members": [
+            "UUV-1",
+            "UUV-2",
+            "UUV-3",
+            "UUV-4",
+            "UUV-6",
+            "UUV-7"
+          ]
+        }
+      ],
+      "pending_approvals": [],
+      "event_cursor": 4786,
+      "uavs": [
+        {
+          "id": "UUV-1",
+          "position": [
+            2.2866117639483163,
+            30.934209096273843
+          ],
+          "heading_rad": 1.6188528647701514,
+          "generation": 2,
+          "remaining_range_m": 10777.606171405158,
+          "energy_pct": 59.875589841139764,
+          "speed_mps": 4,
+          "heading_deg": 267.24656319600774,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-1",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-2",
+          "position": [
+            29.323689904430303,
+            25.629778493631036
+          ],
+          "heading_rad": 2.586747612353939,
+          "generation": 2,
+          "remaining_range_m": 10752.811218222809,
+          "energy_pct": 59.73784010123782,
+          "speed_mps": 4,
+          "heading_deg": 211.79027914657658,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-2",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-3",
+          "position": [
+            3.0387316459143325,
+            18.271309200633418
+          ],
+          "heading_rad": 1.1088050045095723,
+          "generation": 2,
+          "remaining_range_m": 10788.00680370702,
+          "energy_pct": 59.93337113170566,
+          "speed_mps": 4,
+          "heading_deg": 296.4701529386173,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-3",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-4",
+          "position": [
+            17.304338232550244,
+            7.582417613135785
+          ],
+          "heading_rad": 1.4938000911489986,
+          "generation": 2,
+          "remaining_range_m": 10920.808346079473,
+          "energy_pct": 60.6711574782193,
+          "speed_mps": 4,
+          "heading_deg": 274.4115593409047,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-4",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-5",
+          "position": [
+            18.51713583677217,
+            1.4311363257415997
+          ],
+          "heading_rad": 3.1218355534139226,
+          "generation": 2,
+          "remaining_range_m": 8686.407398660143,
+          "energy_pct": 48.25781888144524,
+          "speed_mps": 4,
+          "heading_deg": 181.13199845549457,
+          "sensor_mode": "passive",
+          "task_phase": "tracking",
+          "status": "tracking",
+          "operation_mode": "track",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": null,
+          "team_id": "plan-b6477a6efe19",
+          "target_group_id": "CONTACT-1",
+          "task_visual": {
+            "task_type": "track",
+            "phase": "track",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-6",
+          "position": [
+            29.17163804715622,
+            23.126855575087088
+          ],
+          "heading_rad": 1.6138943670946304,
+          "generation": 2,
+          "remaining_range_m": 10884.009613628801,
+          "energy_pct": 60.466720075715564,
+          "speed_mps": 4,
+          "heading_deg": 267.5306641855405,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-6",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-7",
+          "position": [
+            6.159476110024247,
+            31.41558646064901
+          ],
+          "heading_rad": 0.26432412327881133,
+          "generation": 2,
+          "remaining_range_m": 10820.806858246688,
+          "energy_pct": 60.11559365692604,
+          "speed_mps": 4,
+          "heading_deg": 344.8553433126284,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-7",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-8",
+          "position": [
+            15.85331090245117,
+            4.993376036028062
+          ],
+          "heading_rad": 1.4165265940522254,
+          "generation": 2,
+          "remaining_range_m": 10852.008380523632,
+          "energy_pct": 60.28893544735351,
+          "speed_mps": 4,
+          "heading_deg": 278.83900459276623,
+          "sensor_mode": "passive",
+          "task_phase": "tracking",
+          "status": "tracking",
+          "operation_mode": "track",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": null,
+          "team_id": "plan-b6477a6efe19",
+          "target_group_id": "CONTACT-1",
+          "task_visual": {
+            "task_type": "track",
+            "phase": "track",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        }
+      ],
+      "search_regions": [
+        {
+          "id": "region-UUV-1",
+          "bbox": [
+            0.0,
+            0.0,
+            6.666666666666666,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-1",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-2",
+          "bbox": [
+            6.666666666666666,
+            0.0,
+            13.333333333333332,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-2",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-3",
+          "bbox": [
+            13.333333333333332,
+            0.0,
+            20.0,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-3",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-4",
+          "bbox": [
+            20.0,
+            0.0,
+            26.666666666666664,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-4",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-6",
+          "bbox": [
+            26.666666666666664,
+            0.0,
+            33.33333333333333,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-6",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-7",
+          "bbox": [
+            33.33333333333333,
+            0.0,
+            40.0,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-7",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        }
+      ],
+      "phase": "moving_human_replan"
+    },
+    {
+      "episode_id": "mission-840cff9d1fa8",
+      "frame_id": 29512,
+      "sim_time_min": 98.37333333333332,
+      "runtime_status": "running",
+      "mission_revision": 21,
+      "autonomy_mode": "full",
+      "agent_status": {
+        "status": "running",
+        "model": "LongCat-2.0",
+        "cycle": 47,
+        "error": null
+      },
+      "standing_policy": {
+        "enabled": true,
+        "energy_rotation": true,
+        "local_repair": true,
+        "lost_reacquire": true,
+        "plan_id": "plan-7aead4d22174"
+      },
+      "mission_metrics": {
+        "effective_tracking_seconds": 3146.0,
+        "lost_seconds": 1366.0,
+        "handoff_count": 1,
+        "handoff_attempts": 1,
+        "rotation_count": 8,
+        "search_boats": 6,
+        "search_regions": 6,
+        "coverage_pct": 100.0,
+        "unscanned_cells": 0,
+        "recent_coverage_pct": 93.56060606060606,
+        "revisit_timeliness_pct": 93.56060606060606,
+        "handoff_success_rate": 100.0
+      },
+      "teams": [
+        {
+          "id": "plan-b6477a6efe19",
+          "members": [
+            "UUV-5",
+            "UUV-8"
+          ],
+          "task": "track"
+        },
+        {
+          "id": "region-UUV-1",
+          "members": [
+            "UUV-1"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-2",
+          "members": [
+            "UUV-2"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-3",
+          "members": [
+            "UUV-3"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-4",
+          "members": [
+            "UUV-4"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-6",
+          "members": [
+            "UUV-6"
+          ],
+          "task": "search"
+        },
+        {
+          "id": "region-UUV-7",
+          "members": [
+            "UUV-7"
+          ],
+          "task": "search"
+        }
+      ],
+      "contacts": [
+        {
+          "x": 1827.7544094093744,
+          "y": 3611.907573159704,
+          "vx": -1.699679525052311,
+          "vy": -0.5350866298626689,
+          "covariance": [
+            [
+              6.075450480470063,
+              4.733085356836208,
+              0.2157674431846544,
+              0.14926518119010915
+            ],
+            [
+              4.733085356836208,
+              10.01594051203265,
+              0.12195739617921098,
+              0.36422513003514123
+            ],
+            [
+              0.2157674431846544,
+              0.12195739617921098,
+              0.015404278247940642,
+              0.004090615649890106
+            ],
+            [
+              0.14926518119010915,
+              0.36422513003514123,
+              0.004090615649890106,
+              0.020210619504689536
+            ]
+          ],
+          "estimate_time": 5902.0,
+          "uncertainty_m": 7.258783424357397,
+          "contact_id": "CONTACT-1",
+          "last_seen": 5902.0,
+          "state": "tracking",
+          "hits": [
+            5897.0,
+            5898.0,
+            5899.0,
+            5900.0,
+            5901.0,
+            5902.0
+          ],
+          "samples": [
+            {
+              "mode": "passive",
+              "bearing_rad": -1.9915891826287602,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1923.3056099158723,
+                3806.514119846329,
+                3.088392818255035
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7955",
+              "sequence": 7955,
+              "contact_id": "CONTACT-1",
+              "time_s": 5893.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5727314327044153,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.4769122010212,
+                3472.1650774372865,
+                -1.5548987127441847
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7956",
+              "sequence": 7956,
+              "contact_id": "CONTACT-1",
+              "time_s": 5893.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.9190119198092808,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1919.3099718857954,
+                3806.700256253,
+                3.1015268381951837
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7957",
+              "sequence": 7957,
+              "contact_id": "CONTACT-1",
+              "time_s": 5894.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5858144335244411,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.5914899296895,
+                3468.166828561585,
+                -1.5292398077956448
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7958",
+              "sequence": 7958,
+              "contact_id": "CONTACT-1",
+              "time_s": 5894.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.9696126087291115,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1915.3122454215047,
+                3806.834268938924,
+                3.114481056140109
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7959",
+              "sequence": 7959,
+              "contact_id": "CONTACT-1",
+              "time_s": 5895.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5670883706705827,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1633.8112854535284,
+                3464.172993401639,
+                -1.5022589665261825
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7960",
+              "sequence": 7960,
+              "contact_id": "CONTACT-1",
+              "time_s": 5895.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.937803250236258,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1911.3131001080012,
+                3806.915482660457,
+                3.1279289222187376
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7961",
+              "sequence": 7961,
+              "contact_id": "CONTACT-1",
+              "time_s": 5896.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.5782638525150191,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1634.136780984823,
+                3460.1863718925138,
+                -1.4762555559800217
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7962",
+              "sequence": 7962,
+              "contact_id": "CONTACT-1",
+              "time_s": 5896.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.945463731898812,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1907.3132201831033,
+                3806.941998546558,
+                -3.1413586429487514
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7963",
+              "sequence": 7963,
+              "contact_id": "CONTACT-1",
+              "time_s": 5897.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.6458454541925924,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1634.564969712687,
+                3456.2094657810208,
+                -1.4506798259377909
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7964",
+              "sequence": 7964,
+              "contact_id": "CONTACT-1",
+              "time_s": 5897.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.911745920060702,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1903.3133541514637,
+                3806.9133337957323,
+                -3.1276629619055996
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7965",
+              "sequence": 7965,
+              "contact_id": "CONTACT-1",
+              "time_s": 5898.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.6026851474293645,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1635.0927945378899,
+                3452.2445454912568,
+                -1.426062720541781
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7966",
+              "sequence": 7966,
+              "contact_id": "CONTACT-1",
+              "time_s": 5898.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.903704483022086,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1899.3142813494335,
+                3806.828796582834,
+                -3.1134269114448374
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7967",
+              "sequence": 7967,
+              "contact_id": "CONTACT-1",
+              "time_s": 5899.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.6288067178111261,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1635.7171111058062,
+                3448.2936656129446,
+                -1.4019231302829558
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7968",
+              "sequence": 7968,
+              "contact_id": "CONTACT-1",
+              "time_s": 5899.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.9166336469742165,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1895.3168459081712,
+                3806.686580759157,
+                -3.0988172350737884
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7969",
+              "sequence": 7969,
+              "contact_id": "CONTACT-1",
+              "time_s": 5900.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.6554486797386135,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1636.4352584621354,
+                3444.358753837077,
+                -1.378466224324261
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7970",
+              "sequence": 7970,
+              "contact_id": "CONTACT-1",
+              "time_s": 5900.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.9018069801924298,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1891.3219489474634,
+                3806.4853317634397,
+                -3.083888562346807
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7971",
+              "sequence": 7971,
+              "contact_id": "CONTACT-1",
+              "time_s": 5901.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.6402015530916993,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1637.2424981417512,
+                3440.4411369300633,
+                -1.3565264964317734
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7972",
+              "sequence": 7972,
+              "contact_id": "CONTACT-1",
+              "time_s": 5901.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": -1.8519127895887049,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1887.3306037369362,
+                3806.222965472453,
+                -3.0682189842270224
+              ],
+              "observer_id": "UUV-5",
+              "generation": 2,
+              "observers": [
+                "UUV-5"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7973",
+              "sequence": 7973,
+              "contact_id": "CONTACT-1",
+              "time_s": 5902.0
+            },
+            {
+              "mode": "passive",
+              "bearing_rad": 0.6515932275583726,
+              "bearing_sigma": 0.03490658503988659,
+              "observer_pose": [
+                1638.1324889229968,
+                3436.5414753196906,
+                -1.3361122137204509
+              ],
+              "observer_id": "UUV-8",
+              "generation": 2,
+              "observers": [
+                "UUV-8"
+              ],
+              "source": "sensor",
+              "sample_id": "obs-7974",
+              "sequence": 7974,
+              "contact_id": "CONTACT-1",
+              "time_s": 5902.0
+            }
+          ],
+          "vessel_class": "underwater",
+          "tracking_streak": 283.0,
+          "observers": [
+            "UUV-5",
+            "UUV-8"
+          ],
+          "geometry_quality": 0.5028908922259829,
+          "estimated_position": [
+            17.777544094093745,
+            3.3809242684029597
+          ],
+          "estimated_velocity": [
+            -0.016996795250523108,
+            0.005350866298626689
+          ]
+        }
+      ],
+      "bearing_lines": [
+        {
+          "from": [
+            18.413219489474635,
+            1.4351466823656027
+          ],
+          "to": [
+            17.275723046704005,
+            4.745146960716674
+          ],
+          "observer_id": "UUV-5",
+          "contact_id": "CONTACT-1"
+        },
+        {
+          "from": [
+            15.872424981417513,
+            5.095588630699367
+          ],
+          "to": [
+            18.679338793936846,
+            3.004838801310834
+          ],
+          "observer_id": "UUV-8",
+          "contact_id": "CONTACT-1"
+        },
+        {
+          "from": [
+            18.37330603736936,
+            1.4377703452754713
+          ],
+          "to": [
+            17.402306431766338,
+            4.800382390385457
+          ],
+          "observer_id": "UUV-5",
+          "contact_id": "CONTACT-1"
+        },
+        {
+          "from": [
+            15.881324889229969,
+            5.134585246803095
+          ],
+          "to": [
+            18.66423995044432,
+            3.0119963176728377
+          ],
+          "observer_id": "UUV-8",
+          "contact_id": "CONTACT-1"
+        }
+      ],
+      "plans": [
+        {
+          "status": "superseded",
+          "algorithm": "strip-sweep-dubins-loops-v1",
+          "diagnostics": {
+            "solution_quality": "feasible",
+            "coverage_guarantee": false
+          },
+          "kind": "search",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "fleet_plan": true,
+          "regions": [
+            {
+              "id": "region-UUV-1",
+              "owner": "UUV-1",
+              "bbox_m": [
+                0.0,
+                0,
+                500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-2",
+              "owner": "UUV-2",
+              "bbox_m": [
+                500.0,
+                0,
+                1000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-3",
+              "owner": "UUV-3",
+              "bbox_m": [
+                1000.0,
+                0,
+                1500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-4",
+              "owner": "UUV-4",
+              "bbox_m": [
+                1500.0,
+                0,
+                2000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-5",
+              "owner": "UUV-5",
+              "bbox_m": [
+                2000.0,
+                0,
+                2500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-6",
+              "owner": "UUV-6",
+              "bbox_m": [
+                2500.0,
+                0,
+                3000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-7",
+              "owner": "UUV-7",
+              "bbox_m": [
+                3000.0,
+                0,
+                3500.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-8",
+              "owner": "UUV-8",
+              "bbox_m": [
+                3500.0,
+                0,
+                4000.0,
+                4000
+              ]
+            }
+          ],
+          "partial_region_update": true,
+          "standing_policy": true,
+          "result_id": "result-40186eea0b89",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 0,
+          "snapshot_id": 0,
+          "members": [
+            "UUV-1",
+            "UUV-2",
+            "UUV-3",
+            "UUV-4",
+            "UUV-5",
+            "UUV-6",
+            "UUV-7",
+            "UUV-8"
+          ],
+          "created_at_s": 0.0,
+          "assignments": {
+            "UUV-1": null,
+            "UUV-2": null,
+            "UUV-3": null,
+            "UUV-4": null,
+            "UUV-5": null,
+            "UUV-6": null,
+            "UUV-7": null,
+            "UUV-8": null
+          },
+          "generations": {
+            "UUV-1": 1,
+            "UUV-2": 1,
+            "UUV-3": 1,
+            "UUV-4": 1,
+            "UUV-5": 1,
+            "UUV-6": 1,
+            "UUV-7": 1,
+            "UUV-8": 1
+          },
+          "region_signatures": {
+            "UUV-4": null,
+            "UUV-7": null,
+            "UUV-2": null,
+            "UUV-6": null,
+            "UUV-5": null,
+            "UUV-1": null,
+            "UUV-8": null,
+            "UUV-3": null
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-a141dae61bb5",
+          "risk": 0.2,
+          "policy_version": 1,
+          "expires_at_s": 600.0,
+          "fallback": "repeat_approved_closed_route",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "risk_threshold",
+          "active_members": []
+        },
+        {
+          "status": "expired",
+          "members": [
+            "UUV-5",
+            "UUV-6"
+          ],
+          "slots": {
+            "UUV-5": {
+              "index": 1,
+              "pose": [
+                2409.2282825863895,
+                1646.2987278281526,
+                1.8631924714902808
+              ],
+              "eta_s": 163.21031397689032,
+              "angle_rad": 0.7853981633974483,
+              "radius_m": 220.0,
+              "length_m": 652.8412559075613,
+              "endurance_s": 3280.8972179914826,
+              "generation": 1
+            },
+            "UUV-6": {
+              "index": 7,
+              "pose": [
+                2489.625473732383,
+                1316.984845806467,
+                0.7139044700359708
+              ],
+              "eta_s": 175.40296678945003,
+              "angle_rad": 5.497787143782138,
+              "radius_m": 280.0,
+              "length_m": 701.6118671578001,
+              "endurance_s": 3337.151291331139,
+              "generation": 1
+            }
+          },
+          "diagnostics": {
+            "candidate_routes": 384,
+            "candidate_teams": 10410,
+            "geometry_quality": 0.9899636402092391,
+            "score": 209.1817347735695,
+            "energy_horizon_s": 600,
+            "solution_quality": "feasible",
+            "arrival_is_tracking_success": false
+          },
+          "acquisition_mode": "active_until_cooperative_geometry",
+          "acquisition_requirements": {
+            "min_active_observers": 2,
+            "eligible_members": [
+              "UUV-5",
+              "UUV-6"
+            ]
+          },
+          "kind": "track",
+          "contact_id": "CONTACT-1",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "repair_assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "repair_generations": {
+            "UUV-1": 1,
+            "UUV-2": 1,
+            "UUV-3": 1,
+            "UUV-4": 1,
+            "UUV-7": 1,
+            "UUV-8": 1
+          },
+          "result_id": "result-887d62dce10b",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 1,
+          "snapshot_id": 2541,
+          "created_at_s": 508.2,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-5": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-5": 1,
+            "UUV-6": 1
+          },
+          "region_signatures": {
+            "UUV-4": "f4e214fc80e029ebdb0a6b90ce20a9bf435f5f090550a9115a88e3c73939c3cf",
+            "UUV-7": "188b777b7c99d79da96b167db75d6e47cf05673b0edf7f7c03555b6471138edb",
+            "UUV-6": "af279ca024fc88806e0e89d76ae751191cb71911d81f1a01b5c78e8942ab2f25",
+            "UUV-2": "8552cd0f09f7c9a0d72e303838f3d095d182f2e05ea77e47a7200e92266d3316",
+            "UUV-5": "9ffab5bfc70fcf8709ca2c97e4fa64d81392c593691ee808f009cad5d8509e04",
+            "UUV-1": "10806cece569c14073bea9ab32bee5eac11ee5052e52233e5de51ff2385a33d1",
+            "UUV-3": "1edfa9720ac138ffe91e6bfb8148d5379782eed1770e39032ab6a802091fdd65",
+            "UUV-8": "3385f7b33cef913e879cf2749d7d65f802823d90bc63f1123b61d77d68227100"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-287b5e9a6782",
+          "risk": 0.6332861388525146,
+          "policy_version": 2,
+          "expires_at_s": 1108.2,
+          "fallback": "authorized_active_reacquisition",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "human_required"
+        },
+        {
+          "status": "superseded",
+          "members": [
+            "UUV-5",
+            "UUV-6"
+          ],
+          "slots": {
+            "UUV-5": {
+              "index": 1,
+              "pose": [
+                2409.2282825863895,
+                1646.2987278281526,
+                1.8631924714902808
+              ],
+              "eta_s": 163.21031397689032,
+              "angle_rad": 0.7853981633974483,
+              "radius_m": 220.0,
+              "length_m": 652.8412559075613,
+              "endurance_s": 3280.8972179914826,
+              "generation": 1
+            },
+            "UUV-6": {
+              "index": 7,
+              "pose": [
+                2489.625473732383,
+                1316.984845806467,
+                0.7139044700359708
+              ],
+              "eta_s": 175.40296678945003,
+              "angle_rad": 5.497787143782138,
+              "radius_m": 280.0,
+              "length_m": 701.6118671578001,
+              "endurance_s": 3337.151291331139,
+              "generation": 1
+            }
+          },
+          "diagnostics": {
+            "candidate_routes": 384,
+            "candidate_teams": 10410,
+            "geometry_quality": 0.9899636402092391,
+            "score": 209.1817347735695,
+            "energy_horizon_s": 600,
+            "solution_quality": "feasible",
+            "arrival_is_tracking_success": false
+          },
+          "acquisition_mode": "active_until_cooperative_geometry",
+          "acquisition_requirements": {
+            "min_active_observers": 2,
+            "eligible_members": [
+              "UUV-5",
+              "UUV-6"
+            ]
+          },
+          "kind": "track",
+          "contact_id": "CONTACT-1",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "repair_assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "repair_generations": {
+            "UUV-1": 1,
+            "UUV-2": 1,
+            "UUV-3": 1,
+            "UUV-4": 1,
+            "UUV-7": 1,
+            "UUV-8": 1
+          },
+          "result_id": "result-71486511963e",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 1,
+          "snapshot_id": 2541,
+          "created_at_s": 508.2,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-5": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-5": 1,
+            "UUV-6": 1
+          },
+          "region_signatures": {
+            "UUV-4": "f4e214fc80e029ebdb0a6b90ce20a9bf435f5f090550a9115a88e3c73939c3cf",
+            "UUV-7": "188b777b7c99d79da96b167db75d6e47cf05673b0edf7f7c03555b6471138edb",
+            "UUV-6": "af279ca024fc88806e0e89d76ae751191cb71911d81f1a01b5c78e8942ab2f25",
+            "UUV-2": "8552cd0f09f7c9a0d72e303838f3d095d182f2e05ea77e47a7200e92266d3316",
+            "UUV-5": "9ffab5bfc70fcf8709ca2c97e4fa64d81392c593691ee808f009cad5d8509e04",
+            "UUV-1": "10806cece569c14073bea9ab32bee5eac11ee5052e52233e5de51ff2385a33d1",
+            "UUV-3": "1edfa9720ac138ffe91e6bfb8148d5379782eed1770e39032ab6a802091fdd65",
+            "UUV-8": "3385f7b33cef913e879cf2749d7d65f802823d90bc63f1123b61d77d68227100"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-e4e47e055c2a",
+          "risk": 0.6332861388525146,
+          "policy_version": 2,
+          "expires_at_s": 1108.2,
+          "fallback": "authorized_active_reacquisition",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "human_required",
+          "active_members": [],
+          "active_generations": {
+            "UUV-7": 1,
+            "UUV-6": 1
+          }
+        },
+        {
+          "status": "active",
+          "members": [
+            "UUV-5",
+            "UUV-8"
+          ],
+          "slots": {
+            "UUV-5": {
+              "index": 2,
+              "pose": [
+                2459.5767853692614,
+                3251.479971597057,
+                2.849719967289843
+              ],
+              "eta_s": 77.344734809349,
+              "angle_rad": 1.5707963267948966,
+              "radius_m": 280.0,
+              "length_m": 309.378939237396,
+              "endurance_s": 2218.926694194721,
+              "generation": 2
+            },
+            "UUV-8": {
+              "index": 0,
+              "pose": [
+                2751.5410200745605,
+                2959.5606104667154,
+                1.864019186864066
+              ],
+              "eta_s": 73.27860457005147,
+              "angle_rad": 0.0,
+              "radius_m": 280.0,
+              "length_m": 293.1144182802059,
+              "endurance_s": 2691.4134057538927,
+              "generation": 2
+            }
+          },
+          "diagnostics": {
+            "candidate_routes": 295,
+            "candidate_teams": 1013,
+            "geometry_quality": 0.9826568089984281,
+            "score": 95.00309181622404,
+            "energy_horizon_s": 600,
+            "solution_quality": "feasible",
+            "arrival_is_tracking_success": false
+          },
+          "acquisition_mode": "active_until_cooperative_geometry",
+          "acquisition_requirements": {
+            "min_active_observers": 2,
+            "eligible_members": [
+              "UUV-5",
+              "UUV-8"
+            ]
+          },
+          "kind": "track",
+          "contact_id": "CONTACT-1",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "repair_assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5"
+          },
+          "repair_generations": {
+            "UUV-1": 2,
+            "UUV-2": 2,
+            "UUV-3": 2,
+            "UUV-4": 2,
+            "UUV-6": 2,
+            "UUV-7": 2
+          },
+          "result_id": "result-be2e6d1e7e15",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 19,
+          "snapshot_id": 27183,
+          "created_at_s": 5436.6,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-5": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5",
+            "UUV-8": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-5": 2,
+            "UUV-8": 2
+          },
+          "region_signatures": {
+            "UUV-4": "5284fe255bacc8814ce3fd4e8d4e7a7743bf38afcf01168fc067627c3d296863",
+            "UUV-7": "1757101bfcbcf5c8aa299839c4baa56a8fd1c609e98c9f03698a90ce34ea5c34",
+            "UUV-6": "1fe3c2fcf9864ecdb27ebe01469d89d1a3ba236b75ed8b0eb65f21e704a08372",
+            "UUV-2": "085ae0f78d5017a510dd5800275d1812d35619d7793aece9770d889a6253f927",
+            "UUV-5": "5b8d11f0a1cd2115d01b825472fd8a048729c20fb1d0952dfde3c9cb90105b73",
+            "UUV-1": "ede5d4556283ad1ed0b12055145c99bbb86af82aaf3bff526502a91296e6efd8",
+            "UUV-3": "27a3b4f3aa93c5a85412dc6949bd4c432c2d3084422c416034417ab4b31cf754",
+            "UUV-8": "45dfa262d35c135cd50948b8aad67a27e4a0a5688d4050c3423dcb7643dbe1c7"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-b6477a6efe19",
+          "risk": 0.6899126187519528,
+          "policy_version": 3,
+          "expires_at_s": 6036.6,
+          "fallback": "authorized_active_reacquisition",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "risk_threshold",
+          "active_members": [
+            "UUV-5",
+            "UUV-8"
+          ]
+        },
+        {
+          "status": "active",
+          "algorithm": "strip-sweep-dubins-loops-v1",
+          "diagnostics": {
+            "solution_quality": "feasible",
+            "coverage_guarantee": false
+          },
+          "kind": "search",
+          "bbox": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "fleet_plan": true,
+          "regions": [
+            {
+              "id": "region-UUV-1",
+              "owner": "UUV-1",
+              "bbox_m": [
+                0.0,
+                0,
+                666.6666666666666,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-2",
+              "owner": "UUV-2",
+              "bbox_m": [
+                666.6666666666666,
+                0,
+                1333.3333333333333,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-3",
+              "owner": "UUV-3",
+              "bbox_m": [
+                1333.3333333333333,
+                0,
+                2000.0,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-4",
+              "owner": "UUV-4",
+              "bbox_m": [
+                2000.0,
+                0,
+                2666.6666666666665,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-6",
+              "owner": "UUV-6",
+              "bbox_m": [
+                2666.6666666666665,
+                0,
+                3333.333333333333,
+                4000
+              ]
+            },
+            {
+              "id": "region-UUV-7",
+              "owner": "UUV-7",
+              "bbox_m": [
+                3333.333333333333,
+                0,
+                4000.0,
+                4000
+              ]
+            }
+          ],
+          "partial_region_update": true,
+          "standing_policy": true,
+          "result_id": "result-f1733689e7f6",
+          "episode_id": "mission-840cff9d1fa8",
+          "mission_revision": 20,
+          "snapshot_id": 28993,
+          "members": [
+            "UUV-1",
+            "UUV-2",
+            "UUV-3",
+            "UUV-4",
+            "UUV-6",
+            "UUV-7"
+          ],
+          "created_at_s": 5799.8,
+          "assignments": {
+            "UUV-1": "plan-a141dae61bb5",
+            "UUV-2": "plan-a141dae61bb5",
+            "UUV-3": "plan-a141dae61bb5",
+            "UUV-4": "plan-a141dae61bb5",
+            "UUV-6": "plan-a141dae61bb5",
+            "UUV-7": "plan-a141dae61bb5"
+          },
+          "generations": {
+            "UUV-1": 2,
+            "UUV-2": 2,
+            "UUV-3": 2,
+            "UUV-4": 2,
+            "UUV-6": 2,
+            "UUV-7": 2
+          },
+          "region_signatures": {
+            "UUV-4": "ba0c5cafd78a40edd8ae571cb4f6a0361af21c30e000db093ebfd37595fa8cf4",
+            "UUV-1": "ede5d4556283ad1ed0b12055145c99bbb86af82aaf3bff526502a91296e6efd8",
+            "UUV-2": "085ae0f78d5017a510dd5800275d1812d35619d7793aece9770d889a6253f927",
+            "UUV-7": "1757101bfcbcf5c8aa299839c4baa56a8fd1c609e98c9f03698a90ce34ea5c34",
+            "UUV-3": "27a3b4f3aa93c5a85412dc6949bd4c432c2d3084422c416034417ab4b31cf754",
+            "UUV-6": "28f9b27aae9ec10977e3efb1f663247155bef4bc49af83586445e7889bc34c44"
+          },
+          "execution_domain": [
+            0,
+            0,
+            4000,
+            4000
+          ],
+          "domain_policy": "route_envelope_including_transit",
+          "plan_id": "plan-7aead4d22174",
+          "risk": 0.2767376670676967,
+          "policy_version": 4,
+          "expires_at_s": 6413.2,
+          "fallback": "repeat_approved_closed_route",
+          "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
+          "reason": "risk_threshold",
+          "active_members": [
+            "UUV-1",
+            "UUV-2",
+            "UUV-3",
+            "UUV-4",
+            "UUV-6",
+            "UUV-7"
+          ]
+        }
+      ],
+      "pending_approvals": [],
+      "event_cursor": 4808,
+      "uavs": [
+        {
+          "id": "UUV-1",
+          "position": [
+            2.2793850112768985,
+            31.09404558958374
+          ],
+          "heading_rad": 1.613167451220731,
+          "generation": 2,
+          "remaining_range_m": 10761.606171459065,
+          "energy_pct": 59.786700952550355,
+          "speed_mps": 4,
+          "heading_deg": 267.572313397176,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-1",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-2",
+          "position": [
+            29.1872916285785,
+            25.713416775217638
+          ],
+          "heading_rad": 2.5949860151203183,
+          "generation": 2,
+          "remaining_range_m": 10736.811218345529,
+          "energy_pct": 59.64895121303071,
+          "speed_mps": 4,
+          "heading_deg": 211.31825343813412,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-2",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-3",
+          "position": [
+            3.11004937926028,
+            18.414535528206585
+          ],
+          "heading_rad": 1.1088092056295524,
+          "generation": 2,
+          "remaining_range_m": 10772.006803707034,
+          "energy_pct": 59.84448224281685,
+          "speed_mps": 4,
+          "heading_deg": 296.4699122321732,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-3",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-4",
+          "position": [
+            17.316643505561238,
+            7.741943724649413
+          ],
+          "heading_rad": 1.493826043558695,
+          "generation": 2,
+          "remaining_range_m": 10904.808346079488,
+          "energy_pct": 60.58226858933049,
+          "speed_mps": 4,
+          "heading_deg": 274.4100723773609,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-4",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-5",
+          "position": [
+            18.35735311216356,
+            1.4389964114646272
+          ],
+          "heading_rad": 3.061584332070965,
+          "generation": 2,
+          "remaining_range_m": 8670.40740472747,
+          "energy_pct": 48.16893002626372,
+          "speed_mps": 4,
+          "heading_deg": 184.5841391489546,
+          "sensor_mode": "passive",
+          "task_phase": "tracking",
+          "status": "tracking",
+          "operation_mode": "track",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": null,
+          "team_id": "plan-b6477a6efe19",
+          "target_group_id": "CONTACT-1",
+          "task_visual": {
+            "task_type": "track",
+            "phase": "track",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-6",
+          "position": [
+            29.165571442872874,
+            23.286739918844642
+          ],
+          "heading_rad": 1.6043866330386265,
+          "generation": 2,
+          "remaining_range_m": 10868.009613783244,
+          "energy_pct": 60.377831187684684,
+          "speed_mps": 4,
+          "heading_deg": 268.0754172196823,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-6",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-7",
+          "position": [
+            6.313693129079761,
+            31.458211899403356
+          ],
+          "heading_rad": 0.27357023350394727,
+          "generation": 2,
+          "remaining_range_m": 10804.80685840057,
+          "energy_pct": 60.02670476889205,
+          "speed_mps": 4,
+          "heading_deg": 344.3255802198154,
+          "sensor_mode": "active",
+          "task_phase": "scanning",
+          "status": "searching",
+          "operation_mode": "coverage",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": "region-UUV-7",
+          "team_id": "plan-7aead4d22174",
+          "target_group_id": null,
+          "task_visual": {
+            "task_type": "coverage",
+            "phase": "search",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        },
+        {
+          "id": "UUV-8",
+          "position": [
+            15.885106917593358,
+            5.150131787273913
+          ],
+          "heading_rad": 1.3281843029694338,
+          "generation": 2,
+          "remaining_range_m": 10836.008393598371,
+          "energy_pct": 60.20004663110206,
+          "speed_mps": 4,
+          "heading_deg": 283.9006450243264,
+          "sensor_mode": "passive",
+          "task_phase": "tracking",
+          "status": "tracking",
+          "operation_mode": "track",
+          "operational_status": "available",
+          "control_owner": "system",
+          "assigned_region_id": null,
+          "team_id": "plan-b6477a6efe19",
+          "target_group_id": "CONTACT-1",
+          "task_visual": {
+            "task_type": "track",
+            "phase": "track",
+            "route_source": "python",
+            "route_status": "active"
+          },
+          "sensor_radius_cells": 3.5
+        }
+      ],
+      "search_regions": [
+        {
+          "id": "region-UUV-1",
+          "bbox": [
+            0.0,
+            0.0,
+            6.666666666666666,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-1",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-2",
+          "bbox": [
+            6.666666666666666,
+            0.0,
+            13.333333333333332,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-2",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-3",
+          "bbox": [
+            13.333333333333332,
+            0.0,
+            20.0,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-3",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-4",
+          "bbox": [
+            20.0,
+            0.0,
+            26.666666666666664,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-4",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-6",
+          "bbox": [
+            26.666666666666664,
+            0.0,
+            33.33333333333333,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-6",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        },
+        {
+          "id": "region-UUV-7",
+          "bbox": [
+            33.33333333333333,
+            0.0,
+            40.0,
+            40.0
+          ],
+          "assigned_uav_id": "UUV-7",
+          "revision": 20,
+          "priority": "medium",
+          "completion_pct": 100.0
+        }
+      ],
+      "phase": "moving_human_replan"
+    }
+  ],
+  "operator_actions": [
+    {
+      "path": "/api/pi-agent/messages",
+      "reason": "explicit moving search replan through native feedback",
+      "phase": "moving_human_replan",
+      "payload": {
+        "delivery": "followUp",
+        "text": "这是一次明确的人工搜索航线调整请求，不是普通巡检。先读取当前状态，然后用 plan_search 省略 members，standing_policy=true，生成当前可用搜索艇的舰队搜索候选，evaluate_plan 后 submit_mission_plan 一次。保留现有跟踪队及其跟踪计划，绝不把跟踪艇纳入搜索。不要暂停、停止、重置仿真或改变权限。整个规划、评估、提交过程必须在艇队继续运动时完成。"
+      },
+      "wall_time": "2026-09-27T12:25:52.740255+00:00",
+      "test_operator_action": true,
+      "response": {
+        "run_id": "run-4eee555a1489",
+        "episode_id": "mission-840cff9d1fa8",
+        "status": "running",
+        "text": "Periodic review: preserve valid plans, act only on material changes.",
+        "source": "periodic",
+        "feedback": [
+          {
+            "id": "feedback-bef85912e3b5",
+            "text": "这是一次明确的人工搜索航线调整请求，不是普通巡检。先读取当前状态，然后用 plan_search 省略 members，standing_policy=true，生成当前可用搜索艇的舰队搜索候选，evaluate_plan 后 submit_mission_plan 一次。保留现有跟踪队及其跟踪计划，绝不把跟踪艇纳入搜索。不要暂停、停止、重置仿真或改变权限。整个规划、评估、提交过程必须在艇队继续运动时完成。",
+            "delivery": "followUp"
+          }
+        ],
+        "lease_deadline": 3542529.374365696
+      }
+    }
+  ],
+  "runs": {
+    "moving_search_replan": {
+      "run_id": "run-4eee555a1489",
+      "terminal_job": {
+        "run_id": "run-4eee555a1489",
+        "episode_id": "mission-840cff9d1fa8",
+        "status": "completed",
+        "text": "Periodic review: preserve valid plans, act only on material changes.",
+        "source": "periodic",
+        "feedback": [],
+        "lease_deadline": 3542533.38003698,
+        "accepted_feedback": []
+      }
+    }
+  },
+  "errors": [
+    {
+      "type": "AssertionError",
+      "message": "Missing real tool receipts for run-4eee555a1489"
+    }
+  ],
+  "jobs": [
+    {
+      "run_id": "run-8d425aaf7238",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Load multi-uuv-recon-tracking with the native read tool. Read mission state. Generate one atomic eight-UUV search plan using plan_search with members OMITTED and standing_policy=true. Evaluate then submit that plan exactly once. Each of the eight boats must own one distinct region. Keep simulation paused; do not start it. Do not change the operator's permission mode.",
+      "source": "human",
+      "feedback": [],
+      "lease_deadline": 3540763.830967046,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-5b98b4bae649",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 90.0,
+      "coalesced_count": 2,
+      "lease_deadline": 3540786.767293576,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-3fb23be9cfa7",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 300.0,
+      "coalesced_count": 6,
+      "lease_deadline": 3540812.175476093,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-49b2013e6998",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 450.0,
+      "coalesced_count": 4,
+      "lease_deadline": 3540852.639202542,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-3573cb627054",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3540887.773055312,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-c8fa3078364d",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Contact CONTACT-1 confirmed. Select a two-UUV tracking team, evaluate and submit its transit plan, preserving search coverage.",
+      "source": "target_found",
+      "feedback": [],
+      "lease_deadline": 3540863.868667792,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-558251d9d2f6",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Load the mission skill. Call get_mission_state, then explicitly call get_observations to read the actual sensor records for CONTACT-1. Produce one NEW tracking candidate with plan_tracking, omitting members so selection is automatic. Use a two-boat team when feasible. Evaluate it, then submit once to REQUEST human approval. Earlier unapproved proposals are not executed tasks; create this candidate for this explicit operator review. Keep all existing execution unchanged until operator approval. Do not approve, change mode, or start simulation.",
+      "source": "human",
+      "feedback": [],
+      "lease_deadline": 3540913.541662992,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-41894aad4fa7",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 600.0,
+      "coalesced_count": 3,
+      "lease_deadline": 3540943.920731935,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-7f8c448b14a8",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 720.0,
+      "coalesced_count": 3,
+      "lease_deadline": 3540971.233905509,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-f597c627a83c",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Read current mission state and latest observations, then explain the existing approved tracking plan. This is read-only review; preserve every valid active plan and assignment. Do not plan, evaluate, submit, change permissions, or resume simulation.",
+      "source": "human",
+      "feedback": [],
+      "lease_deadline": 3540989.938634958,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-531bb6ee2ddc",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3541023.948466835,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-06e1a0d3ba4a",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 810.0,
+      "coalesced_count": 1,
+      "lease_deadline": 3541052.804012223,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-042f13102706",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 990.0,
+      "coalesced_count": 5,
+      "lease_deadline": 3541082.253873487,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-ca5168a87d61",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 1170.0,
+      "coalesced_count": 5,
+      "lease_deadline": 3541113.650748565,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-5740f2548de8",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 1350.0,
+      "coalesced_count": 5,
+      "lease_deadline": 3541144.475040973,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-484e7e56c337",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 1560.0,
+      "coalesced_count": 6,
+      "lease_deadline": 3541175.210362198,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-cb4ec6cc898e",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 1740.0,
+      "coalesced_count": 6,
+      "lease_deadline": 3541205.809581768,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-62afdba68b23",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 1920.0,
+      "coalesced_count": 7,
+      "lease_deadline": 3541234.562325554,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-138e08ab76e9",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 2100.0,
+      "coalesced_count": 5,
+      "lease_deadline": 3541265.738256783,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-650a94fbd666",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 2310.0,
+      "coalesced_count": 6,
+      "lease_deadline": 3541296.652324402,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-722e7f2f662a",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 2520.0,
+      "coalesced_count": 7,
+      "lease_deadline": 3541326.258326154,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-3c82c4f2858f",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 2730.0,
+      "coalesced_count": 7,
+      "lease_deadline": 3541354.751384147,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-866441293a71",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 2910.0,
+      "coalesced_count": 7,
+      "lease_deadline": 3541386.064222414,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-b5c7c54eb2ad",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 3120.0,
+      "coalesced_count": 7,
+      "lease_deadline": 3541418.08554652,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-7a53d1c7ce5b",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 3330.0,
+      "coalesced_count": 6,
+      "lease_deadline": 3541450.463582691,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-be3a63d9ab10",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "failed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 3480.0,
+      "coalesced_count": 5,
+      "lease_deadline": 3541504.584220428
+    },
+    {
+      "run_id": "run-ce9454e0c3cb",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 3600.0,
+      "coalesced_count": 3,
+      "lease_deadline": 3541540.173294425,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-f56540fa3c1d",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 5130.0,
+      "coalesced_count": 53,
+      "lease_deadline": 3541821.473372559,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-78fb034260dc",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "A tracking boat is exiting. Plan a replacement team and verify observations; do not report handoff before acquisition.",
+      "source": "energy_exit",
+      "feedback": [],
+      "lease_deadline": 3541619.618558264,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-d61695fe52b1",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Contact CONTACT-1 lost. Review active reacquisition and remaining coverage.",
+      "source": "target_lost",
+      "feedback": [],
+      "updated_at_s": 3896.0,
+      "coalesced_count": 1,
+      "lease_deadline": 3541767.554176342,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-54710ea246d9",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Contact CONTACT-1 lost. Review active reacquisition and remaining coverage.",
+      "source": "target_lost",
+      "feedback": [],
+      "updated_at_s": 4479.0,
+      "coalesced_count": 3,
+      "lease_deadline": 3541786.414955147,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-87c173bcf088",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Search segment complete; plan revisit if needed.",
+      "source": "search_complete",
+      "feedback": [],
+      "updated_at_s": 5313.6,
+      "coalesced_count": 10,
+      "lease_deadline": 3541857.183957071,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-5661f80458ca",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "failed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 5430.0,
+      "coalesced_count": 4,
+      "lease_deadline": 3541924.09610887,
+      "error": "worker_restarted"
+    },
+    {
+      "run_id": "run-57f02c1f0f97",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Contact CONTACT-1 confirmed. Select a two-UUV tracking team, evaluate and submit its transit plan, preserving search coverage.",
+      "source": "target_found",
+      "feedback": [],
+      "lease_deadline": 3541896.063936578,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-9d80ec799516",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3541996.192092793,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-7bfba38b6fa0",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3542032.251935686,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-972b9250d911",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3542070.464023438,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-37e6e26414e9",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3542103.653169737,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-b9b65df2db54",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3542142.29558794,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-0c97e1f42754",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3542188.479576644,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-7808741bafce",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "failed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3542246.495609341,
+      "error": "worker_lease_expired"
+    },
+    {
+      "run_id": "run-0d3dc0eb01e2",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3542288.437388949,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-3f0aab9fcc2a",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3542329.559604541,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-465e604d3e58",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 5760.0,
+      "coalesced_count": 1,
+      "lease_deadline": 3542374.977287524,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-2ad8d1c7fde4",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "这是一次明确的人工搜索航线调整请求，不是普通巡检。先读取当前状态，然后用 plan_search 省略 members，standing_policy=true，生成当前可用搜索艇的舰队搜索候选，evaluate_plan 后 submit_mission_plan 一次。保留现有跟踪队及其跟踪计划，绝不把跟踪艇纳入搜索。不要暂停、停止、重置仿真或改变权限。整个规划、评估、提交过程必须在艇队继续运动时完成。",
+      "source": "human",
+      "feedback": [],
+      "lease_deadline": 3542435.682014781,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-9d8bae38b38d",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "updated_at_s": 5820.0,
+      "coalesced_count": 1,
+      "lease_deadline": 3542486.751126988,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-4eee555a1489",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "completed",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": [],
+      "lease_deadline": 3542533.38003698,
+      "accepted_feedback": []
+    },
+    {
+      "run_id": "run-069df2ac0f1c",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "queued",
+      "text": "Periodic review: preserve valid plans, act only on material changes.",
+      "source": "periodic",
+      "feedback": []
+    },
+    {
+      "run_id": "run-1f00d6a95430",
+      "episode_id": "mission-840cff9d1fa8",
+      "status": "running",
+      "text": "这是一次明确的人工搜索航线调整请求，不是普通巡检。先读取当前状态，然后用 plan_search 省略 members，standing_policy=true，生成当前可用搜索艇的舰队搜索候选，evaluate_plan 后 submit_mission_plan 一次。保留现有跟踪队及其跟踪计划，绝不把跟踪艇纳入搜索。不要暂停、停止、重置仿真或改变权限。整个规划、评估、提交过程必须在艇队继续运动时完成。",
+      "source": "feedback",
+      "feedback": [],
+      "source_feedback_id": "feedback-bef85912e3b5",
+      "source_feedback": {
+        "id": "feedback-bef85912e3b5",
+        "text": "这是一次明确的人工搜索航线调整请求，不是普通巡检。先读取当前状态，然后用 plan_search 省略 members，standing_policy=true，生成当前可用搜索艇的舰队搜索候选，evaluate_plan 后 submit_mission_plan 一次。保留现有跟踪队及其跟踪计划，绝不把跟踪艇纳入搜索。不要暂停、停止、重置仿真或改变权限。整个规划、评估、提交过程必须在艇队继续运动时完成。",
+        "delivery": "followUp"
+      },
+      "lease_deadline": 3542547.774878534
+    }
+  ],
+  "elapsed_wall_s": 25.57083229580894
+}

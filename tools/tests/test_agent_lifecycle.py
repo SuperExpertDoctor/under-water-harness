@@ -70,6 +70,42 @@ def test_heartbeat_cannot_revive_expired_or_wrong_episode_job(client):
     assert runtime.agent_jobs[0]["status"] == "failed"
 
 
+@pytest.mark.parametrize("ending", ["lease", "failed", "completed"])
+def test_unacknowledged_feedback_survives_job_end_without_duplication(client, ending):
+    metadata = start_job(client)
+    runtime = client.app.state.runtime
+    for text in ("keep first instruction", "keep second instruction"):
+        client.post("/api/pi-agent/messages", json={"episode_id": runtime.episode, "text": text}).raise_for_status()
+    if ending == "lease":
+        runtime.agent_jobs[0]["lease_deadline"] = time.monotonic()-1
+    else:
+        client.post("/internal/agent/event", headers=HEADERS, json={**metadata, "type": ending}).raise_for_status()
+    client.post("/internal/agent/next", json={}, headers=HEADERS).raise_for_status()
+    recovered = [job["text"] for job in runtime.agent_jobs if job["source"] == "feedback"]
+    assert recovered == ["keep first instruction", "keep second instruction"]
+    assert runtime.agent_jobs[0]["feedback"] == []
+    client.post("/internal/agent/next", json={}, headers=HEADERS).raise_for_status()
+    assert [job["text"] for job in runtime.agent_jobs if job["source"] == "feedback"] == recovered
+
+
+def test_feedback_recovery_keeps_overflow_until_queue_capacity_returns(client):
+    metadata = start_job(client)
+    runtime = client.app.state.runtime
+    for text in ("first feedback", "second feedback"):
+        client.post("/api/pi-agent/messages", json={"episode_id": runtime.episode, "text": text}).raise_for_status()
+    for index in range(11):
+        runtime.queue_agent(f"backlog-{index}", "feedback")
+    client.post("/internal/agent/event", headers=HEADERS, json={**metadata, "type": "failed"}).raise_for_status()
+    assert [item["text"] for item in runtime.agent_jobs[0]["feedback"]] == ["second feedback"]
+    next_job = client.post("/internal/agent/next", json={}, headers=HEADERS).json()["job"]
+    client.post("/internal/agent/event", headers=HEADERS, json={"episode_id": runtime.episode,
+        "run_id": next_job["run_id"], "type": "completed"}).raise_for_status()
+    client.post("/internal/agent/next", json={}, headers=HEADERS).raise_for_status()
+    assert runtime.agent_jobs[0]["feedback"] == []
+    recovered = [job["text"] for job in runtime.agent_jobs if job["text"] in ("first feedback", "second feedback")]
+    assert recovered == ["first feedback", "second feedback"]
+
+
 def test_reset_rejects_old_run_even_when_it_uses_new_episode(client):
     metadata = start_job(client)
     client.post("/api/simulation/reset", json=metadata).raise_for_status()

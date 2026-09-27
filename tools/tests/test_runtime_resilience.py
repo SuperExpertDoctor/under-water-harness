@@ -30,7 +30,7 @@ def test_automatic_backpressure_never_interrupts_tick(runtime):
 def test_disjoint_approvals_survive_candidate_eviction(runtime):
     runtime.set_mode("request")
     first = candidate(runtime)
-    second = candidate(runtime, "UUV-2")
+    second = runtime.calculate("plan_search", {"members": ["UUV-2"], "bbox": [300, 1800, 1700, 3200]})
     a = runtime.submit(first["result_id"], "a", runtime.episode)
     b = runtime.submit(second["result_id"], "b", runtime.episode)
     runtime.results.clear()
@@ -47,7 +47,7 @@ def test_replacing_one_member_does_not_invent_motion_for_others(runtime):
     runtime.submit(replacement["result_id"], "solo", runtime.episode)
     assert runtime.active["UUV-2"]["kind"] == "search"
     assert runtime.active["UUV-2"]["plan_id"] == original["plan_id"]
-    region = next(region for region in runtime.frame()["search_regions"] if region["id"] == original["plan_id"])
+    region = next(region for region in runtime.frame()["search_regions"] if region["assigned_uav_id"] == "UUV-2")
     assert region["assigned_uav_id"] == "UUV-2"
 
 

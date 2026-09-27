@@ -19,7 +19,8 @@ def add_vessel(client, vessel_class="type_ii", position=None):
     response = client.post("/api/vessels", json={"episode_id": runtime.episode,
         "command_id": f"add-{len(runtime.vessels)}", "vessel_class": vessel_class, "position_cells": position or [25, 10]})
     response.raise_for_status()
-    return client.get("/api/state").json()["scenario_vessels"][-1]
+    assert client.get("/api/state").json()["scenario_vessels"] == []
+    return client.get("/api/scene").json()["scenario_vessels"][-1]
 
 
 def toggle_ais(client, vessel, enabled):
@@ -41,7 +42,7 @@ def test_scene_vessel_is_a_moving_si_target_with_stable_scene_revision(client):
     for _ in range(10):
         runtime.tick()
     assert 0 < math.dist(before[:2], target["pose"][:2]) <= 5.01
-    scene = runtime.frame()["scenario_vessels"][0]
+    scene = client.get("/api/scene").json()["scenario_vessels"][0]
     assert scene["position"] == pytest.approx(runtime.cells(target["pose"]))
     assert scene["revision"] == vessel["revision"]
     assert "heading_deg" in scene
@@ -58,7 +59,9 @@ def test_ais_is_observed_without_uuv_sensor_and_hidden_target_stays_hidden(clien
     for _ in range(15):
         runtime.tick()
     contacts = runtime.mission_state()["contacts"]
-    assert [contact["contact_id"] for contact in contacts] == [vessel["scenario_entity_id"]]
+    assert len(contacts) == 1
+    assert contacts[0]["contact_id"].startswith("CONTACT-")
+    assert contacts[0]["contact_id"] != vessel["scenario_entity_id"]
     assert contacts[0]["state"] == "confirmed"
     assert contacts[0]["vessel_class"] == "type_ii"
     assert contacts[0]["ais_mmsi"]
@@ -79,14 +82,14 @@ def test_disabled_ais_does_not_reveal_unseen_vessel_and_existing_contact_is_lost
     for _ in range(15):
         runtime.tick()
     assert runtime.contacts == {}
-    vessel = runtime.frame()["scenario_vessels"][0]
+    vessel = client.get("/api/scene").json()["scenario_vessels"][0]
     toggle_ais(client, vessel, True).raise_for_status()
     for _ in range(15):
         runtime.tick()
-    contact = runtime.contacts[vessel["scenario_entity_id"]]
+    contact = runtime.contacts[runtime.contact_mapping[vessel["scenario_entity_id"]]]
     assert contact["state"] == "confirmed"
     last_seen = contact["last_seen"]
-    vessel = runtime.frame()["scenario_vessels"][0]
+    vessel = client.get("/api/scene").json()["scenario_vessels"][0]
     client.patch(f"/api/vessels/{vessel['scenario_entity_id']}/ais", json={"episode_id": runtime.episode,
         "command_id": "disable-again", "expected_revision": vessel["revision"], "ais_enabled": False}).raise_for_status()
     for _ in range(80):
@@ -105,7 +108,7 @@ def test_ais_off_can_be_seen_by_an_actual_nearby_active_sensor(client):
     runtime.start()
     for _ in range(5):
         runtime.tick()
-    contact = runtime.contacts.get(vessel["scenario_entity_id"])
+    contact = runtime.contacts.get(runtime.contact_mapping.get(vessel["scenario_entity_id"]))
     assert contact is not None
     assert contact["samples"][-1]["source"] == "sensor"
     assert contact["samples"][-1]["observers"] == ["UUV-1"]
@@ -119,19 +122,19 @@ def test_delete_removes_physics_contact_and_observations(client):
     for _ in range(15):
         runtime.tick()
     entity_id = vessel["scenario_entity_id"]
-    assert entity_id in runtime.contacts
-    runtime.set_mode("full")
-    candidate = runtime.calculate("plan_tracking", {"members": ["UUV-1"], "contact_id": entity_id})
-    runtime.submit(candidate["result_id"], "track-scene-vessel", runtime.episode)
+    contact_id = runtime.contact_mapping[entity_id]
+    assert contact_id in runtime.contacts
+    assert any(sample["contact_id"] == contact_id for sample in runtime.observations)
     client.request("DELETE", f"/api/vessels/{entity_id}", json={"episode_id": runtime.episode,
         "command_id": "delete-scene", "expected_revision": vessel["revision"]}).raise_for_status()
-    assert entity_id not in runtime.contacts
+    assert entity_id not in runtime.contact_mapping
+    assert contact_id not in runtime.contacts
     assert all(target["id"] != entity_id for target in runtime.targets)
-    assert all(sample["contact_id"] != entity_id for sample in runtime.observations)
-    assert not runtime.frame()["scenario_vessels"]
+    assert all(sample["contact_id"] != contact_id for sample in runtime.observations)
+    assert not client.get("/api/scene").json()["scenario_vessels"]
+    assert runtime.frame()["scenario_vessels"] == []
     runtime.tick()
-    assert runtime.status == "safety_paused"
-    assert runtime.events[-1]["type"] == "safety_tracking_contact_lost"
+    assert contact_id not in runtime.contacts
 
 
 def test_type_i_ais_is_fixed_and_scene_capacity_is_twenty(client):

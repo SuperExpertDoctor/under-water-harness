@@ -30,6 +30,9 @@ export default function App() {
   const [vesselCommandStatus, setVesselCommandStatus] = useState(null);
   const [liveEvents, setLiveEvents] = useState([]);
   const [lastLlmCycle, setLastLlmCycle] = useState(null);
+  const [scene, setScene] = useState(null);
+  const [sceneError, setSceneError] = useState("");
+  const [selectedMessageId, setSelectedMessageId] = useState(null);
   const mapExporterRef = useRef(null);
   const mission = useMissionControl(mode === "live");
   const live = useWebSocket(mode === "live" && mission.ready);
@@ -49,8 +52,27 @@ export default function App() {
     [live.information, mode, sourceFrame],
   );
   const readOnly = mode === "replay" || !mission.ready || frame?.episode_id === "local-demo";
-  const editingAllowed = mode === "live" && Boolean(frame?.vessel_mutation_allowed);
+  const editingAllowed = mode === "live" && showScenario && scene?.episode_id === frame?.episode_id && Boolean(scene?.vessel_mutation_allowed);
+  const displayFrame = useMemo(() => frame && showScenario && scene?.episode_id === frame.episode_id
+    ? { ...frame, scenario_vessels: scene.scenario_vessels || [], vessel_mutation_allowed: scene.vessel_mutation_allowed }
+    : frame, [frame, scene, showScenario]);
   const vesselCommandBusy = vesselCommandStatus?.status === "queued";
+
+  useEffect(() => {
+    if (!showScenario || mode !== "live" || !mission.ready) { setScene(null); return undefined; }
+    let disposed = false;
+    const refresh = async () => {
+      try {
+        const response = await fetch("/api/scene");
+        if (!response.ok) throw new Error(`scene_${response.status}`);
+        const next = await response.json();
+        if (!disposed) { setScene(next); setSceneError(""); }
+      } catch (error) { if (!disposed) setSceneError(error.message); }
+    };
+    refresh();
+    const timer = window.setInterval(refresh, 2500);
+    return () => { disposed = true; window.clearInterval(timer); };
+  }, [showScenario, mode, mission.ready, frame?.episode_id]);
 
   useEffect(() => {
     setSelectionMode(false);
@@ -62,6 +84,8 @@ export default function App() {
     setLiveEvents([]);
     setLastLlmCycle(null);
     setSelectedUavId(null);
+    setSelectedMessageId(null);
+    setScene(null);
   }, [mode, frame?.episode_id]);
 
   useEffect(() => {
@@ -168,7 +192,7 @@ export default function App() {
 
   const handleDeleteVessel = async () => {
     if (!editingAllowed || vesselCommandBusy || !selectedScenarioVesselId || !frame?.episode_id) return;
-    const vessel = (frame.scenario_vessels || []).find(
+    const vessel = (scene?.scenario_vessels || []).find(
       (item) => item.scenario_entity_id === selectedScenarioVesselId,
     );
     if (!vessel) return;
@@ -186,7 +210,7 @@ export default function App() {
 
   const handleSetVesselAis = async (enabled) => {
     if (!editingAllowed || vesselCommandBusy || !selectedScenarioVesselId || !frame?.episode_id) return;
-    const vessel = (frame.scenario_vessels || []).find(
+    const vessel = (scene?.scenario_vessels || []).find(
       (item) => item.scenario_entity_id === selectedScenarioVesselId,
     );
     if (!vessel?.ais_controllable || vessel.ais_enabled === enabled) return;
@@ -211,10 +235,10 @@ export default function App() {
     error: "数据错误",
   }[live.status] || live.status;
   const displayedConnectionLabel = sourceFrame?.episode_id !== "local-demo"
-    ? (live.status === "connected" ? connectionLabel : "HTTP 轮询 · 正在重连") : "本地演示 · 等待后端";
+    ? (live.status === "connected" ? connectionLabel : mission.connection === "reconnecting" ? "数据已过期 · 正在重连" : "HTTP 轮询 · 正在重连") : "本地演示 · 等待后端";
 
   return (
-    <main className={`app-layout ${mode === "replay" ? "replay-active" : ""}`}>
+    <main className={`app-layout mission-v2 ${mode === "replay" ? "replay-active" : ""}`}>
       <header className="top-bar">
         <div className="product-mark" aria-label="多 UUV 协同任务控制台">
           <span className="mark-index">MC</span>
@@ -319,7 +343,7 @@ export default function App() {
 
       <CanvasMap
         ref={mapExporterRef}
-        frame={frame}
+        frame={displayFrame}
         candidate={mode === "live" ? mission.candidate : null}
         selectedUavId={selectedUavId}
         onSelectUav={setSelectedUavId}
@@ -343,7 +367,7 @@ export default function App() {
       />
       <RightSidebar
         mission={mission}
-        frame={frame}
+        frame={displayFrame}
         selectedUavId={selectedUavId}
         onSelectUav={setSelectedUavId}
         open={sidebarOpen}
@@ -364,13 +388,26 @@ export default function App() {
         onDeleteVessel={handleDeleteVessel}
         onSetVesselAis={handleSetVesselAis}
         vesselCommandStatus={vesselCommandStatus}
+        selectedMessageId={selectedMessageId}
+        sceneVisible={showScenario}
+        onToggleScene={setShowScenario}
       />
+      {showScenario && <div className="scene-debug-indicator" role="status">场景调试真值{sceneError ? ` · ${sceneError}` : ""}</div>}
       <BottomDrawer
         frame={frame}
         events={mode === "live" ? mission.state.events || liveEvents : replayEvents}
         llmCycle={displayedLlmCycle}
         visible={drawerVisible}
         onToggle={() => setDrawerVisible((value) => !value)}
+        mission={mission}
+        onSelectEvent={(event) => {
+          const data = event.data || {};
+          const uuv = data.uav_id || data.uuv_id || data.observer_id || data.members?.[0];
+          if (uuv) setSelectedUavId(uuv);
+          if (data.contact_id) setSelectedContactId(data.contact_id);
+          if (data.message_id) { setSelectedMessageId(data.message_id); setSidebarOpen(true); }
+          if (data.plan_id && mode === "live") mission.preview(data.plan_id);
+        }}
       />
       <PlaybackBar
         visible={mode === "replay"}

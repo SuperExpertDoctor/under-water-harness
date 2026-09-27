@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Bot, CircleX, Crosshair, MousePointer2, Plane, Radio, RadioTower, Radar, Ship, Trash2, Waypoints } from "lucide-react";
+import { Bot, CircleX, Crosshair, MousePointer2, Radio, RadioTower, Radar, Ship, Trash2, Waypoints } from "lucide-react";
 import AgentPanel from "./AgentPanel";
-import { UAV_STATUS_COLORS } from "../renderer/colors";
 import {
   controlOwnerDisplayLabel,
   taskTypeDisplayLabel,
@@ -11,6 +10,8 @@ import {
 import ContactPanel from "./ContactPanel";
 import CoveragePanel from "./CoveragePanel";
 import IntentPanel from "./IntentPanel";
+import ConversationPanel from "./ConversationPanel";
+import UuvStatusPanel from "./UuvStatusPanel";
 
 const STATUS_LABELS = {
   idle: "待命",
@@ -56,9 +57,13 @@ export default function RightSidebar({
   onSetVesselAis,
   vesselCommandStatus,
   mission,
+  selectedMessageId,
+  sceneVisible,
+  onToggleScene,
 }) {
-  const [tab, setTab] = useState("state");
+  const [tab, setTab] = useState("chat");
   useEffect(() => { if (selection) setTab("state"); }, [selection]);
+  useEffect(() => { if (selectedMessageId) setTab("chat"); }, [selectedMessageId]);
   const uavs = frame?.uavs || [];
   const ships = frame?.ships || [];
   const contacts = frame?.contacts || [];
@@ -93,18 +98,25 @@ export default function RightSidebar({
   const canEditVessels = Boolean(editingAllowed) && !vesselCommandBusy;
 
   return (
-    <aside className={`sidebar ${open ? "open" : ""}`} aria-label="编队状态">
+    <aside className={`sidebar ${open ? "open" : ""} ${tab === "chat" ? "conversation-sidebar" : ""}`} aria-label="任务工作区">
       <div className="sidebar-header">
-        <div><span className="eyebrow">MISSION STATE</span><strong>编队态势</strong></div>
+        <div><span className="eyebrow">MISSION CONTROL</span><strong>任务工作区</strong></div>
         <button className="icon-btn mobile-only" onClick={onClose} aria-label="关闭编队状态" title="关闭"><CircleX size={17} /></button>
       </div>
       <div className="sidebar-tabs" role="tablist" aria-label="任务视图">
-        {[["state", "态势"], ["chat", "对话"], ["approvals", "审批"], ["tasks", "任务"]].map(([id, label]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>{label}{id === "approvals" && Boolean(mission?.state.plans?.some((plan) => plan.status === "pending_approval")) && <span className="approval-count">{mission.state.plans.filter((plan) => plan.status === "pending_approval").length}</span>}</button>)}
+        {[["chat", "对话"], ["state", "数据"]].map(([id, label]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>{label}</button>)}
       </div>
-      {tab !== "state" && mission ? <AgentPanel key={frame?.episode_id} tab={tab} mission={mission} frame={frame} readOnly={readOnly} selection={selection} /> : !frame ? (
+      {tab === "chat" && mission ? <>
+        <ConversationPanel key={frame?.episode_id} mission={mission} frame={frame} readOnly={readOnly} selectedMessageId={selectedMessageId} />
+        <div className="conversation-secondary">
+          <details className="workspace-details"><summary>审批 <span className="approval-count">{mission.state.plans?.filter((plan) => plan.status === "pending_approval").length || 0}</span></summary><AgentPanel tab="approvals" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /></details>
+          <details className="workspace-details"><summary>任务与算法</summary><AgentPanel tab="tasks" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /></details>
+        </div>
+      </> : !frame ? (
         <div className="sidebar-empty"><Radar size={24} /><span>等待任务数据</span></div>
       ) : (
         <>
+          <UuvStatusPanel frame={frame} selectedUuvId={selectedUavId} onSelectUuv={onSelectUav} />
           <section className="sidebar-section overview-grid" aria-label="任务概览">
             <Metric label="仿真时间" value={frame.timestamp || "--:--:--"} />
             <Metric label="决策周期" value={`#${frame.cycle ?? 0}`} />
@@ -114,7 +126,8 @@ export default function RightSidebar({
 
           <CoveragePanel frame={frame} connectionStatus={connectionStatus} readOnly={readOnly} />
 
-          <section className="sidebar-section vessel-editor" aria-label="初始化船舶编辑">
+          <details className="sidebar-section vessel-editor" open={sceneVisible} onToggle={(event) => { if (event.currentTarget.open !== sceneVisible) onToggleScene?.(event.currentTarget.open); }} aria-label="初始化船舶编辑">
+            <summary>场景编辑 · 调试真值</summary>
             <div className="section-heading">
               <span><Ship size={15} />场景船舶</span>
               <small>{frame.actual_vessel_count ?? ships.length}/{frame.initial_vessel_count ?? ships.length}</small>
@@ -191,7 +204,7 @@ export default function RightSidebar({
                 {vesselCommandStatus.errorCode && <small>{vesselCommandStatus.errorCode}</small>}
               </div>
             )}
-          </section>
+          </details>
 
           {selectedScenarioVessel && (
             <section className="sidebar-section selected-vessel-detail" aria-label="选中船舶详情">
@@ -247,26 +260,6 @@ export default function RightSidebar({
             <div className="coverage-track"><i style={{ width: `${coverage}%` }} /></div>
           </section>
 
-          <section className="sidebar-section uav-section">
-            <div className="section-heading"><span>UUV 编队</span><small>{uavs.filter((uav) => uav.operational_status !== "failed" && uav.status !== "idle").length} ACTIVE</small></div>
-            <div className="uav-list">
-              {uavs.map((uav) => {
-                const color = UAV_STATUS_COLORS[uav.status] || "#94A3B8";
-                const isSelected = uav.id === selectedUavId;
-                const display = uavDisplayState(uav);
-                return (
-                  <button key={uav.id} className={`uav-row ${isSelected ? "selected" : ""}`} onClick={() => onSelectUav?.(isSelected ? null : uav.id)} aria-pressed={isSelected}>
-                    <span className="uav-plane" style={{ color }}><Plane size={16} /></span>
-                    <span className="uav-copy">
-                      <strong>{vehicleDisplayId(uav.id)}</strong>
-                      <small>{taskTypeDisplayLabel(uav)} · {display.label} · {uav.assigned_region_id || "无任务"}</small>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
-
           {selected && (
             <section className="sidebar-section selected-detail">
               <div className="section-heading"><span>{vehicleDisplayId(selected.id)} 详情</span></div>
@@ -301,7 +294,7 @@ export default function RightSidebar({
           />
 
           <section className="sidebar-section llm-summary">
-            <div className="section-heading"><span><Bot size={15} />模型决策</span><small>{lastLlmCycle?.model || "LONGCAT-2.0"}</small></div>
+            <div className="section-heading"><span><Bot size={15} />模型决策</span><small>{lastLlmCycle?.model || mission?.state.agent?.model || "未连接"}</small></div>
             {lastLlmCycle ? (
               <div className="llm-status-row">
                 <span className={lastLlmCycle.success ? "success" : "failed"}>{lastLlmCycle.success ? "校验通过" : "决策失败"}</span>

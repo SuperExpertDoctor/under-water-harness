@@ -9,6 +9,7 @@ export default function AgentPanel({ tab, mission, frame, readOnly, selection })
   const [tool, setTool] = useState("plan_search");
   const [contactId, setContactId] = useState("");
   const [taskLabel, setTaskLabel] = useState("区域搜索");
+  const [automaticMembers, setAutomaticMembers] = useState(true);
   const disabled = readOnly || !mission.ready || !frame?.episode_id || frame?.episode_id === "local-demo" || Boolean(mission.busy);
   const candidate = mission.candidate;
   const assessment = mission.assessment;
@@ -69,7 +70,8 @@ export default function AgentPanel({ tab, mission, frame, readOnly, selection })
       <label className="mission-field">计算类型<select value={tool} onChange={(event) => setTool(event.target.value)} disabled={disabled}>
         <option value="plan_search">搜索航线</option><option value="plan_tracking">目标跟踪</option><option value="compute_task_allocation">编队分配</option>
       </select></label>
-      {tool !== "compute_task_allocation" && <fieldset className="member-picker"><legend>编队成员（最多 3 艘）</legend>
+      {tool !== "compute_task_allocation" && <label className="automatic-members"><input type="checkbox" checked={automaticMembers} onChange={(event) => setAutomaticMembers(event.target.checked)} disabled={disabled} />{tool === "plan_search" ? "全艇队原子搜索计划" : "自动选择协同跟踪队"}</label>}
+      {tool !== "compute_task_allocation" && !automaticMembers && <fieldset className="member-picker"><legend>{tool === "plan_tracking" ? "编队成员（最多 3 艘）" : "搜索艇"}</legend>
         {(frame?.uavs || []).map((uuv) => <label key={uuv.id}><input type="checkbox" checked={selectedMembers.includes(uuv.id)} disabled={disabled || (!selectedMembers.includes(uuv.id) && selectedMembers.length >= 3)} onChange={(event) => {
           const next = event.target.checked ? [...selectedMembers, uuv.id] : selectedMembers.filter((id) => id !== uuv.id);
           setMembers(next.length ? next : [uuv.id]);
@@ -82,7 +84,7 @@ export default function AgentPanel({ tab, mission, frame, readOnly, selection })
       {tool === "plan_tracking" && <label className="mission-field">观测接触<select value={contactId} disabled={disabled} onChange={(event) => setContactId(event.target.value)}><option value="">选择已确认接触</option>{(frame?.contacts || []).filter((contact) => !["tentative", "lost"].includes(contact.state)).map((contact) => <option key={contact.contact_id} value={contact.contact_id}>{contact.contact_id} · {contact.state}</option>)}</select></label>}
       <button className="primary-action" disabled={disabled || (tool === "plan_tracking" && !contactId) || (tool === "plan_search" && (bounds[0] >= bounds[2] || bounds[1] >= bounds[3]))} onClick={async () => {
         mission.setCandidate(null); mission.setAssessment(null);
-        const result = await mission.act("计算候选", "/api/algorithm/task-plan", { tool, members: selectedMembers, bbox: bounds, contact_id: contactId });
+        const result = await mission.act("计算候选", "/api/algorithm/task-plan", { tool, ...(!automaticMembers ? { members: selectedMembers } : {}), standing_policy: automaticMembers && tool === "plan_search", bbox: bounds, contact_id: contactId });
         if (result?.result_id) await mission.preview(result.result_id);
       }}><Play size={14} />计算候选</button>
       {candidate && <div className="candidate-detail">

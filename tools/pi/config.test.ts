@@ -11,7 +11,8 @@ test("LongCat uses documented compatible endpoint and bounded output", () => {
 });
 
 test("task allowlist cannot grant permission or execute shell", () => {
-  assert.equal(TOOL_NAMES.length, 9);
+  assert.equal(TOOL_NAMES.length, 10);
+  assert.ok(TOOL_NAMES.includes("partition_search_area"));
   assert.ok(!TOOL_NAMES.includes("bash"));
   assert.ok(!TOOL_NAMES.includes("approve"));
 });

@@ -4,6 +4,7 @@ import { RadioTower } from "lucide-react";
 import { computeLayout, dragToBBox, pixelToCoord } from "../renderer/geometry";
 import { renderFrame } from "../renderer/layers";
 import { drawMissionOverlay } from "../renderer/missionOverlay";
+import { interpolateUuv } from "../state/missionState";
 
 const MAP_ASSET_SOURCES = {
   background: "/assets/background.png",
@@ -149,17 +150,7 @@ const CanvasMap = forwardRef(function CanvasMap({
           const prevShipMap = new Map();
           for (const s of prev.ships || []) prevShipMap.set(s.id, s);
 
-          const uavs = (target.uavs || []).map((u) => {
-            const prevU = prevUavMap.get(u.id);
-            if (!prevU) return u;
-            return {
-              ...u,
-              position: [
-                prevU.position[0] + (u.position[0] - prevU.position[0]) * t,
-                prevU.position[1] + (u.position[1] - prevU.position[1]) * t,
-              ],
-            };
-          });
+          const uavs = (target.uavs || []).map((u) => interpolateUuv(prevUavMap.get(u.id), u, t));
 
           const ships = (target.ships || []).map((s) => {
             const prevS = prevShipMap.get(s.id);
@@ -251,6 +242,7 @@ const CanvasMap = forwardRef(function CanvasMap({
             selectedScenarioVesselId,
             frameCount: index, assets: mapAssets,
           });
+          drawMissionOverlay(context, frames[index], null, layoutRef.current);
           context.restore();
           onProgress?.((index + 1) / frames.length);
           await new Promise((resolve) => window.setTimeout(resolve, 1000 / fps));

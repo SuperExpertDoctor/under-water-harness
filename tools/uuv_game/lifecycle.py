@@ -47,7 +47,7 @@ def exit_route(runtime, boat):
     return None
 
 
-def repair_search(runtime, exclude=(), add=()):
+def repair_search(runtime, exclude=(), add=(), required=True):
     if not runtime.standing_policy.get("local_repair"):
         runtime.pause("safety_local_repair_authorization_required")
         return False
@@ -56,8 +56,9 @@ def repair_search(runtime, exclude=(), add=()):
         allow_partial=runtime.standing_policy["energy_rotation"], now=runtime.sim_time,
         window_s=runtime.config.coverage_window_min*60)
     if result["status"] != "succeeded":
-        runtime.event("allocation_blocked", {"reason": result["diagnostics"]})
-        runtime.pause("safety_allocation_infeasible")
+        runtime.event("allocation_blocked", {"reason": result["diagnostics"], "required": required})
+        if required:
+            runtime.pause("safety_allocation_infeasible")
         return False
     previous = {r["owner"]: r["cells"] for r in runtime.regions}
     for region in result["regions"]:
@@ -91,8 +92,9 @@ def prepare_exits(runtime):
         if route is None:
             runtime.pause("safety_exit_infeasible")
             return False
-        if not repair_search(runtime, exclude=[boat["id"]]):
-            return False
+        if not repair_search(runtime, exclude=[boat["id"]], required=False):
+            runtime.event("coverage_gap_accepted", {"uuv_id": boat["id"], "generation": boat["generation"],
+                "reason": "repair_infeasible_for_remaining_fleet"})
         if action["kind"] == "track":
             runtime.event("tracking_relief_required", {"uuv_id": boat["id"], "contact_id": action.get("contact_id")})
             runtime.queue_agent("A tracking boat is exiting. Plan a replacement team and verify observations; do not report handoff before acquisition.", "energy_exit")

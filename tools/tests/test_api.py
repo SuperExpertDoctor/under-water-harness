@@ -181,6 +181,25 @@ def test_fuel_shortage_engages_energy_exit_lifecycle(client):
     assert any(e["type"] == "energy_exit_started" and e["data"]["uuv_id"] == drained["uuv_id"] for e in runtime.events)
 
 
+def test_energy_exit_proceeds_when_repair_infeasible(client, monkeypatch):
+    import uuv_game.lifecycle as lifecycle
+    runtime = client.app.state.runtime
+    runtime.set_mode("full")
+    fleet = runtime.calculate("plan_search", {"standing_policy": True})
+    assert fleet["status"] == "succeeded"
+    runtime.submit(fleet["result_id"], "fleet", runtime.episode)
+    monkeypatch.setattr(lifecycle, "search_bundle",
+        lambda *args, **kwargs: {"status": "failed", "diagnostics": {"reason": "forced"}})
+    boat = runtime.uuvs[0]
+    boat["pose"] = [350, 2000, 3.14159]
+    boat["remaining_range_m"] = 500
+    runtime.start()
+    runtime.tick()
+    assert runtime.status == "running"
+    assert runtime.active[boat["id"]]["kind"] == "exit"
+    assert any(e["type"] == "coverage_gap_accepted" and e["data"]["uuv_id"] == boat["id"] for e in runtime.events)
+
+
 def test_invalid_video_rejected(client):
     assert client.post("/api/export/mp4", content=b"not video", headers={"Content-Type": "video/webm"}).status_code in (422, 503)
 

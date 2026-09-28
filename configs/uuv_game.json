@@ -144,7 +144,11 @@
       "orbit_blend_distance_m": 180.0,
       "heading_gain": 1.5,
       "lookahead_m": 40.0,
-      "follow_heading_penalty_fraction": 0.2
+      "follow_heading_penalty_fraction": 0.2,
+      "acquisition_heading_gain": 1.0,
+      "acquisition_standoff_m": 170.0,
+      "reacquisition_standoff_m": 120.0,
+      "acquisition_prediction_s": 3.0
     },
     "control": {
       "prediction_times_s": [0, 3, 6, 9, 12, 18],
@@ -232,7 +236,14 @@
     "runtime": {
       "periodic_review_s": 30.0,
       "candidate_freshness_m": 200.0,
+      "contact_candidate_freshness_m": 120.0,
+      "contact_candidate_max_age_s": 30.0,
       "approved_plan_expiration_s": 600.0,
+      "reacquisition_trigger_s": 3.0,
+      "reacquisition_max_unobserved_s": 120.0,
+      "contact_hold_max_s": 120.0,
+      "contact_hold_radius_m": 500.0,
+      "contact_hold_energy_reserve_m": 600.0,
       "route_domain_padding_m": 100.0,
       "obstacle_interaction_padding_m": 12.0,
       "max_pending_approvals": 32,

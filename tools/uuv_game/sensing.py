@@ -134,6 +134,7 @@ def observe(runtime):
                 runtime.active[boat["id"]].get("acquisition_mode") == "active" for boat in tracking):
             for boat in tracking:
                 runtime.active[boat["id"]]["acquisition_mode"] = "passive"
+                runtime.active[boat["id"]]["established_once"] = True
                 if runtime.active[boat["id"]].get("phase") == "reacquiring":
                     runtime.active[boat["id"]]["phase"] = "acquiring"
             runtime.event("tracking_passive_acquisition_started", {"contact_id": key,
@@ -162,6 +163,11 @@ def observe(runtime):
                           {"contact_id": key, "state": contact["state"], "observers": contact["observers"]})
             if contact["state"] == "confirmed" and old in ("tentative", "lost"):
                 runtime.event("target_found", {"contact_id": key})
+                if old == "tentative" and hasattr(runtime, "provisional_contact"):
+                    discoverer = next((sample for sample in accepted if sample["mode"] == "active"
+                        and runtime.active.get(sample["observer_id"], {}).get("kind") == "search"), None)
+                    if discoverer:
+                        runtime.provisional_contact(key, discoverer)
                 runtime.queue_agent(f"Contact {key} confirmed. Select a two-UUV tracking team, evaluate and submit its transit plan, preserving search coverage.", "target_found")
             elif contact["state"] == "lost":
                 runtime.queue_agent(f"Contact {key} lost. Review active reacquisition and remaining coverage.", "target_lost")

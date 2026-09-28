@@ -235,23 +235,27 @@ class AdversaryApiTests(unittest.TestCase):
         game.submit(fleet['result_id'], 'enemy-scenario-search', game.episode)
         job = self.post('next', {}).json()['job']
         ids = {'episode_id': game.episode, 'run_id': job['run_id']}
-        tracking = False
         confirmed_at = None
         while game.sim_time < 2400:
             if game.frame_id % 150 == 0:
                 self.post('heartbeat', ids).raise_for_status()
                 self.post('parameters', {**ids, 'speed_mps': speed, 'turn_bias': .2, 'duration_s': 60}).raise_for_status()
             game.tick()
-            self.assertEqual(game.status, 'running', game.events[-3:])
+            self.assertEqual(game.status, 'running', {
+                'events': game.events[-3:],
+                'actions': {member: (action['kind'], action.get('phase'), action.get('provisional'))
+                    for member, action in game.active.items()},
+                'contacts': {key: (contact['state'], contact['last_seen']) for key, contact in game.contacts.items()},
+            })
             self.assertEqual(len(game.uuvs), 8)
             self.assertEqual(len(game.targets), 1)
             contact = next((contact for contact in game.contacts.values() if contact['state'] == 'confirmed'), None)
-            if contact and not tracking:
-                confirmed_at = game.sim_time
+            if contact and not any(action['kind'] == 'track' for action in game.active.values()):
+                if confirmed_at is None:
+                    confirmed_at = game.sim_time
                 candidate = game.calculate('plan_tracking', {'contact_id': contact['contact_id']})
                 self.assertEqual(candidate['status'], 'succeeded')
-                game.submit(candidate['result_id'], 'enemy-scenario-track', game.episode)
-                tracking = True
+                game.submit(candidate['result_id'], f'enemy-scenario-track-{game.frame_id}', game.episode)
             self.assertLessEqual(sum(action['kind'] == 'track' for action in game.active.values()), 3)
             if game.metrics['effective_tracking_seconds'] >= 5:
                 break

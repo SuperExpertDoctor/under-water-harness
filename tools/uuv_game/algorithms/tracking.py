@@ -61,8 +61,8 @@ def tracking_plan(uuvs, contact, obstacles, *, require_active_acquisition=True):
                 route = None
                 for _ in range(_TRACK["candidate_iterations"]):
                     center = [tx+vx*eta, ty+vy*eta]
-                    heading = math.atan2(vy+Config().speed*math.cos(angle), vx-Config().speed*math.sin(angle))
-                    goal = [center[0]+distance*math.cos(angle), center[1]+distance*math.sin(angle), heading]
+                    goal = [center[0]+distance*math.cos(angle), center[1]+distance*math.sin(angle), 0]
+                    goal[2] = math.atan2(center[1]-goal[1], center[0]-goal[0])
                     route = plan_path(start, goal, obstacles=obstacles, budget=_TRACK["planning_entry_budget"])
                     result["diagnostics"]["candidate_routes"] += 1
                     if route["status"] != "succeeded":
@@ -157,6 +157,20 @@ def tracking_plan(uuvs, contact, obstacles, *, require_active_acquisition=True):
             conflict_solver=joint["diagnostics"]["algorithm"], conflict_nodes=joint["diagnostics"]["expanded"],
             solution_quality="feasible", arrival_is_tracking_success=False)
     return result
+
+
+def acquisition_control(pose, estimate, radius=Config().radius, speed=Config().speed, *, reacquiring=False):
+    """Turn toward the shared estimate while preserving a safe moving standoff."""
+    x, y, heading = valid_pose(pose)
+    radius, speed = positive(radius, "radius"), positive(speed, "speed")
+    tx, ty, vx, vy = [finite(estimate[key], key) for key in ("x", "y", "vx", "vy")]
+    tx += vx*_TRACK["acquisition_prediction_s"]
+    ty += vy*_TRACK["acquisition_prediction_s"]
+    standoff = _TRACK["reacquisition_standoff_m"] if reacquiring else _TRACK["acquisition_standoff_m"]
+    if math.dist([x, y], [tx, ty]) <= standoff:
+        return tracking_control(pose, estimate, radius=radius, speed=speed)
+    error = math.remainder(math.atan2(ty-y, tx-x)-heading, math.tau)
+    return max(-1/radius, min(1/radius, _TRACK["acquisition_heading_gain"]*error/radius))
 
 
 def tracking_control(pose, estimate, radius=Config().radius, speed=Config().speed, slot=0, team=None) -> float:

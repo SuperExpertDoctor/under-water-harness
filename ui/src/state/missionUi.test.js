@@ -14,6 +14,17 @@ test("console exposes timeline agent metrics and retained secondary views", asyn
   for (const label of ["时间线", "Agent 运行", "任务指标", "区域", "参数", "AIS"]) assert.ok(html.includes(label), label);
 });
 
+test("contact transition events read as mission actions in the timeline", async () => {
+  const { default: Drawer } = await server.ssrLoadModule("/src/components/BottomDrawer.jsx");
+  const events = [
+    { id: 1, type: "provisional_contact_aborted", time: 1, data: { uuv_id: "UUV-1" } },
+    { id: 2, type: "tracking_reacquisition_started", time: 2, data: { uuv_id: "UUV-1" } },
+    { id: 3, type: "stale_contact_search_resumed", time: 3, data: { members: ["UUV-1", "UUV-2"] } },
+  ];
+  const html = renderToStaticMarkup(createElement(Drawer, { frame: {}, events, visible: true }));
+  for (const label of ["临时接触中止", "主动重新捕获", "失联归还搜索"]) assert.ok(html.includes(label), label);
+});
+
 test("conversation renders safe Markdown without raw HTML or executable links", async () => {
   const { default: Conversation } = await server.ssrLoadModule("/src/components/ConversationPanel.jsx");
   const mission = { ready: true, state: { messages: [{ id: "m", role: "assistant", text: "**Observed** <script>alert(1)</script> [bad](javascript:alert(1))", status: "streaming" }] } };
@@ -26,9 +37,9 @@ test("conversation renders safe Markdown without raw HTML or executable links", 
 
 test("boat data includes generation energy range heading speed and sensor phase", async () => {
   const { default: Panel } = await server.ssrLoadModule("/src/components/UuvStatusPanel.jsx");
-  const frame = { uavs: [{ id: "UUV-1", generation: 3, energy_pct: 42, remaining_range_m: 4800, speed_mps: 4, heading_deg: 90, sensor_mode: "passive", task_phase: "acquire", position: [1, 2] }] };
+  const frame = { uavs: [{ id: "UUV-1", generation: 3, energy_pct: 42, remaining_range_m: 4800, speed_mps: 4, heading_deg: 90, sensor_mode: "passive", operation_mode: "track", task_phase: "acquire", position: [1, 2] }] };
   const html = renderToStaticMarkup(createElement(Panel, { frame, selectedUuvId: "UUV-1" }));
-  for (const label of ["G3", "42.0%", "4800 m", "4.0 m/s", "90.0°", "passive", "acquire"]) assert.ok(html.includes(label), label);
+  for (const label of ["G3", "42.0%", "4800 m", "4.0 m/s", "90.0°", "passive", "建立协同观测"]) assert.ok(html.includes(label), label);
 });
 
 test("conversation exposes native tool results in collapsed traceable output", async () => {

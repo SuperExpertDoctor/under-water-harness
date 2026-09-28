@@ -100,7 +100,9 @@ test("friendly console does not offer truth or extra-vessel controls", async () 
 
 test("tracking transit and unavailable observation are not mislabeled as effective tracking", async () => {
   const { uavDisplayState } = await server.ssrLoadModule("/src/renderer/displayState.js");
+  assert.equal(uavDisplayState({ operation_mode: "track", task_phase: "provisional", status: "provisional" }).label, "临时保持接触");
   assert.equal(uavDisplayState({ operation_mode: "track", task_phase: "transit", status: "transit" }).label, "跟踪转场");
+  assert.equal(uavDisplayState({ operation_mode: "track", task_phase: "acquiring", status: "acquiring" }).label, "建立协同观测");
   assert.equal(uavDisplayState({ operation_mode: "track", task_phase: "tracking", status: "tracking", effective_tracking: false }).label, "观测中断");
   assert.equal(uavDisplayState({ operation_mode: "idle", task_phase: "exit", status: "transit" }).label, "驶离补换");
 });

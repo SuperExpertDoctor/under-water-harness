@@ -15,11 +15,11 @@ from .algorithms.motion import integrate
 from .algorithms.planning import plan_path, path_safe
 from .algorithms.coverage import plan_search
 from .algorithms.allocation import allocate_tasks
-from .algorithms.tracking import tracking_control, follow_path, tracking_plan
+from .algorithms.tracking import acquisition_control, tracking_control, follow_path, tracking_plan
 from .algorithms.partition import partition_regions
 from .algorithms.control import choose_controls
 from .mission_planning import search_bundle, explicit_regions
-from .lifecycle import prepare_exits, replacement_pose, apply_replacements
+from .lifecycle import prepare_exits, replacement_pose, apply_replacements, repair_search
 from .handover import prepare_handover, finish_handover
 from .sensing import observe, sensor_mode, sensor_roles
 from .information import information_fields
@@ -161,7 +161,7 @@ class MissionRuntime:
         self.last_observation_time = -1.0
         self.regions = []
         self.region_revision = 0
-        self.standing_policy = {"enabled": False, "energy_rotation": False, "local_repair": False, "lost_reacquire": False}
+        self.standing_policy = {"enabled": False, "energy_rotation": False, "local_repair": False, "lost_reacquire": False, "contact_hold": False}
         self.metrics = {"effective_tracking_seconds": 0.0, "lost_seconds": 0.0, "handoff_count": 0, "handoff_attempts": 0, "rotation_count": 0}
 
     @synchronized
@@ -399,6 +399,9 @@ class MissionRuntime:
             "snapshot_id": snapshot, "members": [u["id"] for u in members], "created_at_s": self.sim_time,
             "start_poses": {u["id"]: u["pose"] for u in members}, "assignments": assignments,
             "generations": {u["id"]: u["generation"] for u in members}})
+        if result.get("kind") == "track" and result.get("contact_id") in contacts:
+            belief = contacts[result["contact_id"]]
+            result["contact_snapshot"] = {key: belief[key] for key in ("x", "y", "vx", "vy")}
         affected = set(result["members"]) | set(result.get("repair_assignments", {}))
         if result.get("fleet_plan") and not result.get("partial_region_update"):
             affected.update(region["owner"] for region in regions)
@@ -472,6 +475,16 @@ class MissionRuntime:
                     errors.append("missing_sensor_capability")
         if result.get("kind") == "track" and self.contacts.get(result.get("contact_id"), {}).get("state") in (None, "lost"):
             errors.append("contact_lost")
+        if result.get("kind") == "track" and result.get("contact_snapshot"):
+            previous = result["contact_snapshot"]
+            current = self.contacts.get(result["contact_id"])
+            if current:
+                elapsed = max(0, self.sim_time-result["created_at_s"])
+                predicted = [previous["x"]+previous["vx"]*elapsed, previous["y"]+previous["vy"]*elapsed]
+                if math.dist(predicted, [current["x"], current["y"]]) > _RUNTIME["contact_candidate_freshness_m"]:
+                    errors.append("contact_estimate_changed_replan")
+                if "last_seen" in current and self.sim_time-current["last_seen"] > _RUNTIME["contact_candidate_max_age_s"]:
+                    errors.append("contact_observation_stale_replan")
         if result.get("kind") == "track":
             existing = {member for member, action in self.active.items() if action["kind"] == "track" and action.get("contact_id") == result.get("contact_id")}
             if len(existing | set(members)) > _ASSIGNMENT["maximum_team_size"]:
@@ -549,7 +562,8 @@ class MissionRuntime:
                 active_capable = "active" in next(boat["capabilities"] for boat in self.uuvs if boat["id"] == member)
                 self.active[member]["acquisition_mode"] = "passive" if passive_established or not active_capable else "active"
         if plan.get("standing_policy"):
-            self.standing_policy = {"enabled": True, "energy_rotation": True, "local_repair": True, "lost_reacquire": True, "plan_id": plan["plan_id"]}
+            self.standing_policy = {"enabled": True, "energy_rotation": True, "local_repair": True, "lost_reacquire": True,
+                "contact_hold": True, "plan_id": plan["plan_id"]}
         if plan.get("regions"):
             unchanged = [r for r in self.regions if r["owner"] not in plan["members"]] if plan.get("partial_region_update") else []
             self.regions = unchanged + copy.deepcopy(plan["regions"])
@@ -668,6 +682,42 @@ class MissionRuntime:
     def _observe(self):
         observe(self)
 
+    def provisional_contact(self, contact_id, sample):
+        if not self.standing_policy.get("contact_hold") or self.status != "running":
+            return
+        member = sample["observer_id"]
+        boat = next((u for u in self.uuvs if u["id"] == member), None)
+        action = self.active.get(member)
+        region = next((r for r in self.regions if r["owner"] == member), None)
+        if (not boat or not action or action["kind"] != "search" or not region
+                or sample["generation"] != boat["generation"] or "active" not in boat["capabilities"]
+                or sum(a["kind"] == "track" and a.get("contact_id") == contact_id for a in self.active.values()) >= _ASSIGNMENT["maximum_team_size"]):
+            return
+        edge = min(boat["pose"][0], boat["pose"][1], self.config.width-boat["pose"][0], self.config.height-boat["pose"][1])
+        if boat["remaining_range_m"] <= edge+self.config.exit_reserve+_RUNTIME["contact_hold_energy_reserve_m"]:
+            return
+        radius = _RUNTIME["contact_hold_radius_m"]
+        x, y = boat["pose"][:2]
+        self.active[member] = {"plan_id": action["plan_id"], "kind": "track", "phase": "provisional", "provisional": True,
+            "contact_id": contact_id, "acquisition_mode": "active", "generation": boat["generation"],
+            "slot": 0, "expires_at_s": self.sim_time+_RUNTIME["contact_hold_max_s"],
+            "execution_domain": [max(0, x-radius), max(0, y-radius),
+                                 min(self.config.width, x+radius), min(self.config.height, y+radius)]}
+        self.regions = [r for r in self.regions if r["owner"] != member]
+        self.region_revision += 1
+        self.revision += 1
+        self.event("provisional_contact_started", {"uuv_id": member, "contact_id": contact_id,
+            "observation_id": sample["sample_id"], "observed_at_s": sample["time_s"],
+            "estimated_position": [self.contacts[contact_id]["x"], self.contacts[contact_id]["y"]],
+            "generation": boat["generation"],
+            "gap_region_id": region["id"], "expires_at_s": self.active[member]["expires_at_s"]})
+
+    def _end_provisional_contact(self, member, reason):
+        action = self.active.pop(member)
+        self.event("provisional_contact_expired" if reason == "lease_expired" else "provisional_contact_aborted",
+            {"uuv_id": member, "contact_id": action["contact_id"], "reason": reason})
+        return repair_search(self, add=[member])
+
     def _search_gap(self):
         if not any(u["id"] not in self.active and "active" in u["capabilities"]
                    for u in self.uuvs):
@@ -703,6 +753,32 @@ class MissionRuntime:
         if enemy_job and enemy_job["status"] == "running" and enemy_job["lease_deadline"] <= time.monotonic():
             enemy_job["status"] = "failed"
             self.adversary.update(parameters=None, status="degraded")
+        for member, action in list(self.active.items()):
+            if action.get("provisional") and self.sim_time >= action["expires_at_s"]:
+                if not self._end_provisional_contact(member, "lease_expired"):
+                    return
+        stale_contacts = {action["contact_id"] for action in self.active.values()
+            if action.get("kind") == "track" and not action.get("provisional") and action.get("contact_id") in self.contacts
+            and self.contacts[action["contact_id"]]["state"] == "lost"
+            and self.sim_time-self.contacts[action["contact_id"]]["last_seen"] >= _RUNTIME["reacquisition_max_unobserved_s"]
+            and not any(other.get("kind") == "track" and other.get("contact_id") == action["contact_id"]
+                and other.get("phase") == "transit" for other in self.active.values())
+            and all(self.sim_time-other.get("acquisition_started_at_s", self.contacts[action["contact_id"]]["last_seen"])
+                >= _RUNTIME["reacquisition_max_unobserved_s"] for other in self.active.values()
+                if other.get("kind") == "track" and other.get("contact_id") == action["contact_id"])}
+        for contact_id in stale_contacts:
+            members = [member for member, action in self.active.items()
+                if action.get("kind") == "track" and action.get("contact_id") == contact_id]
+            if not self.standing_policy.get("local_repair"):
+                self.pause("safety_stale_contact_repair_authorization_required")
+                return
+            for member in members:
+                self.active.pop(member)
+            if not repair_search(self, add=members):
+                return
+            self.event("stale_contact_search_resumed", {"contact_id": contact_id, "members": members,
+                "last_seen_s": self.contacts[contact_id]["last_seen"]})
+            self.queue_agent(f"Contact {contact_id} has no fresh observation. Coverage search resumed; plan new tracking only after a measured reacquisition.", "target_lost")
         if self.frame_id % _RUNTIME["safety_review_frames"] == 0:
             prepare_handover(self)
             if not prepare_exits(self):
@@ -724,21 +800,28 @@ class MissionRuntime:
                     self.pause("safety_tracking_contact_lost")
                     return
                 if estimate["state"] == "lost":
+                    if action.get("phase") != "transit":
+                        action["phase"] = "reacquiring"
+                    action["acquisition_mode"] = "active"
+                elif (action.get("phase") == "tracking" and self.standing_policy.get("lost_reacquire")
+                      and self.sim_time-estimate["last_seen"] >= _RUNTIME["reacquisition_trigger_s"]):
                     action["phase"] = "reacquiring"
                     action["acquisition_mode"] = "active"
-                elif action.get("phase") == "reacquiring":
-                    action["phase"] = "acquiring"
+                    self.event("tracking_reacquisition_started", {"uuv_id": u["id"], "contact_id": action["contact_id"],
+                        "last_seen_s": estimate["last_seen"]})
                 teammates = [b for b in sorted(self.uuvs, key=lambda b: (self.active.get(b["id"], {}).get("slot", 0), b["id"]))
                     if self.active.get(b["id"], {}).get("kind") == "track" and self.active[b["id"]].get("contact_id") == action["contact_id"]
                     and (action.get("phase") == "transit" or self.active[b["id"]].get("phase") != "transit")]
                 slot = next(i for i, b in enumerate(teammates) if b["id"] == u["id"])
-                preferred = tracking_control(pose, estimate, slot=slot, team=[b["pose"] for b in teammates] if len(teammates) >= 2 else None)
+                preferred = (acquisition_control(pose, estimate, reacquiring=action.get("phase") == "reacquiring") if action.get("acquisition_mode") == "active" and action.get("phase") in ("provisional", "acquiring", "reacquiring")
+                    else tracking_control(pose, estimate, slot=slot, team=[b["pose"] for b in teammates] if len(teammates) >= 2 else None))
                 if action.get("phase") == "transit" and action.get("points"):
                     points = action["points"]
                     nearest = min(range(action["index"], min(len(points), action["index"]+_RUNTIME["nearest_waypoint_span"])), key=lambda n: math.dist(pose[:2], points[n][:2]))
                     action["index"] = nearest
                     if nearest >= len(points)-_RUNTIME["arrival_waypoint_tolerance"] or (math.dist(pose[:2], points[-1][:2]) < _RUNTIME["arrival_distance_m"] and abs(math.remainder(pose[2]-points[-1][2], 2*math.pi)) < _RUNTIME["arrival_heading_rad"]):
                         action["phase"] = "acquiring"
+                        action["acquisition_started_at_s"] = self.sim_time
                         self.event("tracking_position_reached", {"uuv_id": u["id"], "contact_id": action["contact_id"]})
                     else:
                         preferred = follow_path(pose, points[nearest:nearest+_RUNTIME["lookahead_points"]])
@@ -771,6 +854,9 @@ class MissionRuntime:
         if selected is None:
             self.event("control_infeasible", {"algorithm": "joint-dubins-beam", "controls": controls, "diagnostics": control_diagnostics,
                 "boats": [{"id": u["id"], "pose": u["pose"], "curvature": u["curvature"]} for u in self.uuvs]})
+            provisional = next((member for member, action in self.active.items() if action.get("provisional")), None)
+            if provisional and self._end_provisional_contact(provisional, "unsafe_joint_control"):
+                return self.tick()
             self.pause("safety_infeasible")
             return
         for u in self.uuvs:

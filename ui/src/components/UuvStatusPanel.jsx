@@ -30,6 +30,7 @@ const STATUS_LABELS = {
   exiting: "驶离补换",
   reacquiring: "重搜索",
   tracking_transit: "跟踪转场",
+  provisional: "临时保持接触",
 };
 
 function idLabel(id) {
@@ -123,7 +124,7 @@ export default function UuvStatusPanel({ frame, selectedUuvId, onSelectUuv }) {
                   <div><dt>速度</dt><dd>{Number.isFinite(uav.speed_mps) ? `${uav.speed_mps.toFixed(1)} m/s` : "--"}</dd></div>
                   <div><dt>航向</dt><dd>{Number.isFinite(uav.heading_deg) ? `${uav.heading_deg.toFixed(1)}°` : "--"}</dd></div>
                   <div><dt>传感器</dt><dd>{sensorLabel(uav)} <small>({uav.sensor_mode || "off"})</small></dd></div>
-                  <div><dt>任务阶段</dt><dd>{uav.task_phase || "--"}</dd></div>
+                  <div><dt>任务阶段</dt><dd>{uavDisplayState(uav).label}</dd></div>
                   <div><dt>搜索区域</dt><dd>{uav.assigned_region_id || "--"}</dd></div>
                   <div><dt>控制权</dt><dd>{uav.control_owner || "--"}</dd></div>
                 </dl>

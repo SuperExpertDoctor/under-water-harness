@@ -12,6 +12,11 @@ const TABS = [
 ];
 const EVENT_NAMES = {
   target_found: "发现目标",
+  provisional_contact_started: "临时保持接触",
+  provisional_contact_expired: "接触保持到期",
+  provisional_contact_aborted: "临时接触中止",
+  tracking_reacquisition_started: "主动重新捕获",
+  stale_contact_search_resumed: "失联归还搜索",
   ship_detected: "舰船确认",
   target_lost: "目标丢失",
   uav_returned: "UAV 返航",

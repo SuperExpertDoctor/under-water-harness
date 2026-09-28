@@ -86,8 +86,9 @@ export function uavDisplayState(uav = {}) {
   }
   if (["exit", "exiting"].includes(uav.task_phase)) return { label: "驶离补换", tone: "return", phase: "exiting" };
   if (uav.operation_mode === "track") {
+    if (uav.task_phase === "provisional") return { label: "临时保持接触", tone: "observe", phase: "track_provisional" };
     if (["transit", "tracking_transit"].includes(uav.task_phase)) return { label: "跟踪转场", tone: "approach", phase: "track_approach" };
-    if (["acquire", "acquiring"].includes(uav.task_phase)) return { label: "获取观测", tone: "observe", phase: "track_acquire" };
+    if (["acquire", "acquiring"].includes(uav.task_phase)) return { label: "建立协同观测", tone: "observe", phase: "track_acquire" };
     if (uav.effective_tracking === false && uav.task_phase === "tracking") return { label: "观测中断", tone: "assessment", phase: "track_degraded" };
     if (["degraded", "reacquiring"].includes(uav.task_phase)) return { label: "重新搜索", tone: "search", phase: "track_reacquire" };
   }

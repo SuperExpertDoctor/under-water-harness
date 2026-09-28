@@ -1010,14 +1010,10 @@ class MissionRuntime:
                     self.pause("safety_entry_blocked")
                     return
                 replacements[u["id"]] = replacement
-        before_turnover = copy.deepcopy(self.uuvs) if replacements else None
         for u in self.uuvs:
             u["remaining_range_m"] = max(0, u["remaining_range_m"]-math.dist(u["pose"][:2], next_poses[u["id"]][:2]))
             u["pose"] = next_poses[u["id"]]
-        if not apply_replacements(self, replacements):
-            self.uuvs = before_turnover
-            self.save()
-            return
+        apply_replacements(self, replacements)
         for target in self.targets:
             target["pose"] = target_poses[target["id"]]
         self.sim_time = round(self.sim_time+self.config.dt, 6)

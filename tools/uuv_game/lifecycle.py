@@ -1,6 +1,5 @@
 """Preauthorized boundary turnover and coverage repair, never LLM-controlled spawn."""
 
-import copy
 import math
 
 from .config import algorithm_settings
@@ -132,7 +131,6 @@ def replacement_pose(runtime, boat, next_poses):
 def apply_replacements(runtime, replacements):
     if not replacements:
         return True
-    before = (copy.deepcopy(runtime.uuvs), copy.deepcopy(runtime.active), copy.deepcopy(runtime.regions))
     for boat in runtime.uuvs:
         if boat["id"] not in replacements:
             continue
@@ -140,9 +138,9 @@ def apply_replacements(runtime, replacements):
         boat.update(pose=replacements[boat["id"]], trail=[], curvature=0, generation=old_generation+1,
                     remaining_range_m=runtime.config.range_capacity)
         runtime.active.pop(boat["id"], None)
-    if not repair_search(runtime, add=replacements):
-        runtime.uuvs, runtime.active, runtime.regions = before
-        return False
+    if not repair_search(runtime, add=replacements, required=False):
+        runtime.event("coverage_gap_accepted", {"uuv_ids": list(replacements),
+            "reason": "repair_infeasible_for_remaining_fleet"})
     for member in replacements:
         boat = next(u for u in runtime.uuvs if u["id"] == member)
         runtime.metrics["rotation_count"] += 1

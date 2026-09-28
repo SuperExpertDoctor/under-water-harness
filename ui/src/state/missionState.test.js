@@ -18,6 +18,9 @@ test("annotations preserve source identity and reject quotes outside the selecte
   assert.equal(typeof missionState.annotationPayload, "function");
   assert.deepEqual(missionState.annotationPayload(message, "this search"), { message_id: "m1", quote: "this search", plan_id: "p1" });
   assert.equal(missionState.annotationPayload(message, "another message"), null);
+  assert.equal(missionState.annotationPayload({ id: "long", text: "a".repeat(2001) }, "a".repeat(2001)), null);
+  assert.deepEqual(missionState.annotationPayload({ id: "m2", text: "搜索完成下一步追踪" }, "搜索完成\n下一步追踪"),
+    { message_id: "m2", quote: "搜索完成\n下一步追踪", plan_id: null });
 });
 
 test("generation rollover never interpolates a replacement from the departed boat", () => {

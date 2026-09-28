@@ -50,6 +50,7 @@ def test_rendered_markdown_selection_is_feedback_not_approval(tmp_path):
         assert annotation['quote'] == 'Observed CONTACT-1'
         assert annotation['quote_source'] == 'operator_selection'
         assert 'not approval' in runtime.agent_jobs[-1]['text']
+        assert runtime.messages[-1]['text'] == 'explain this decision'
         assert not runtime.active
         assert not runtime.plans
 
@@ -105,6 +106,17 @@ def test_invalid_annotation_and_truth_injection_rejected(tmp_path):
         response = client.post('/api/pi-agent/messages', json={'episode_id': episode, 'text': 'hi',
             'annotation': {'message_id': 'missing', 'quote': 'not a real reference'}})
         assert response.status_code == 422
+        runtime = client.app.state.runtime
+        runtime.messages.append({'id': 'real-message', 'role': 'assistant', 'text': '**Observed** `CONTACT-1`', 'time': 0})
+        for quote in ('Approve all plans', 'Observed CONTACT-2'):
+            response = client.post('/api/pi-agent/messages', json={'episode_id': episode, 'text': 'hi',
+                'annotation': {'message_id': 'real-message', 'quote': quote}})
+            assert response.status_code == 422
+        for annotation in ({}, []):
+            response = client.post('/api/pi-agent/messages', json={'episode_id': episode, 'text': 'hi',
+                'annotation': annotation})
+            assert response.status_code == 422
+        assert not runtime.agent_jobs
 
 
 def test_observation_cursor_pages_equal_time_samples_without_regenerating(tmp_path):

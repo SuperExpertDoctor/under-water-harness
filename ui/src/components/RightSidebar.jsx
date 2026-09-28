@@ -100,19 +100,15 @@ export default function RightSidebar({
   return (
     <aside className={`sidebar ${open ? "open" : ""} ${tab === "chat" ? "conversation-sidebar" : ""}`} aria-label="任务工作区">
       <div className="sidebar-header">
-        <div><span className="eyebrow">MISSION CONTROL</span><strong>任务工作区</strong></div>
+        <div><span className="eyebrow">MISSION CONTROL</span><strong>{tab === "chat" ? <>PI Agent <small className="sidebar-agent-status">{readOnly ? "只读" : mission?.state.agent?.status || "待命"}</small></> : "任务工作区"}</strong></div>
         <button className="icon-btn mobile-only" onClick={onClose} aria-label="关闭编队状态" title="关闭"><CircleX size={17} /></button>
       </div>
       <div className="sidebar-tabs" role="tablist" aria-label="任务视图">
-        {[["chat", "对话"], ["state", "数据"]].map(([id, label]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>{label}</button>)}
+        {[["chat", "对话"], ["state", "数据"]].map(([id, label]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>{label}{id === "state" && mission?.state.plans?.some((plan) => plan.status === "pending_approval") && <span className="sidebar-tab-count">{mission.state.plans.filter((plan) => plan.status === "pending_approval").length}</span>}</button>)}
       </div>
-      {tab === "chat" && mission ? <>
+      {tab === "chat" && mission ? (
         <ConversationPanel key={frame?.episode_id} mission={mission} frame={frame} readOnly={readOnly} selectedMessageId={selectedMessageId} />
-        <div className="conversation-secondary">
-          <details className="workspace-details"><summary>审批 <span className="approval-count">{mission.state.plans?.filter((plan) => plan.status === "pending_approval").length || 0}</span></summary><AgentPanel tab="approvals" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /></details>
-          <details className="workspace-details"><summary>任务与算法</summary><AgentPanel tab="tasks" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /></details>
-        </div>
-      </> : !frame ? (
+      ) : !frame ? (
         <div className="sidebar-empty"><Radar size={24} /><span>等待任务数据</span></div>
       ) : (
         <>
@@ -125,6 +121,11 @@ export default function RightSidebar({
           </section>
 
           <CoveragePanel frame={frame} connectionStatus={connectionStatus} readOnly={readOnly} />
+
+          {mission && <section className="sidebar-section mission-controls" aria-label="任务操作">
+            <details className="workspace-details"><summary>审批 <span className="approval-count">{mission.state.plans?.filter((plan) => plan.status === "pending_approval").length || 0}</span></summary><AgentPanel tab="approvals" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /></details>
+            <details className="workspace-details"><summary>任务与算法</summary><AgentPanel tab="tasks" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /></details>
+          </section>}
 
           {editingAllowed && <details className="sidebar-section vessel-editor" open={sceneVisible} onToggle={(event) => { if (event.currentTarget.open !== sceneVisible) onToggleScene?.(event.currentTarget.open); }} aria-label="初始化船舶编辑">
             <summary>场景编辑 · 调试真值</summary>

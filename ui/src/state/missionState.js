@@ -12,7 +12,7 @@ export function mergeMissionState(previous, incoming) {
 
 export function annotationPayload(message, selection) {
   const quote = selection?.trim();
-  if (!message?.id || !quote || !message.text?.includes(quote)) return null;
+  if (!message?.id || !quote || quote.length > 2000 || !message.text?.replace(/\s+/g, "").includes(quote.replace(/\s+/g, ""))) return null;
   return { message_id: message.id, quote, plan_id: message.plan_id ?? null };
 }
 

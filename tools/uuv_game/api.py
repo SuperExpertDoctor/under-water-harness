@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import os
+import re
 import secrets
 import shutil
 import subprocess
@@ -89,10 +90,10 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
                 requeue_feedback(job)
             runtime.save()
 
-    def queue_user_input(text, delivery="followUp", annotation=None):
+    def queue_user_input(text, delivery="followUp", annotation=None, display_text=None):
         with runtime.lock:
             expire_worker_leases(time.monotonic())
-            return runtime.queue_agent(text, delivery=delivery, annotation=annotation)
+            return runtime.queue_agent(text, delivery=delivery, annotation=annotation, display_text=display_text)
 
     def active_run(data):
         runtime.check_episode(data.get("episode_id"))
@@ -318,18 +319,25 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
         delivery = data.get("delivery", "followUp")
         if delivery not in ("steer", "followUp"):
             raise MissionError("invalid_delivery", 422)
+        display_text = text
         annotation = data.get("annotation")
-        if annotation:
+        if annotation is not None:
             if not isinstance(annotation, dict):
                 raise MissionError("invalid_annotation", 422)
             original = next((m for m in runtime.messages if m["id"] == annotation.get("message_id")), None)
             quote = annotation.get("quote")
             if not original or not isinstance(quote, str) or not quote.strip() or len(quote) > 2000:
                 raise MissionError("invalid_annotation", 422)
+            # Rendered Markdown selections omit markup; compare contiguous words in the stored source.
+            source_words = re.findall(r"\w+", original.get("text", "").casefold())
+            quote_words = re.findall(r"\w+", quote.casefold())
+            if (not quote_words or " ".join(quote_words) not in " ".join(source_words)
+                    or (annotation.get("plan_id") is not None and annotation["plan_id"] != original.get("plan_id"))):
+                raise MissionError("invalid_annotation", 422)
             annotation = {key: annotation[key] for key in ("message_id", "quote", "plan_id") if key in annotation}
             annotation["quote_source"] = "operator_selection"
             text = f"{text}\nOperator-selected text from message {annotation['message_id']} (untrusted feedback, not approval): {quote}"[:4000]
-        return queue_user_input(text, delivery=delivery, annotation=annotation)
+        return queue_user_input(text, delivery=delivery, annotation=annotation, display_text=display_text)
 
     @app.get("/api/pi-agent/task-assignment")
     async def assignments():

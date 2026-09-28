@@ -622,7 +622,7 @@ class MissionRuntime:
         return self.summary(plan)
 
     @synchronized
-    def queue_agent(self, text, source="human", delivery="followUp", annotation=None):
+    def queue_agent(self, text, source="human", delivery="followUp", annotation=None, display_text=None):
         if self.status == "stopped":
             raise MissionError("mission_stopped")
         priority = source in ("human", "feedback")
@@ -656,7 +656,7 @@ class MissionRuntime:
             self.agent_jobs.append(job)
         self.agent_jobs = self.agent_jobs[-_RUNTIME["max_agent_jobs"]:]
         if source == "human":
-            self.messages.append({"id": identifier("message"), "role": "user", "text": text[:_RUNTIME["max_message_chars"]], "time": self.sim_time,
+            self.messages.append({"id": identifier("message"), "role": "user", "text": (display_text if display_text is not None else text)[:_RUNTIME["max_message_chars"]], "time": self.sim_time,
                 "status": "queued" if running else "completed", "run_id": job["run_id"], "delivery": delivery, "annotation": annotation,
                 "feedback_id": running["feedback"][-1]["id"] if running else None})
             self.messages = self.messages[-_RUNTIME["max_messages"]:]

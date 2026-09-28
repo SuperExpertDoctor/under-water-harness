@@ -164,7 +164,8 @@
       "contact_risk_weight": 3.0,
       "proximity_padding_m": 4.0,
       "obstacle_margin_m": 10.0,
-      "separation_subdivision_limit": 5
+      "separation_subdivision_limit": 5,
+      "boundary_recovery_weight": 1000000.0
     },
     "adversary": {
       "fallback_speed_mps": 2.5,

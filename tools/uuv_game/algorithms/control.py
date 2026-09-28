@@ -72,9 +72,9 @@ def choose_controls(boats, requests, contacts, obstacles, separation=_CONTROL["s
     nearby = {identifier: {other for other in poses if other != identifier and math.dist(poses[identifier][:2], poses[other][:2]) <= 2*speed*TIMES[-1]+separation+4}
               for identifier in poses}
 
-    def rollout(identifier, curvature):
+    def rollout(identifier, curvature, margin=_CONTROL["obstacle_margin_m"]):
         points = [integrate(poses[identifier], speed, curvature, t) for t in TIMES]
-        if not path_safe(points, obstacles, requests[identifier]["execution_domain"], margin=_CONTROL["obstacle_margin_m"]):
+        if not path_safe(points, obstacles, requests[identifier]["execution_domain"], margin=margin):
             return None
         if any(not _separated(points, target, clearance) for target, clearance, _ in targets):
             return None
@@ -107,6 +107,17 @@ def choose_controls(boats, requests, contacts, obstacles, separation=_CONTROL["s
                         abs(curvature-previous[identifier])*_CONTROL["control_smoothness_weight"]+
                         _CONTROL["contact_risk_weight"]*contact_risk(points))
                 values.append((cost, curvature, points))
+        if not values:
+            # A boat pressed against its domain edge can need the full boundary
+            # to swing back inside; margin-zero rollouts are still required to
+            # stay inside the domain, clear of obstacles and separated.
+            for curvature in choices:
+                points = rollout(identifier, curvature, margin=0)
+                if points is not None:
+                    cost = (abs(curvature-preferred[identifier])*_CONTROL["control_deviation_weight"]+
+                            abs(curvature-previous[identifier])*_CONTROL["control_smoothness_weight"]+
+                            _CONTROL["contact_risk_weight"]*contact_risk(points)+_CONTROL["boundary_recovery_weight"])
+                    values.append((cost, curvature, points))
         if not values:
             diagnostics["candidate_counts"][identifier] = 0
             diagnostics.update(reason="no_static_safe_candidates", blocked_boat=identifier)

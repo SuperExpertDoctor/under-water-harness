@@ -6,6 +6,7 @@ import {
   uavDisplayState,
   vehicleDisplayId,
 } from "../renderer/displayState";
+import { informationCellCounts } from "../state/missionState";
 import ContactPanel from "./ContactPanel";
 import CoveragePanel from "./CoveragePanel";
 import IntentPanel from "./IntentPanel";
@@ -73,14 +74,11 @@ export default function RightSidebar({
   const info = frame?.info_matrix || [];
   let scanned = 0;
   let total = 0;
-  const situations = { white: 0, gray: 0, black: 0 };
   info.forEach((column) => column.forEach((value) => {
     total += 1;
     if (value > 0) scanned += 1;
-    if (value > 0.7) situations.white += 1;
-    else if (value >= 0.2) situations.gray += 1;
-    else situations.black += 1;
   }));
+  const situations = informationCellCounts(frame);
   const coverage = Number.isFinite(frame?.coverage_pct)
     ? frame.coverage_pct
     : (total ? scanned / total * 100 : 0);

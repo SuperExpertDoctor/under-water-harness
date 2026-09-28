@@ -47,6 +47,8 @@ def control(own_pose, detections, parameters, obstacles, config, now):
     """
     active = parameters if parameters and parameters["expires_at_s"] > now else {}
     speed = max(0, min(config.enemy_max_speed, active.get("speed_mps", _ADVERSARY["fallback_speed_mps"])))
+    if speed == 0:
+        return list(own_pose), 0.0, 0.0
     bias = max(-1, min(1, active.get("turn_bias", 0)))
     x, y, heading = own_pose
     nearest = min(detections, key=lambda item: item["range_m"], default=None)

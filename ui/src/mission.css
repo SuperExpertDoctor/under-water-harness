@@ -22,6 +22,9 @@
 .approval-mode-scope { margin: 6px 8px 2px; padding-top: 8px; border-top: 1px solid #454951; color: #b8bec8; font-size: 11px; }
 .mission-statuses { display: flex; gap: 12px; flex-wrap: wrap; color: var(--text-muted); font-size: 11px; }
 .mission-statuses b { color: var(--text); }
+.top-actions .recording-active, .recording-status.recording, .recording-status.failed, .recording-status.unavailable { color: var(--danger); }
+.recording-status { display: block; min-width: 0; max-width: min(400px, 60vw); overflow: hidden; color: var(--text-muted); font-size: 11px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.recording-status.completed { color: var(--teal); }
 .mission-error { position: absolute; top: calc(100% + 5px); left: 0; right: 0; z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 8px; background: #fff1f2; border: 1px solid #e1a0ad; color: var(--danger); font-size: 12px; overflow-wrap: anywhere; }
 button:disabled { opacity: .45; cursor: not-allowed; }
 .danger-action { color: var(--danger) !important; }
@@ -80,6 +83,7 @@ textarea:focus-visible, summary:focus-visible { outline: 2px solid var(--cyan); 
   .product-mark > span:last-child { display: inline; font-size: 12px; }
   .mode-switch button { font-size: 11px; padding: 0 6px; min-width: 44px; }
   .top-actions { flex: 0 0 100%; justify-content: flex-end; }
+  .recording-status { max-width: 65vw; }
   .top-actions .icon-btn, .top-actions .trail-mode-compact { width: 40px; height: 40px; }
   .mission-control { flex-wrap: wrap; gap: 4px 8px; padding-top: 3px; }
   .simulation-controls .icon-btn { width: 36px; height: 36px; }

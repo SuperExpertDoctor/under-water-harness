@@ -125,6 +125,7 @@ def main():
     env["UUV_ADVERSARY_TOKEN"] = enemy_token_path.read_text().strip()
     port, ui_port = free_port(args.port), free_port(args.ui_port)
     env["UUV_API_URL"] = f"http://127.0.0.1:{port}"
+    env["UUV_UI_URL"] = f"http://127.0.0.1:{ui_port}"
     env["VITE_BACKEND_PORT"] = str(port)
     env["PYTHONPATH"] = str(ROOT / "tools")
     env["UUV_DB"] = str(RUNTIME / "mission.sqlite")

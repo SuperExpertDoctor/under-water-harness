@@ -161,6 +161,6 @@ function ApprovalRequestItem({ plan, mission, frame, disabled }) {
       </fieldset>
       <div className="approval-submit-row"><button type="button" className="approval-preview" onClick={() => mission.preview(plan.plan_id)}><Eye size={14} />地图预览</button><span>{remaining !== null ? `剩余 ${remaining} s` : "等待你的决定"}</span><button className="approval-submit" type="submit" disabled={disabled}>提交<CornerDownRight size={14} /></button></div>
     </form>}
-    {pending && <small className="approval-paused">计划执行已暂停，等待审批结果</small>}
+    {pending && <small className="approval-paused">新计划等待审批；已授权任务继续执行</small>}
   </section>;
 }

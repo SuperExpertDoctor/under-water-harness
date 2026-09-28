@@ -43,20 +43,30 @@ def test_scan_half_life_and_obstacle_mask(game):
 
 
 def test_real_active_scan_refreshes_and_paused_reads_are_immutable(game):
+    game.uuvs[0]["pose"] = [2050, 2050, 0]
     game.active["UUV-1"] = {"kind": "search"}
     game.sim_time = 1
     game._observe()
-    assert game.frame()["info_matrix"][4][33] == 1
+    assert game.frame()["info_matrix"][20][17] == 1
+    assert game.frame()["info_matrix"][22][19] == 0
     game.sim_time = 181
-    assert game.frame()["info_matrix"][4][33] == pytest.approx(.5)
+    assert game.frame()["info_matrix"][20][17] == pytest.approx(.5)
     game._observe()
-    assert game.frame()["info_matrix"][4][33] == 1
+    assert game.frame()["info_matrix"][20][17] == 1
     game.status = "paused"
     before = copy.deepcopy((game.scan_times, game.contacts, game.rng.getstate()))
     frame = game.frame()
     game.tick()
     assert game.frame()["info_matrix"] == frame["info_matrix"]
     assert (game.scan_times, game.contacts, game.rng.getstate()) == before
+
+
+def test_information_counts_exclude_blocked_cells(game):
+    game.scan_times[0][0] = 0
+    frame = game.frame()
+    counts = frame["information_cell_counts"]
+    assert counts == {"white": 1, "gray": 0, "black": frame["searchable_cells"] - 1}
+    assert sum(counts.values()) == frame["searchable_cells"] == 1584
 
 
 def test_localized_evidence_has_neighborhood_without_scan_credit_or_truth(game):

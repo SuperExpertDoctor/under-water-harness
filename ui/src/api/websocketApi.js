@@ -1,8 +1,7 @@
 const DEFAULT_PATH = "/ws/live";
 
-function websocketUrl(path = DEFAULT_PATH) {
-  const configuredUrl = import.meta.env.VITE_WS_URL;
-  if (configuredUrl) return configuredUrl;
+export function websocketUrl(path = DEFAULT_PATH, configuredUrl = import.meta.env?.VITE_WS_URL) {
+  if (configuredUrl) return new URL(path, configuredUrl).href;
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${protocol}//${window.location.host}${path}`;
 }

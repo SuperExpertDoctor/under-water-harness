@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Focus, Grid3X3, History, PanelBottom, PanelRight, Radio, Route, Wind } from "lucide-react";
+import { Circle, Focus, Grid3X3, History, PanelBottom, PanelRight, Radio, Route, Square, Wind } from "lucide-react";
 
 import BottomDrawer from "./components/BottomDrawer";
 import CanvasMap from "./components/CanvasMap";
@@ -7,6 +7,7 @@ import PlaybackBar from "./components/PlaybackBar";
 import RightSidebar from "./components/RightSidebar";
 import MissionControl from "./components/MissionControl";
 import useMissionControl from "./hooks/useMissionControl";
+import useRecording, { recordingPresentation } from "./hooks/useRecording";
 import useReplay from "./hooks/useReplay";
 import useMp4Export from "./hooks/useMp4Export";
 import useWebSocket from "./hooks/useWebSocket";
@@ -37,6 +38,8 @@ export default function App() {
   const [selectedMessageId, setSelectedMessageId] = useState(null);
   const mapExporterRef = useRef(null);
   const mission = useMissionControl(mode === "live");
+  const recording = useRecording();
+  const recordingView = recordingPresentation(recording.status, recording.error);
   const live = useWebSocket(mode === "live" && mission.ready);
   const replay = useReplay(mode === "replay");
   const mp4Export = useMp4Export(replay, mapExporterRef);
@@ -272,6 +275,14 @@ export default function App() {
           {mode === "live" ? displayedConnectionLabel : replayConnectionLabel}
         </span>
         <div className="top-actions">
+          <button
+            type="button"
+            className={`icon-btn ${recording.status.status === "recording" ? "recording-active" : ""}`}
+            aria-label={recordingView.action === "stop" ? "停止录制界面" : "开始录制界面"}
+            title={recordingView.action === "stop" ? "停止录制并保存 MP4" : "录制完整实时界面到 outputs"}
+            disabled={!recordingView.action || recording.busy || (recordingView.action === "start" && (mode !== "live" || !mission.ready))}
+            onClick={recordingView.action === "stop" ? recording.stop : recording.start}
+          >{recordingView.action === "stop" ? <Square size={14} fill="currentColor" /> : <Circle size={15} fill="currentColor" />}</button>
           <div className="map-mode-switch" role="group" aria-label="地图图层">
             <button type="button" className={mapMode === "situation" ? "active" : ""} aria-pressed={mapMode === "situation"} onClick={() => setMapMode("situation")}>态势</button>
             <button type="button" className={mapMode === "planning" ? "active" : ""} aria-pressed={mapMode === "planning"} onClick={() => setMapMode("planning")}>规划</button>
@@ -337,7 +348,9 @@ export default function App() {
             <PanelRight size={17} />
           </button>
         </div>
-        <MissionControl mission={mission} frame={frame} readOnly={readOnly} />
+        <MissionControl mission={mission} frame={frame} readOnly={readOnly}
+          recordingStatus={recordingView.label}
+          recordingState={recordingView.alert ? "unavailable" : recording.status.status} />
       </header>
 
       <CanvasMap

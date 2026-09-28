@@ -9,7 +9,7 @@ const APPROVAL_MODES = [
   { mode: "full", label: "完全访问权限", description: "有效的 UUV 任务计划自动执行；不开放命令、文件或联网权限", Icon: ShieldAlert },
 ];
 
-export default function MissionControl({ mission, frame, readOnly }) {
+export default function MissionControl({ mission, frame, readOnly, recordingStatus, recordingState }) {
   const [modeMenuOpen, setModeMenuOpen] = useState(false);
   const modePickerRef = useRef(null);
   const modeTriggerRef = useRef(null);
@@ -72,6 +72,7 @@ export default function MissionControl({ mission, frame, readOnly }) {
     <div className="mission-statuses" aria-live="polite">
       <span>仿真 <b>{status === "local_demo" ? "离线演示" : readOnly ? "回放只读" : SIM_STATUS[status] || status || "未连接"}</b></span>
       <span title={agent.error || ""}>PI <b className={agent.error ? "failed" : ""}>{AGENT_STATUS[agent.status] || agent.status || "未连接"}</b></span>
+      {recordingStatus && <span className={`recording-status ${recordingState}`} role={["failed", "unavailable"].includes(recordingState) ? "alert" : "status"} title={recordingStatus}>{recordingStatus}</span>}
       {mission.busy && <span role="status">{mission.busy}…</span>}
     </div>
     {mission.error && <div className="mission-error" role="alert"><span>{mission.error}</span><button className="icon-btn" onClick={mission.clearError} title="关闭错误" aria-label="关闭错误"><X size={14} /></button></div>}

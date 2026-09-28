@@ -71,6 +71,10 @@ def information_fields(scan_times, contacts, searchable, now, config):
                                  amplitude*np.exp(-.5*(angle/width)**2), 0)
                 evidence = np.maximum(evidence, field)
     evidence[~mask] = 0
+    observed = freshness[mask]
     return {"info_matrix": freshness.tolist(), "target_info_matrix": np.clip(evidence, 0, 1).tolist(),
+            "information_cell_counts": {"white": int(np.count_nonzero(observed > .7)),
+                                        "gray": int(np.count_nonzero((observed >= .2) & (observed <= .7))),
+                                        "black": int(np.count_nonzero(observed < .2))},
             "information_model": {"schema": "uuv-information/v1", "scan_half_life_s": config.scan_half_life_s,
                                   "target_half_life_s": config.target_half_life_s, "as_of_s": now}}

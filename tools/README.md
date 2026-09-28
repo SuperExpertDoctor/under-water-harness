@@ -8,7 +8,7 @@
 
 ## 启动
 
-建议 Python 3.13、Node 22.22 或兼容版本。MP4 导出另外需要系统 `ffmpeg`。
+建议 Python 3.13、Node 22.22 或兼容版本。MP4 导出及后台界面录制另外需要系统 `ffmpeg`；后台录制还需要 Playwright 的 Chromium 浏览器。
 
 ```sh
 npm ci --ignore-scripts
@@ -16,6 +16,7 @@ npm run hydrate:model-data
 npm --prefix ui ci --ignore-scripts
 python -m venv tools/.venv
 tools/.venv/bin/pip install -r tools/requirements.txt
+tools/.venv/bin/python -m playwright install chromium
 ```
 
 通过环境变量提供 `LONGCAT_API_KEY`，或使用本机忽略文件 `tools/.runtime/credentials.env`。文件内容是 `LONGCAT_API_KEY=实际密钥`，目录权限应为 700、文件权限为 600。不要放进 `ui/`、Vite 环境变量、命令行参数或版本库。
@@ -33,6 +34,7 @@ tools/.venv/bin/pip install -r tools/requirements.txt
 - 左侧“对话 / 数据”：PI 公开流式回复、折叠工具结果、批注和输入队列，或 8 个槽位的代次、任务阶段、能源、剩余航程及遥测。审批和任务规划保留独立入口。
 - 右侧二维地图：责任区域、有效主动覆盖、实际航迹、规划路径、被动方位线、接触估计与不确定性。跟踪转场不显示为已建立协同跟踪。
 - 顶部：仿真开始、暂停、停止、重置，以及请求批准、辅助批准、完全自主三种模式。停止后需重置开启新任务。
+- 顶部录制按钮：开始录制完整的实时桌面界面，再次点击停止；转码完成后在 `outputs/mission-*.mp4` 查看文件。关掉操作员标签页不会停止录制，重新打开页面仍能看到录制状态并停止。后端重启/崩溃不保证视频完整，转码失败时原始 WebM 会留在 `outputs/`；长时录制需预留原始和成品视频的磁盘空间。回放模式已有单独的地图导出功能。
 - 下方任务运行台：“时间线 / Agent 运行 / 任务指标”，保留区域、参数和 AIS 入口。工具、重试、压缩和队列事件来自 PI 会话，不展示隐藏推理。
 
 单目标版本关闭新增船舶、AIS 广播和场景真值入口；旧场景修改接口明确返回 409。敌我双方仅接收各自观测，地图只显示我方已发现目标的估计和失联预测，不显示未发现目标的真值。

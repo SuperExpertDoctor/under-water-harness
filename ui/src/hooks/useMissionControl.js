@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { missionApi } from "../api/missionApi";
 import { connectStateStream } from "../api/websocketApi";
-import { mergeMissionState, mergeTelemetryFrame } from "../state/missionState";
+import { mergeMissionState, mergeTelemetryFrame, shouldApplySnapshot } from "../state/missionState";
 
 export default function useMissionControl(enabled) {
   const [state, setState] = useState({});
@@ -50,8 +50,9 @@ export default function useMissionControl(enabled) {
           setReady(true);
           stop = connectStateStream({ onState: accept, onStatus: setConnection });
         }
+        const requestedEpisode = episodeRef.current;
         const snapshot = await missionApi.get("/api/state");
-        if (disposed) return;
+        if (disposed || !shouldApplySnapshot(requestedEpisode, episodeRef.current, snapshot.episode_id)) return;
         accept({ episode_id: snapshot.episode_id, cursor: snapshot.event_cursor, plans: snapshot.plans,
           autonomy_mode: snapshot.autonomy_mode, agent: snapshot.agent_status, events: snapshot.events });
         setFrame((current) => mergeTelemetryFrame(current, snapshot));

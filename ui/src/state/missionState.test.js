@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mergeMissionState, mergeTelemetryFrame, mutationPayload, selectionToMeters, routeToCells } from "./missionState.js";
+import { informationCellCounts, mergeMissionState, mergeTelemetryFrame, mutationPayload, selectionToMeters, routeToCells, shouldApplySnapshot } from "./missionState.js";
 import { applyInformationField, createInformationField, createInformationFieldModel, updateInformationField } from "./informationField.js";
 import { DEMO_FRAME } from "./demoFrame.js";
 import * as missionState from "./missionState.js";
@@ -234,6 +234,13 @@ test("new episode drops messages, plans and telemetry matrices", () => {
   assert.deepEqual(mergeTelemetryFrame({ episode_id: "a", frame_id: 10, info_matrix: [[1]] }, { episode_id: "b", frame_id: 1 }), { episode_id: "b", frame_id: 1 });
 });
 
+test("HTTP snapshots started before a websocket episode reset cannot restore the old episode", () => {
+  assert.equal(shouldApplySnapshot("old", "new", "old"), false);
+  assert.equal(shouldApplySnapshot(null, "new", "old"), false);
+  assert.equal(shouldApplySnapshot("old", "new", "new"), true);
+  assert.equal(shouldApplySnapshot("old", "old", "new"), true);
+});
+
 test("same episode telemetry retains omitted matrices and rejects older frame", () => {
   const frame = { episode_id: "a", frame_id: 10, info_matrix: [[1]] };
   assert.equal(mergeTelemetryFrame(frame, { episode_id: "a", frame_id: 9 }), frame);
@@ -259,6 +266,12 @@ test("backend information is authoritative even beside actively scanning boats",
   assert.deepEqual(field.info_matrix, [[.2]]);
   assert.equal(field.calculation_mode, "backend");
   assert.deepEqual(applyInformationField(frame, { info_matrix: [[1]] }).info_matrix, [[.2]]);
+});
+
+test("information totals exclude blocked cells in current and historical replay frames", () => {
+  const oldFrame = { searchable_cells: 2, info_matrix: [[1, 0], [0.4, 0]] };
+  assert.deepEqual(informationCellCounts(oldFrame), { white: 1, gray: 1, black: 0 });
+  assert.deepEqual(informationCellCounts({ ...oldFrame, information_cell_counts: { white: 0, gray: 0, black: 2 } }), { white: 0, gray: 0, black: 2 });
 });
 
 test("offline formation contains exactly eight UUVs", () => {

@@ -10,6 +10,27 @@ export function mergeMissionState(previous, incoming) {
   return { ...base, ...incoming, messages: [...messages.values()].slice(-300), events: [...events.values()].slice(-500) };
 }
 
+export function shouldApplySnapshot(requestEpisode, currentEpisode, snapshotEpisode) {
+  return !currentEpisode || requestEpisode === currentEpisode || snapshotEpisode === currentEpisode;
+}
+
+export function informationCellCounts(frame) {
+  if (frame?.information_cell_counts) return frame.information_cell_counts;
+  const counts = { white: 0, gray: 0, black: 0 };
+  let total = 0;
+  for (const column of frame?.info_matrix || []) {
+    for (const value of column) {
+      total += 1;
+      if (value > .7) counts.white += 1;
+      else if (value >= .2) counts.gray += 1;
+      else counts.black += 1;
+    }
+  }
+  // Legacy backend frames mask blocked cells as black but omit explicit counts.
+  if (Number.isFinite(frame?.searchable_cells)) counts.black = Math.max(0, counts.black - Math.max(0, total - frame.searchable_cells));
+  return counts;
+}
+
 export function annotationPayload(message, selection) {
   const quote = selection?.trim();
   if (!message?.id || !quote || quote.length > 2000 || !message.text?.replace(/\s+/g, "").includes(quote.replace(/\s+/g, ""))) return null;

@@ -20,6 +20,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .runtime import ALGORITHM_IDS, MissionRuntime, MissionError, identifier
 from .agent_events import session_event
+from .recording import RecordingError, RecordingManager
 
 
 TOOL_NAMES = ("get_mission_state", "get_observations", "partition_search_area", "compute_task_allocation", "plan_path", "plan_search", "plan_tracking", "evaluate_plan", "submit_mission_plan", "get_action_status")
@@ -28,12 +29,14 @@ WORKER_LEASE_SECONDS = 15
 WORKER_LIVENESS_SECONDS = 30  # Includes the healthy worker's 15-second success cooldown.
 
 
-def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=None):
+def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=None, ui_url=None, recording_dir=None):
     db_path = db_path or os.environ.get("UUV_DB", "tools/.runtime/mission.sqlite")
     token = worker_token or os.environ.get("UUV_WORKER_TOKEN", "")
     enemy_token = adversary_token or os.environ.get("UUV_ADVERSARY_TOKEN", "")
     browser_secret = secrets.token_urlsafe(32)
     runtime = MissionRuntime(db_path)
+    recorder = RecordingManager(ui_url or os.environ.get("UUV_UI_URL"),
+        recording_dir or Path(__file__).resolve().parents[2] / "outputs")
 
     def requeue_feedback(job):
         if runtime.status == "stopped" or job["episode_id"] != runtime.episode:
@@ -138,6 +141,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
         try:
             yield
         finally:
+            await recorder.close()
             if task:
                 task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
@@ -146,11 +150,16 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
 
     app = FastAPI(title="UUV Mission Control", lifespan=lifespan)
     app.state.runtime = runtime
+    app.state.recording = recorder
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "testserver", "[::1]"])
 
     @app.exception_handler(MissionError)
     async def mission_error(_request, exc):
         return JSONResponse({"error_code": exc.code, "message": exc.code}, status_code=exc.status)
+
+    @app.exception_handler(RecordingError)
+    async def recording_error(_request, exc):
+        return JSONResponse({"error_code": exc.code, "message": recorder.status()["error"] or exc.code}, status_code=exc.status)
 
     @app.exception_handler(ValueError)
     async def invalid_value(_request, exc):
@@ -247,6 +256,22 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
     @app.get("/api/state")
     async def state():
         return runtime.frame()
+
+    @app.get("/api/recording")
+    async def recording_status():
+        return recorder.status()
+
+    @app.post("/api/recording/start")
+    async def recording_start(request: Request):
+        if await request.body() not in (b"", b"{}"):
+            raise RecordingError("unexpected_parameters", 422)
+        return await recorder.start()
+
+    @app.post("/api/recording/stop")
+    async def recording_stop(request: Request):
+        if await request.body() not in (b"", b"{}"):
+            raise RecordingError("unexpected_parameters", 422)
+        return await recorder.stop()
 
     @app.get("/api/scene")
     async def scene():

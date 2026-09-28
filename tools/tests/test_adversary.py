@@ -137,6 +137,16 @@ class AdversaryTests(unittest.TestCase):
         self.assertLessEqual(abs(curvature), 1/game.config.enemy_turn_radius)
         self.assertTrue(all(math.isfinite(value) for value in pose))
 
+    def test_zero_speed_maneuver_does_not_pause_runtime(self):
+        game = self.game
+        game.targets[0]['pose'] = [2000, 2000, 0]
+        initial = game.targets[0]['pose'][:]
+        game.start()
+        game.set_target_maneuver({'speed_mps': 0, 'turn_bias': 0, 'duration_s': 30}, '暂停移动', 'test-run')
+        game.tick()
+        self.assertEqual(game.status, 'running')
+        self.assertEqual(game.targets[0]['pose'], initial)
+
     def test_boundary_and_obstacle_avoidance(self):
         from uuv_game.adversary import control
         from uuv_game.algorithms.planning import path_safe

@@ -19,7 +19,7 @@ from .algorithms.tracking import acquisition_control, tracking_control, follow_p
 from .algorithms.partition import partition_regions
 from .algorithms.control import choose_controls
 from .mission_planning import search_bundle, explicit_regions
-from .lifecycle import prepare_exits, replacement_pose, apply_replacements, repair_search, navigation_pose
+from .lifecycle import prepare_exits, replacement_pose, apply_replacements, repair_search, navigation_pose, exit_route
 from .handover import prepare_handover, finish_handover
 from .sensing import observe, sensor_mode, sensor_roles
 from .information import information_fields
@@ -632,13 +632,15 @@ class MissionRuntime:
         self.event("mission_assignment_committed", {"plan_id": plan["plan_id"], "members": plan["members"]})
 
     @synchronized
-    def decide(self, plan_id, decision):
+    def decide(self, plan_id, decision, comment=None):
         if decision is True:
             decision = "approve_once"
         elif decision is False:
             decision = "reject"
         if decision not in ("approve_once", "approve_session", "reject"):
             raise MissionError("invalid_decision", 422)
+        if comment is not None and (not isinstance(comment, str) or not 1 <= len(comment.strip()) <= 500):
+            raise MissionError("invalid_approval_comment", 422)
         plan = self.plans.get(plan_id)
         if not plan:
             raise MissionError("plan_not_found", 404)
@@ -662,9 +664,49 @@ class MissionRuntime:
         else:
             plan["status"] = "rejected"
         plan["approval_scope"] = decision
-        self.event("approval_decided", {"plan_id": plan_id, "status": plan["status"], "decision": decision})
+        if comment is not None:
+            plan["approval_comment"] = comment.strip()
+        self.event("approval_decided", {"plan_id": plan_id, "status": plan["status"], "decision": decision,
+            "comment": plan.get("approval_comment")})
         self.save()
         return self.summary(plan)
+
+    @synchronized
+    def debug_fuel_shortage(self, uuv_id=None):
+        """Drain a boat's remaining range so the standard energy-exit lifecycle engages.
+
+        The chosen level stays above the exit-route requirement but below the
+        1.5x-edge trigger and the handover affordability check, so the boat
+        exits directly instead of arranging a seamless relief.
+        """
+        if uuv_id is not None:
+            candidates = [u for u in self.uuvs if u["id"] == uuv_id]
+            if not candidates:
+                raise MissionError("unknown_uuv", 404)
+        else:
+            tracking = [u for u in self.uuvs if self.active.get(u["id"], {}).get("kind") == "track"]
+            others = [u for u in self.uuvs if self.active.get(u["id"], {}).get("kind") not in (None, "track", "exit")]
+            candidates = (sorted(tracking, key=lambda u: u["remaining_range_m"])
+                          + sorted(others, key=lambda u: u["remaining_range_m"]))
+        for boat in candidates:
+            action = self.active.get(boat["id"], {})
+            if action.get("kind") == "exit":
+                continue
+            x, y = boat["pose"][:2]
+            edge = min(x, y, self.config.width-x, self.config.height-y)
+            route = exit_route(self, boat)
+            if route is None:
+                continue
+            required = route["length_m"]+_LIFECYCLE["exit_route_energy_margin_m"]+100
+            if required >= 1.5*edge:
+                continue
+            boat["remaining_range_m"] = required
+            self.event("debug_fuel_shortage", {"uuv_id": boat["id"], "generation": boat["generation"],
+                "remaining_range_m": round(required, 1), "edge_distance_m": round(edge, 1)})
+            self.save()
+            return {"uuv_id": boat["id"], "generation": boat["generation"],
+                    "remaining_range_m": required, "edge_distance_m": edge}
+        raise MissionError("no_feasible_uuv")
 
     @synchronized
     def queue_agent(self, text, source="human", delivery="followUp", annotation=None, display_text=None):

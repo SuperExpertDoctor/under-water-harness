@@ -128,6 +128,59 @@ def test_debug_events_are_explicit(client):
     assert client.post("/api/test/target-lost", json={"episode_id": episode, "debug": True}).status_code == 200
 
 
+def test_approval_comment_is_recorded(client):
+    runtime = client.app.state.runtime
+    runtime.set_mode("request")
+    candidate = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
+    pending = client.post("/api/algorithm/commands", json={"episode_id": runtime.episode,
+        "result_id": candidate["result_id"], "command_id": "commented", "decision_reason": "覆盖北部空白"}).json()
+    assert pending["status"] == "pending_approval"
+    assert client.post(f"/api/approvals/{pending['plan_id']}/decision", json={"episode_id": runtime.episode,
+        "decision": "approve_once", "comment": " "}).status_code == 422
+    assert client.post(f"/api/approvals/{pending['plan_id']}/decision", json={"episode_id": runtime.episode,
+        "decision": "approve_once", "comment": "x"*501}).status_code == 422
+    approved = client.post(f"/api/approvals/{pending['plan_id']}/decision", json={"episode_id": runtime.episode,
+        "decision": "approve_once", "comment": "同意，注意航迹间距"}).json()
+    assert approved["status"] == "active"
+    assert approved["approval_comment"] == "同意，注意航迹间距"
+    event = next(e for e in runtime.events if e["type"] == "approval_decided" and e["data"]["plan_id"] == pending["plan_id"])
+    assert event["data"]["comment"] == "同意，注意航迹间距"
+
+
+def test_fuel_shortage_engages_energy_exit_lifecycle(client):
+    runtime = client.app.state.runtime
+    episode = client.get("/api/state").json()["episode_id"]
+    assert client.post("/api/test/fuel-shortage", json={"episode_id": episode}).status_code == 403
+    assert client.post("/api/test/fuel-shortage", json={"episode_id": episode, "debug": True,
+        "uuv_id": "NOPE"}).status_code == 404
+    runtime.obstacles = []
+    for index, boat in enumerate(runtime.uuvs):
+        boat["pose"] = [400 if index < 4 else 3000, 400+(index % 4)*1000, 0]
+    runtime.set_mode("full")
+    fleet = runtime.calculate("plan_search", {"standing_policy": True})
+    assert fleet["status"] == "succeeded"
+    runtime.submit(fleet["result_id"], "fleet", runtime.episode)
+    runtime.contacts["CONTACT-1"] = {"contact_id": "CONTACT-1", "x": 1100, "y": 1100, "vx": 0, "vy": 0,
+        "uncertainty_m": 30, "state": "confirmed", "last_seen": 0, "samples": []}
+    tracking = runtime.calculate("plan_tracking", {"members": ["UUV-1", "UUV-2"], "contact_id": "CONTACT-1"})
+    assert tracking["status"] == "succeeded"
+    runtime.submit(tracking["result_id"], "track", runtime.episode)
+    runtime.uuvs[0]["pose"] = [2000, 2000, 0]
+    response = client.post("/api/test/fuel-shortage", json={"episode_id": episode, "debug": True})
+    assert response.status_code == 200, response.json()
+    drained = response.json()
+    boat = next(u for u in runtime.uuvs if u["id"] == drained["uuv_id"])
+    x, y = boat["pose"][:2]
+    edge = min(x, y, runtime.config.width-x, runtime.config.height-y)
+    assert runtime.active[drained["uuv_id"]]["kind"] == "track"
+    assert 0 < boat["remaining_range_m"] < 1.5*edge
+    assert any(e["type"] == "debug_fuel_shortage" and e["data"]["uuv_id"] == drained["uuv_id"] for e in runtime.events)
+    runtime.start()
+    runtime.tick()
+    assert runtime.active[drained["uuv_id"]]["kind"] == "exit"
+    assert any(e["type"] == "energy_exit_started" and e["data"]["uuv_id"] == drained["uuv_id"] for e in runtime.events)
+
+
 def test_invalid_video_rejected(client):
     assert client.post("/api/export/mp4", content=b"not video", headers={"Content-Type": "video/webm"}).status_code in (422, 503)
 

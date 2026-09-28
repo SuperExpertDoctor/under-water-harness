@@ -478,7 +478,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
         data = await payload(request)
         if data.get("decision") not in ("approve_once", "approve_session", "reject"):
             raise MissionError("invalid_decision", 422)
-        return runtime.decide(plan_id, data["decision"])
+        return runtime.decide(plan_id, data["decision"], comment=data.get("comment"))
 
     @app.post("/api/permissions/mode")
     async def mode(request: Request):
@@ -662,10 +662,15 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
         data = await payload(request)
         if data.get("debug") is not True:
             raise MissionError("explicit_debug_required", 403)
-        if kind not in ("target-detected", "target-lost"):
+        if kind not in ("target-detected", "target-lost", "fuel-shortage"):
             raise MissionError("unknown_test", 404)
         with runtime.lock:
             runtime.check_episode(data.get("episode_id"))
+            if kind == "fuel-shortage":
+                uuv_id = data.get("uuv_id")
+                if uuv_id is not None and not isinstance(uuv_id, str):
+                    raise MissionError("invalid_uuv_id", 422)
+                return runtime.debug_fuel_shortage(uuv_id)
             runtime.sensor_enabled = kind == "target-detected"
             runtime.event("debug_sensor_changed", {"enabled": runtime.sensor_enabled})
             return {"status": "applied", "sensor_enabled": runtime.sensor_enabled}

@@ -1,0 +1,32 @@
+# Dynamic mission tables and shared fleet entry
+
+## Goal and scope
+
+Make the mission dashboard explain live decisions and target maneuver changes, and show eight UUVs entering from one boundary location. This is a game demonstration, not a sequential launch or a physical launch model. Preserve actual collision checks, existing approvals in the conversation, the map, metrics and regions.
+
+## Operator views
+
+- Keep the existing decision overview, metrics and region views. Remove only the `参数` and `任务操作` bottom tabs and their contents; approvals remain inline in the Agent conversation.
+- Replace `AIS` with `目标状态`: a three-column, append-on-change table headed `时间｜机动参数变化的原因｜机动模型参数`. Show speed in m/s, turn bias and duration/expiry with units. Newest entries remain visible without unexpectedly moving a user who is reading older entries. A recorded automatic expiry is explicitly labelled as a system fallback, not as LLM output.
+- Replace the raw `Agent 运行` event list with a table headed `时间｜运行｜状态｜当前步骤/结果`. States backed by records are `排队中`, `读取观测`, `规划/调用工具`, `等待审批`, `继续执行`, `已完成`, `失败`, and `已取消`. `离线` is a worker-availability indicator, not a fabricated run event. Show only observed states; expose a row's source event for debugging without flooding the main table with token updates.
+- Replace the raw `时间线` event list with a five-column, append-only decision table: `决策时间｜触发类型｜决策原因｜决策内容｜参与调度的 UUV`. A successful submitted plan is a completed scheduling decision even when execution is waiting for approval. Link plan and queued run by their real IDs. `coverage_gap` is `周期性主动触发`; discovery, loss, energy, user instruction and feedback are `事件被动触发`. Show only these two trigger values; count old decisions whose run cannot be linked in a separate warning outside the table, without guessing a type. If a run completes without a new plan, explicitly record the decision to maintain the current plan with a public reason and no participating UUVs; failures and cancellations belong in Agent 运行, not the decision table. Do not substitute trigger text for the decision reason.
+- All three tables receive live updates and survive switching tabs, use the episode ID for isolation, and show an explicit history-truncation note if retained records do not cover the whole episode. Desktop has sticky headers and bounded scroll; narrow screens stack labelled cells within each row so values remain readable. Keep meaningful text for empty/offline states and accessible controls for selecting plans.
+
+## Reasons, records and isolation
+
+The model's internal reasoning is not exposed. `reason content` here is a dedicated, short **public** explanation explicitly produced by the relevant LLM. The friendly PI plan already submits `decision_reason`; require the same explicit explanation when a run chooses no new plan. On a missing public explanation, request one bounded retry and fail/report the turn if it is still missing; never invent a reason in the UI. The target worker must supply its public maneuver reason with the bounded parameter tool call, with equivalent missing-reason handling.
+
+Keep authoritative target parameter changes and their reasons in a bounded, checkpointed target history exposed through operator-facing state/replay only. Append when the effective parameter tuple changes, not on every frame or an identical repeat call. Record the time, run ID and effective duration/expiry. When expiry restores defaults, record a system-fallback row with that explicit provenance. Do not insert target parameter changes, target private observations or raw model output into friendly PI tool results, shared mission events or the friendly Agent's `mission_state`. The existing operator frame and replay can show this history; the two agents remain independently scoped.
+
+Build friendly decision rows from persisted plan/run data and public reasons, using authoritative simulation time. Correlate the plan submission with its run before producing the timeline row, so a pending approval does not appear as a separate decision and a later approval does not create a duplicate. For historical plans lacking a public reason, show `公开决策原因缺失（历史记录）` rather than a trigger description. For newly produced plans, a missing reason is an error requiring a retry as described above. Limit retained history explicitly and do not imply earlier entries were never made.
+
+## Common boundary entry
+
+At reset, choose one seeded, unobstructed entrance on the perimeter of the whole 4 km x 4 km task area. Start all eight boats at safe, distinct positions on a short stretch of that same boundary, oriented inward, around one shared entrance marker. Do not scatter them across the four sides. The map displays one `初始投放 ×8` marker at the shared entrance while boats fan into their actual assigned paths. The marker is an entry label, not a false statement that eight physical poses overlap. Keep the existing safe separation, usable motion planning, sensor behavior, generation identity and mission count of eight. Later energy turnover retains its independently determined exit/re-entry point; this change applies to initial deployment only. Existing checkpoints are not rewritten; a new episode/reset uses the new entry arrangement.
+
+## Verification
+
+- Backend tests: same-side inward starts clustered around one recorded entrance, eight distinct/separated poses, safe initial ticks, feasible representative search planning, deterministic seeded reset and unchanged exit/re-entry behavior.
+- Target worker/API tests: public reason required, bounded retry, one history row per effective change, expiry provenance, checkpoint/replay persistence, no target data in friendly mission state/events.
+- Frontend tests: exact tab names/columns, trigger mapping and run/plan correlation, public reason precedence and historical missing-reason display, no duplicate timeline rows, agent state transitions and mobile row labels.
+- Run the focused tests and `npm run check` required by this repository. Browser-check desktop and narrow/mobile viewports with isolated test data; place the resulting screenshots in `outputs/`. Do not activate the real model workers or mutate the user's live mission for visual testing.

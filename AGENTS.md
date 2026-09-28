@@ -38,7 +38,7 @@
 - For `packages/coding-agent/test/suite/`, use `test/suite/harness.ts` + the faux provider. No real provider APIs, keys, or paid tokens.
 - When regressions tests for fixing a github issue, add a comment with the github issue number next to the test.
 - For ad-hoc scripts, `write` them to a temp file (e.g. `/tmp`), run, edit if needed, remove when done. Don't embed multi-line scripts in `bash` commands.
-- Never commit unless the user asks.
+- After completing a user-requested change and its required checks, automatically commit only the files changed for that request; no separate commit request is needed. Do not silently commit incomplete or failing work as complete. An explicit request to snapshot current work may still be committed with its limitations reported.
 
 ## Dependency and Install Security
 

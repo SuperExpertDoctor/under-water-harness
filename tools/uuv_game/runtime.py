@@ -967,7 +967,8 @@ class MissionRuntime:
                 domain = [-pad, -pad, self.config.width+pad, self.config.height+pad]
             controls[u["id"]] = {"preferred": preferred, "execution_domain": domain}
         control_diagnostics = {}
-        selected = choose_controls(self.uuvs, controls, self.contacts, self.obstacles, separation=self.config.separation, diagnostics=control_diagnostics)
+        selected = choose_controls(self.uuvs, controls, self.contacts, self.obstacles, separation=self.config.separation,
+            diagnostics=control_diagnostics, recovery_domain=[0, 0, self.config.width, self.config.height])
         if selected is None:
             self.event("control_infeasible", {"algorithm": "joint-dubins-beam", "controls": controls, "diagnostics": control_diagnostics,
                 "boats": [{"id": u["id"], "pose": u["pose"], "curvature": u["curvature"]} for u in self.uuvs]})

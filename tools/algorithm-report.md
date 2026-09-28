@@ -256,7 +256,7 @@ cd ..
 The offline v2 fleet acceptance driver does not call a model:
 
 ```sh
-PYTHONPATH=tools python tools/scripts/v2_acceptance.py --sim-seconds 14400 --wall-seconds 1800 --output outputs/v2-acceptance.json
+PYTHONPATH=tools python tools/acceptance/v2_acceptance.py --sim-seconds 14400 --wall-seconds 1800 --output outputs/v2-acceptance.json
 ```
 
 Read `passed`, `acceptance_checks`, failures, pauses and raw metrics in the JSON.
@@ -270,8 +270,8 @@ and storage-growth requirements.
 Paid-model checks are separate, explicitly authorized operations:
 
 ```sh
-python tools/scripts/model_acceptance.py
-python tools/scripts/model_acceptance.py --fleet
+python tools/acceptance/model_acceptance.py
+python tools/acceptance/model_acceptance.py --fleet
 ```
 
 The second command plans and submits into the connected live episode. It checks

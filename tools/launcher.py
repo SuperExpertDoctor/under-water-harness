@@ -11,8 +11,9 @@ import sys
 import time
 from urllib.request import urlopen
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = ROOT / "tools/.runtime"
+LAUNCHER_PATHS = (ROOT / "tools/launcher.py", ROOT / "tools/scripts/run.py")
 
 
 def free_port(preferred):
@@ -26,12 +27,16 @@ def free_port(preferred):
     raise RuntimeError("No free local port")
 
 
+def is_launcher_command(arguments):
+    return len(arguments) > 1 and arguments[1] in (path.as_posix().encode() for path in LAUNCHER_PATHS) and b"--foreground" in arguments
+
+
 def is_our_supervisor(pid):
     if not isinstance(pid, int) or pid <= 1:
         return False
     try:
         arguments = Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
-        return str(Path(__file__).resolve()).encode() in arguments and b"--foreground" in arguments
+        return is_launcher_command(arguments)
     except OSError:
         return False
 

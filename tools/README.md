@@ -21,12 +21,12 @@ tools/.venv/bin/pip install -r tools/requirements.txt
 通过环境变量提供 `LONGCAT_API_KEY`，或使用本机忽略文件 `tools/.runtime/credentials.env`。文件内容是 `LONGCAT_API_KEY=实际密钥`，目录权限应为 700、文件权限为 600。不要放进 `ui/`、Vite 环境变量、命令行参数或版本库。
 
 ```sh
-tools/.venv/bin/python tools/scripts/run.py
-tools/.venv/bin/python tools/scripts/run.py --status
-tools/.venv/bin/python tools/scripts/run.py --stop
+./run.sh
+./run.sh --status
+./run.sh --stop
 ```
 
-启动器默认选择后端 8765、前端 5173；端口占用时自动选择其他端口，真实地址记录在 `tools/.runtime/services.json`。`--no-model` 可运行真实算法与界面而不请求模型，界面会显示 PI 离线，不伪造模型回复。`--foreground` 用于终端前台管理。
+`run.sh` 可从其他工作目录调用；优先使用 `tools/.venv/bin/python`，否则使用 `python3`。启动器默认选择后端 8765、前端 5173；端口占用时自动选择其他端口，真实地址记录在 `tools/.runtime/services.json`。`./run.sh --no-model` 可运行仿真算法与界面而不请求模型，界面会显示 PI 离线，不伪造模型回复。`--foreground` 用于终端前台管理。已有后台进程时再次启动只报告状态；停止会中断当前任务。
 
 ## 界面与操作
 
@@ -37,7 +37,7 @@ tools/.venv/bin/python tools/scripts/run.py --stop
 
 单目标版本关闭新增船舶、AIS 广播和场景真值入口；旧场景修改接口明确返回 409。敌我双方仅接收各自观测，地图只显示我方已发现目标的估计和失联预测，不显示未发现目标的真值。
 
-地图保留原海域底图，责任区、责任艇和航线使用稳定关联色。己方使用 `ui/public/assets/uuv.png`；目标估计使用从 `submarine.png` 生成的透明底 `submarine-transparent.png`，不改写原图。重新生成可运行 `python tools/scripts/prepare_submarine_asset.py`。艇首朝向按世界航向或目标估计速度转换，未知目标速度时不伪造朝向。
+地图保留原海域底图，责任区、责任艇和航线使用稳定关联色。己方使用 `ui/public/assets/uuv.png`；目标估计使用从 `submarine.png` 生成的透明底 `submarine-transparent.png`，不改写原图。重新生成可运行 `python tools/prepare_submarine_asset.py`。艇首朝向按世界航向或目标估计速度转换，未知目标速度时不伪造朝向。
 
 第一次演示可选择“请求”，发送“为8艘UUV准备一艇一区的舰队搜索计划，包含能源退出、边界补入和局部覆盖接续的常驻授权，评估后提交，等待批准”。确认候选、批准并开始仿真后，再观察真实搜索和接触事件。常驻授权包含在计划审批中，不是模型自行批准。
 
@@ -150,7 +150,7 @@ cd ..
 第二版离线舰队验收从仓库根目录单独执行，不请求模型：
 
 ```sh
-PYTHONPATH=tools python tools/scripts/v2_acceptance.py --sim-seconds 14400 --wall-seconds 1800 --output outputs/v2-acceptance.json
+PYTHONPATH=tools python tools/acceptance/v2_acceptance.py --sim-seconds 14400 --wall-seconds 1800 --output outputs/v2-acceptance.json
 ```
 
 该脚本同时检查 4 小时仿真、30 分钟墙钟、真实协同跟踪与转场、至少两次轮换及运行不变量。保护性暂停立即结束并记录失败，不等待计时器凑足时长。短探测只能验证局部行为；脚本退出码表示请求时长是否完成，完整验收还必须检查 JSON 的 `passed` 与 `acceptance_checks`。
@@ -158,10 +158,10 @@ PYTHONPATH=tools python tools/scripts/v2_acceptance.py --sim-seconds 14400 --wal
 真实模型联调会请求计费 API，需明确授权后单独执行：
 
 ```sh
-python tools/scripts/model_acceptance.py
-python tools/scripts/model_acceptance.py --fleet
-python tools/scripts/v2_live_acceptance.py --reset --deadline 600
-python tools/scripts/v2_live_soak.py --seconds 1800
+python tools/acceptance/model_acceptance.py
+python tools/acceptance/model_acceptance.py --fleet
+python tools/acceptance/v2_live_acceptance.py --reset --deadline 600
+python tools/acceptance/v2_live_soak.py --seconds 1800
 ```
 
 模型脚本默认读取启动器记录的后端地址，也可用 `--api` 指定。`--fleet` 会修改当前任务，应使用专门的演示局；`--reset` 会明确重置该局。它检查实际工具回执和八艇八区，不是长时验收。模型联调记录在 `tools/artifacts/`，第二版场景报告及截图在 `outputs/`。第一版 `ACCEPTANCE.md` 不能作为第二版通过证据。

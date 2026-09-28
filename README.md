@@ -62,6 +62,18 @@ npm run check         # Lint, format, and type check
 ./pi-test.sh         # Run pi from sources (can be run from any directory)
 ```
 
+## UUV Mission Demo
+
+The multi-UUV algorithm, simulator, PI workers, and UI are started together from the repository root:
+
+```bash
+./run.sh
+./run.sh --status
+./run.sh --stop
+```
+
+Configure `LONGCAT_API_KEY` before a model-backed run. For a simulator/UI run without model requests, use `./run.sh --no-model`. See [tools/README.md](tools/README.md) for prerequisites and permission workflow. An already-running supervisor is reported rather than replaced; stopping it interrupts the current mission.
+
 ## Building standalone binaries from release source
 
 GitHub releases include a versioned source archive covered by the release's `SHA256SUMS` file. Extract it and run the same build script used for the official standalone binaries:

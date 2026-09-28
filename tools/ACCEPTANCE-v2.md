@@ -159,10 +159,10 @@ npm run check
 From `ui/`: `node --test src/state/*.test.js src/renderer/*.test.js`.
 
 ```sh
-PYTHONPATH=tools python tools/scripts/v2_acceptance.py --seed 20260927 --sim-seconds 14400 --wall-seconds 1800 --output outputs/v2-acceptance-heldout-20260927.json
-python tools/scripts/v2_live_acceptance.py --reset --deadline 600
-python tools/scripts/v2_live_soak.py --seconds 1800
-python tools/scripts/v2_browser_acceptance.py --api http://127.0.0.1:8773 --ui http://127.0.0.1:5180 --measure-motion
+PYTHONPATH=tools python tools/acceptance/v2_acceptance.py --seed 20260927 --sim-seconds 14400 --wall-seconds 1800 --output outputs/v2-acceptance-heldout-20260927.json
+python tools/acceptance/v2_live_acceptance.py --reset --deadline 600
+python tools/acceptance/v2_live_soak.py --seconds 1800
+python tools/acceptance/v2_browser_acceptance.py --api http://127.0.0.1:8773 --ui http://127.0.0.1:5180 --measure-motion
 ```
 
 Live scripts alter the dedicated demo episode and use the real paid model.

@@ -7,7 +7,7 @@ from PIL import Image
 
 
 def test_background_only_transparency():
-    script = Path(__file__).resolve().parents[1] / "scripts/prepare_submarine_asset.py"
+    script = Path(__file__).resolve().parents[1] / "prepare_submarine_asset.py"
     assert script.exists(), "transparent derivative generator is missing"
     spec = importlib.util.spec_from_file_location("prepare_submarine_asset", script)
     module = importlib.util.module_from_spec(spec)

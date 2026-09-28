@@ -18,6 +18,6 @@ def prepare(source, destination):
 
 
 if __name__ == "__main__":
-    assets = Path(__file__).resolve().parents[2] / "ui/public/assets"
+    assets = Path(__file__).resolve().parents[1] / "ui/public/assets"
     prepare(assets / "submarine.png", assets / "submarine-transparent.png")
     print("Created submarine-transparent.png; original submarine.png unchanged")

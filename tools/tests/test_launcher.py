@@ -1,10 +1,28 @@
 import importlib.util
 from pathlib import Path
+import subprocess
 
 
-spec = importlib.util.spec_from_file_location("uuv_launcher", Path(__file__).parents[1]/"scripts/run.py")
+ROOT = Path(__file__).resolve().parents[2]
+spec = importlib.util.spec_from_file_location("uuv_launcher", ROOT/"tools/launcher.py")
 launcher = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(launcher)
+
+
+def test_root_launcher_accepts_flags_from_another_directory(tmp_path):
+    result = subprocess.run(["sh", str(ROOT/"run.sh"), "--help"], cwd=tmp_path,
+        capture_output=True, text=True, check=True)
+    assert "--status" in result.stdout
+    assert "--no-model" in result.stdout
+
+
+def test_existing_supervisor_is_recognized_without_matching_other_processes():
+    previous = str(ROOT/"tools/scripts/run.py").encode()
+    current = str(ROOT/"tools/launcher.py").encode()
+    assert launcher.is_launcher_command([b"python", previous, b"--foreground"])
+    assert launcher.is_launcher_command([b"python", current, b"--foreground"])
+    assert not launcher.is_launcher_command([b"python", previous, b"--status"])
+    assert not launcher.is_launcher_command([b"python", b"/somewhere/launcher.py", b"--foreground"])
 
 
 def test_process_identity_never_accepts_unrelated_pid():

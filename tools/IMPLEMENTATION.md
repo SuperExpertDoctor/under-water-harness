@@ -56,7 +56,7 @@ Files: tools/uuv_game/{config,store,runtime,api}.py, tools/tests/test_runtime.py
 
 ## Task 3: PI SDK and LongCat
 
-Files: tools/pi/{worker,extension,config}.ts, tools/pi/*.test.ts, .pi/skills/multi-uuv-recon-tracking/SKILL.md, tools/scripts/run.py.
+Files: tools/pi/{worker,extension,config}.ts, tools/pi/*.test.ts, .pi/skills/multi-uuv-recon-tracking/SKILL.md, tools/launcher.py (`run.sh` entry point).
 
 - [x] Verify provider docs and local SDK types. Test configuration and tool allowlist without model calls.
 - [x] Register nine typed tools through an Extension; use createAgentSession, no coding/shell tools. Load mission Skill explicitly into trusted session instructions.

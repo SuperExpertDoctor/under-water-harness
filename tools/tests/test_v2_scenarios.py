@@ -9,7 +9,7 @@ from uuv_game.runtime import MissionError, MissionRuntime
 
 
 def acceptance():
-    spec = importlib.util.find_spec("scripts.v2_acceptance")
+    spec = importlib.util.find_spec("acceptance.v2_acceptance")
     assert spec is not None, "v2 acceptance driver must exist"
     return importlib.import_module(spec.name)
 

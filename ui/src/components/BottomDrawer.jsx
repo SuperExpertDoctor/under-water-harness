@@ -179,7 +179,14 @@ export function MetricsTab({ frame }) {
   </div>;
 }
 
-function RegionTab({ frame }) {
+function regionInformationMean(matrix, cells) {
+  if (!cells?.length) return "--";
+  const values = cells.map(([col, row]) => matrix?.[col]?.[row]);
+  if (!values.every(Number.isFinite)) return "--";
+  return `${(100 * values.reduce((sum, value) => sum + Math.max(0, Math.min(1, value)), 0) / values.length).toFixed(1)}%`;
+}
+
+export function RegionTab({ frame }) {
   const rows = [
     ...(frame?.search_regions || []).map((region) => ({ ...region, displayType: "搜索" })),
     ...(frame?.track_regions || []).map((region) => ({ ...region, displayType: "跟踪" })),
@@ -188,12 +195,12 @@ function RegionTab({ frame }) {
   return (
     <div className="table-wrap">
       <table className="region-table">
-        <thead><tr><th>ID</th><th>类型</th><th>边界</th><th>优先级</th><th>信息素</th><th>价值</th><th>完成</th><th>执行单元</th></tr></thead>
+        <thead><tr><th>ID</th><th>类型</th><th>边界</th><th>优先级</th><th>平均新鲜度</th><th>平均线索</th><th>完成</th><th>执行单元</th></tr></thead>
         <tbody>{rows.map((region) => (
           <tr key={region.id}>
             <td><b>{region.id}</b></td><td>{region.displayType}</td><td className="mono">[{region.bbox?.join(", ")}]</td>
             <td><span className={`priority ${region.priority || "high"}`}>{region.priority || "持续"}</span></td>
-            <td>{Number(region.avg_info || 0).toFixed(2)}</td><td>{Number(region.info_value || 0).toFixed(2)}</td>
+            <td>{regionInformationMean(frame.info_matrix, region.cells)}</td><td>{regionInformationMean(frame.target_info_matrix, region.cells)}</td>
             <td>{region.displayType === "搜索" ? `${Math.round(region.completion_pct || 0)}%` : "-"}</td><td>{region.assigned_uav_id || "待分配"}</td>
           </tr>
         ))}</tbody>

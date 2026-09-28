@@ -1,14 +1,61 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { RadioTower } from "lucide-react";
+import { RadioTower, Radar, Crosshair, Route, LogOut } from "lucide-react";
 
 import { computeLayout, dragToBBox, pixelToCoord } from "../renderer/geometry";
 import { renderFrame } from "../renderer/layers";
 import { drawMissionOverlay } from "../renderer/missionOverlay";
 import { interpolateUuv } from "../state/missionState";
+import { ownerColor } from "../renderer/colors";
+
+export function readCellInformation(frame, cell) {
+  if (!cell || !frame?.info_matrix?.[cell.col] || frame.info_matrix[cell.col][cell.row] == null) return null;
+  const scan = Number(frame.info_matrix[cell.col][cell.row]);
+  const target = Number(frame.target_info_matrix?.[cell.col]?.[cell.row] || 0);
+  return { col: cell.col, row: cell.row,
+    I: Number.isFinite(scan) ? Math.max(0, Math.min(1, scan)) : 0,
+    V: Number.isFinite(target) ? Math.max(0, Math.min(1, target)) : 0 };
+}
+
+export function InformationLegend() {
+  return <div className="information-legend" aria-label="信息强度图例">
+    {[["scan", "扫描新鲜度", "216, 197, 131", .3], ["target", "目标线索", "245, 157, 121", .28]].map(([id, label, rgb, opacity]) =>
+      <span className="information-key" key={id}><span>{label}</span><small>0</small>
+        <span className="information-ramp" aria-hidden="true">{[0, .25, .5, .75, 1].map((value) =>
+          <i key={value} style={{ backgroundColor: `rgba(${rgb}, ${value * opacity})` }} />)}</span><small>100%</small>
+      </span>)}
+  </div>;
+}
+
+export function MapSummary({ frame, selectedUavId, onSelectUav }) {
+  const boats = frame?.uavs || [];
+  const regions = frame?.search_regions || [];
+  const transit = boats.filter((boat) => boat.operation_mode === "track" && ["transit", "tracking_transit", "acquire", "acquiring"].includes(boat.task_phase)).length;
+  const tracking = boats.filter((boat) => boat.effective_tracking === true).length;
+  const exiting = boats.filter((boat) => ["exit", "exiting"].includes(boat.task_phase)).length;
+  const contact = frame?.contacts?.[0];
+  const contactState = !contact ? "尚未发现" : contact.state === "lost" ? "目标失联 · 预测" : contact.state === "tracking" ? "目标跟踪中" : "目标估计";
+  return <div className="map-summary">
+    <div className="map-situation">
+      <strong><Radar size={16} />任务海域 <span>{frame?.task_area?.width_km || 4} × {frame?.task_area?.height_km || 4} km</span></strong>
+      <div className="map-counters"><span>搜索 <b>{regions.length}</b></span><span><Route size={13} />跟踪转场 <b>{transit}</b></span><span><Crosshair size={13} />有效跟踪 <b>{tracking}</b></span><span><LogOut size={13} />驶离 <b>{exiting}</b></span></div>
+      <span className="map-coverage">覆盖 <b>{Number(frame?.coverage_pct || 0).toFixed(1)}%</b></span>
+    </div>
+    <div className="map-responsibilities" aria-label="搜索区域责任艇">
+      {regions.map((region) => <button key={region.id} type="button" className={selectedUavId === region.assigned_uav_id ? "owner-key active" : "owner-key"}
+        aria-pressed={selectedUavId === region.assigned_uav_id} title={`${region.id} · ${region.assigned_uav_id}`}
+        onClick={() => onSelectUav?.(selectedUavId === region.assigned_uav_id ? null : region.assigned_uav_id)}>
+        <i style={{ backgroundColor: ownerColor(region.assigned_uav_id) }} /><span>{region.assigned_uav_id}</span><small>{Math.round(region.completion_pct || 0)}%</small>
+      </button>)}
+      {!regions.length && <span className="no-search-regions">搜索区域待分配</span>}
+      <span className={`contact-state ${contact?.state || "undetected"}`}>{contactState}</span>
+    </div>
+  </div>;
+}
 
 const MAP_ASSET_SOURCES = {
   background: "/assets/background.png",
-  uav: "/assets/uuv.png?v=20260922",
+  uav: "/assets/uuv.png?v=20260928",
+  submarine: "/assets/submarine-transparent.png?v=20260928",
   carrier: "/assets/carrier.png?v=20260801",
   destroyer: "/assets/destroyer.png?v=20260801",
 };
@@ -91,7 +138,7 @@ const CanvasMap = forwardRef(function CanvasMap({
     canvas.style.height = `${height}px`;
     canvas.getContext("2d").setTransform(dpr, 0, 0, dpr, 0, 0);
     const { cols, rows } = frameGridResolution(targetFrameRef.current);
-    layoutRef.current = computeLayout(width, height, cols, rows);
+    layoutRef.current = computeLayout(width, height, cols, rows, { includeLegend: false });
     setSizeVersion((version) => version + 1);
   }, []);
 
@@ -186,7 +233,7 @@ const CanvasMap = forwardRef(function CanvasMap({
         trailMode,
         selectedContactId,
         selectedScenarioVesselId,
-        hoverInfo: hoverRef.current,
+        hoverInfo: readCellInformation(displayFrame, hoverRef.current),
         selectedUavId,
         frameCount: phase,
         assets: mapAssets,
@@ -271,11 +318,8 @@ const CanvasMap = forwardRef(function CanvasMap({
       gridRows,
     );
 
-    if (coord && frame.info_matrix && frame.value_matrix) {
-      const info = Number(frame.info_matrix?.[coord.col]?.[coord.row] || 0);
-      const value = Number(frame.value_matrix?.[coord.col]?.[coord.row] || 0);
-      const category = info >= 0.7 ? "white" : info >= 0.2 ? "gray" : "black";
-      hoverRef.current = { col: coord.col, row: coord.row, I: info, V: value, category };
+    if (coord && frame.info_matrix) {
+      hoverRef.current = coord;
       setHovered(true);
       setHoverVersion((version) => version + 1);
     } else {
@@ -362,6 +406,7 @@ const CanvasMap = forwardRef(function CanvasMap({
 
   const handleClick = useCallback((event) => {
     if (selectionMode) return;
+    handleMouseMove(event);
     const canvas = canvasRef.current;
     if (!canvas || !frame) return;
     const point = pointerPosition(event);
@@ -406,7 +451,19 @@ const CanvasMap = forwardRef(function CanvasMap({
         return;
       }
     }
-  }, [frame, onPlaceVessel, onSelectContact, onSelectScenarioVessel, onSelectUav, placementMode, pointerPosition, selectedScenarioVesselId, selectedUavId, selectionMode]);
+  }, [frame, handleMouseMove, onPlaceVessel, onSelectContact, onSelectScenarioVessel, onSelectUav, placementMode, pointerPosition, selectedScenarioVesselId, selectedUavId, selectionMode]);
+
+  const handleCellKey = (event) => {
+    const directions = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    if (event.key === "Escape") { handleMouseLeave(); return; }
+    const step = directions[event.key];
+    if (!step) return;
+    event.preventDefault();
+    const { cols, rows } = frameGridResolution(frame);
+    const current = hoverRef.current || { col: 0, row: 0 };
+    hoverRef.current = { col: Math.max(0, Math.min(cols - 1, current.col + step[0])), row: Math.max(0, Math.min(rows - 1, current.row + step[1])) };
+    setHoverVersion((version) => version + 1);
+  };
 
   const handleDragOver = useCallback((event) => {
     if (!placementMode && !event.dataTransfer.types.includes("application/x-vessel-class")) return;
@@ -434,8 +491,12 @@ const CanvasMap = forwardRef(function CanvasMap({
     }
     : null;
 
+  const cellInfo = readCellInformation(frame, hoverRef.current);
+
   return (
-    <div className="canvas-area" ref={containerRef}>
+    <div className="canvas-area">
+      <MapSummary frame={frame} selectedUavId={selectedUavId} onSelectUav={onSelectUav} />
+      <div className="map-stage" ref={containerRef}>
       <canvas
         ref={canvasRef}
         onPointerDown={handlePointerDown}
@@ -444,6 +505,11 @@ const CanvasMap = forwardRef(function CanvasMap({
         onPointerCancel={cancelSelection}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
+        tabIndex={0}
+        onKeyDown={handleCellKey}
+        onFocus={() => { if (!hoverRef.current) hoverRef.current = { col: 0, row: 0 }; setHoverVersion((version) => version + 1); }}
+        onBlur={handleMouseLeave}
+        aria-describedby="map-cell-information"
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         style={{ cursor: placementMode || selectionMode ? "crosshair" : hovered ? "crosshair" : "default", touchAction: "none" }}
@@ -465,6 +531,15 @@ const CanvasMap = forwardRef(function CanvasMap({
       )}
       {candidate && candidate.episode_id === frame?.episode_id && <div className="map-candidate-label">候选预览 · {candidate.kind || candidate.algorithm} · {candidate.members?.join(", ")}</div>}
       <div className="map-scale" aria-hidden="true"><i style={{ width: layoutRef.current.cellSize * 5 }} />{Number(frame?.task_area?.cell_size_km || 0) * 5} KM</div>
+      </div>
+      <div className="map-information-bar">
+        <InformationLegend />
+        <output id="map-cell-information" aria-label="栅格信息" className="cell-information">
+          <span>栅格 <b>{cellInfo ? `${cellInfo.col} / ${cellInfo.row}` : "--"}</b></span>
+          <span>扫描 <b>{cellInfo ? `${(cellInfo.I * 100).toFixed(1)}%` : "--"}</b></span>
+          <span>线索 <b>{cellInfo ? `${(cellInfo.V * 100).toFixed(1)}%` : "--"}</b></span>
+        </output>
+      </div>
     </div>
   );
 });

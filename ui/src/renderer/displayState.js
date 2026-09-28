@@ -84,6 +84,13 @@ export function uavDisplayState(uav = {}) {
   if (uav.operational_status === "failed") {
     return { label: "故障停用", tone: "failed", phase: "failed" };
   }
+  if (["exit", "exiting"].includes(uav.task_phase)) return { label: "驶离补换", tone: "return", phase: "exiting" };
+  if (uav.operation_mode === "track") {
+    if (["transit", "tracking_transit"].includes(uav.task_phase)) return { label: "跟踪转场", tone: "approach", phase: "track_approach" };
+    if (["acquire", "acquiring"].includes(uav.task_phase)) return { label: "获取观测", tone: "observe", phase: "track_acquire" };
+    if (uav.effective_tracking === false && uav.task_phase === "tracking") return { label: "观测中断", tone: "assessment", phase: "track_degraded" };
+    if (["degraded", "reacquiring"].includes(uav.task_phase)) return { label: "重新搜索", tone: "search", phase: "track_reacquire" };
+  }
   const taskVisual = uav.task_visual;
   if (taskVisual && taskVisual.route_source !== "none") {
     if (taskVisual.route_status === "cleared") {

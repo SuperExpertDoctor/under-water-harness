@@ -1,5 +1,6 @@
 import { ChevronRight } from "lucide-react";
-import { STATUS_COLORS } from "../renderer/telemetryRenderer";
+import { ownerColor } from "../renderer/colors";
+import { uavDisplayState } from "../renderer/displayState";
 
 const TASK_LABELS = {
   idle: "待命",
@@ -77,10 +78,10 @@ export default function UuvStatusPanel({ frame, selectedUuvId, onSelectUuv }) {
               key={`${uav.id}-${uav.generation ?? 0}`}
               onClick={() => onSelectUuv?.(selected ? null : uav.id)}
             >
-              <i style={{ backgroundColor: STATUS_COLORS[uav.status] || "#64748b" }} />
+              <i style={{ backgroundColor: ownerColor(uav.id) }} />
               <span>
                 <strong>{idLabel(uav.id)} <span className="generation-tag">G{uav.generation ?? "-"}</span></strong>
-                <small>{STATUS_LABELS[uav.task_phase] || uav.task_phase || statusLabel(uav)} · {uav.sensor_mode === "passive" ? "被动方位" : uav.sensor_mode === "active" ? "主动扫描" : "传感器待命"}</small>
+                <small>{uavDisplayState(uav).label} · {uav.sensor_mode === "passive" ? "被动方位" : uav.sensor_mode === "active" ? "主动扫描" : "传感器待命"}</small>
                 <em>{Number.isFinite(uav.energy_pct) ? `${uav.energy_pct.toFixed(0)}% 能量` : "能量 --"} · {Number.isFinite(uav.remaining_range_m) ? `${(uav.remaining_range_m / 1000).toFixed(1)} km` : "航程 --"} · {uav.assigned_region_id || "无搜索区"}</em>
                 <span className="energy-track" role="meter" aria-label={`${uav.id} 能量`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={uav.energy_pct ?? 0}><i style={{ width: `${Math.max(0, Math.min(100, uav.energy_pct ?? 0))}%`, backgroundColor: uav.energy_pct < 25 ? "var(--warning)" : "var(--teal)" }} /></span>
               </span>

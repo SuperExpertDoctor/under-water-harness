@@ -2,6 +2,16 @@ import { useState } from "react";
 import { Check, Eye, Play, Send, Square, X, Workflow } from "lucide-react";
 import { selectionToMeters } from "../state/missionState";
 
+export function planningRequest(tool, automatic, members, bbox, contactId) {
+  const request = { tool, ...(!automatic ? { members } : {}) };
+  if (tool === "plan_search") {
+    request.standing_policy = automatic;
+    if (!automatic) request.bbox = bbox;
+  }
+  if (tool === "plan_tracking") request.contact_id = contactId;
+  return request;
+}
+
 export default function AgentPanel({ tab, mission, frame, readOnly, selection }) {
   const [text, setText] = useState("");
   const [members, setMembers] = useState([]);
@@ -77,14 +87,14 @@ export default function AgentPanel({ tab, mission, frame, readOnly, selection })
           setMembers(next.length ? next : [uuv.id]);
         }} />{uuv.id}</label>)}
       </fieldset>}
-      {tool === "plan_search" && <>
+      {tool === "plan_search" && !automaticMembers && <>
         <fieldset className="bounds-fields"><legend>搜索边界（米）</legend>{["X 最小", "Y 最小", "X 最大", "Y 最大"].map((label, index) => <label key={label}>{label}<input type="number" step="50" min="0" max="4000" value={bounds[index]} disabled={disabled} onChange={(event) => setBounds((current) => current.map((value, i) => i === index ? Number(event.target.value) : value))} /></label>)}</fieldset>
         {selection && <button className="primary-action" disabled={disabled} onClick={() => setBounds(selectionToMeters(selection, frame.task_area))}>采用地图框选</button>}
       </>}
       {tool === "plan_tracking" && <label className="mission-field">观测接触<select value={contactId} disabled={disabled} onChange={(event) => setContactId(event.target.value)}><option value="">选择已确认接触</option>{(frame?.contacts || []).filter((contact) => !["tentative", "lost"].includes(contact.state)).map((contact) => <option key={contact.contact_id} value={contact.contact_id}>{contact.contact_id} · {contact.state}</option>)}</select></label>}
-      <button className="primary-action" disabled={disabled || (tool === "plan_tracking" && !contactId) || (tool === "plan_search" && (bounds[0] >= bounds[2] || bounds[1] >= bounds[3]))} onClick={async () => {
+      <button className="primary-action" disabled={disabled || (tool === "plan_tracking" && !contactId) || (tool === "plan_search" && !automaticMembers && (bounds[0] >= bounds[2] || bounds[1] >= bounds[3]))} onClick={async () => {
         mission.setCandidate(null); mission.setAssessment(null);
-        const result = await mission.act("计算候选", "/api/algorithm/task-plan", { tool, ...(!automaticMembers ? { members: selectedMembers } : {}), standing_policy: automaticMembers && tool === "plan_search", bbox: bounds, contact_id: contactId });
+        const result = await mission.act("计算候选", "/api/algorithm/task-plan", planningRequest(tool, automaticMembers, selectedMembers, bounds, contactId));
         if (result?.result_id) await mission.preview(result.result_id);
       }}><Play size={14} />计算候选</button>
       {candidate && <div className="candidate-detail">

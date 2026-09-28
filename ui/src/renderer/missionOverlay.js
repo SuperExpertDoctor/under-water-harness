@@ -35,6 +35,7 @@ export function drawMissionOverlay(context, frame, candidate, layout) {
   }
   context.setLineDash([]);
   (frame.teams || []).forEach((team, index) => {
+    if (team.task === "search") return;
     context.strokeStyle = colors[index % colors.length];
     context.lineWidth = 2;
     for (const uuv of frame.uavs || []) {

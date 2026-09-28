@@ -1,5 +1,5 @@
 import { coordToPixel } from "./geometry";
-import { markerColor, UAV_STATUS_COLORS } from "./colors";
+import { markerColor, ownerColor, UAV_STATUS_COLORS } from "./colors";
 import { uavDisplayState, vehicleDisplayId } from "./displayState";
 import { layoutLabels } from "./labelLayout";
 
@@ -92,7 +92,11 @@ function drawMapImage(ctx, image, bounds) {
   ctx.rect(bounds.x, bounds.y, bounds.width, bounds.height);
   ctx.clip();
   ctx.globalAlpha = 0.96;
-  ctx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight, bounds.x, bounds.y, bounds.width, bounds.height);
+  const scale = Math.max(bounds.width / image.naturalWidth, bounds.height / image.naturalHeight);
+  const sourceWidth = bounds.width / scale;
+  const sourceHeight = bounds.height / scale;
+  ctx.drawImage(image, image.naturalWidth - sourceWidth, (image.naturalHeight - sourceHeight) / 2,
+    sourceWidth, sourceHeight, bounds.x, bounds.y, bounds.width, bounds.height);
   ctx.restore();
 }
 
@@ -157,15 +161,23 @@ export function drawBackground(
 }
 
 export function drawHeatmap(ctx, info, values, cellSize, ox, oy, gridCols = 30, gridRows = 30) {
+  drawInformationField(ctx, info, "216, 197, 131", .3, cellSize, ox, oy, gridCols, gridRows);
+}
+
+export function drawTargetInformation(ctx, information, cellSize, ox, oy, gridCols = 30, gridRows = 30) {
+  drawInformationField(ctx, information, "245, 157, 121", .28, cellSize, ox, oy, gridCols, gridRows);
+}
+
+function drawInformationField(ctx, information, color, opacity, cellSize, ox, oy, gridCols, gridRows) {
   for (let col = 0; col < gridCols; col += 1) {
     for (let row = 0; row < gridRows; row += 1) {
-      const freshness = Number(info?.[col]?.[row] || 0);
-      const value = Number(values?.[col]?.[row] || 0);
+      const value = Number(information?.[col]?.[row]);
+      if (!Number.isFinite(value) || value <= 0) continue;
       const { x, y } = coordToPixel(col, row, cellSize, ox, oy);
-      if (freshness > 0.7) ctx.fillStyle = `rgba(13, 148, 136, ${0.12 + freshness * 0.2})`;
-      else if (freshness >= 0.2) ctx.fillStyle = `rgba(217, 119, 6, ${0.08 + freshness * 0.14})`;
-      else ctx.fillStyle = `rgba(37, 99, 235, ${0.018 + value * 0.045})`;
-      ctx.fillRect(x + 0.5, y + 0.5, Math.max(0, cellSize - 1), Math.max(0, cellSize - 1));
+      ctx.fillStyle = `rgba(${color}, ${Math.min(1, value) * opacity})`;
+      ctx.fillRect(Math.round(x) + .5, Math.round(y) + .5,
+        Math.max(0, Math.round(x + cellSize) - Math.round(x) - 1),
+        Math.max(0, Math.round(y + cellSize) - Math.round(y) - 1));
     }
   }
 }
@@ -294,17 +306,39 @@ function taskCells(region) {
   return cells;
 }
 
-export function drawSearchRegions(ctx, regions, cellSize, ox, oy) {
+export function regionLabelCell(region) {
+  const cells = taskCells(region);
+  if (!cells.length) return null;
+  const center = cells.reduce((sum, cell) => [sum[0] + cell[0] / cells.length, sum[1] + cell[1] / cells.length], [0, 0]);
+  const distance = (cell) => (cell[0] - center[0]) ** 2 + (cell[1] - center[1]) ** 2;
+  // Keep the centroid label inside a real responsibility cell, including concave regions.
+  return cells.reduce((closest, cell) => distance(cell) < distance(closest) ? cell : closest);
+}
+
+export function drawSearchRegions(ctx, regions, cellSize, ox, oy, selectedId) {
   for (const region of regions || []) {
-    const ownerIndex = Number(String(region.assigned_uav_id || "").match(/\d+/)?.[0] || 0);
-    const color = ownerIndex ? GROUP_COLORS[(ownerIndex - 1) % GROUP_COLORS.length] : "#F59E0B";
+    const color = ownerColor(region.assigned_uav_id);
     const cells = taskCells(region);
-    const assigned = Boolean(region.assigned_uav_id);
-    ctx.fillStyle = `${color}${assigned ? "32" : "26"}`;
+    const occupied = new Set(cells.map(([col, row]) => `${col},${row}`));
+    ctx.save();
+    const selected = region.assigned_uav_id === selectedId;
+    // Responsibility is a boundary, never evidence that the interior was observed.
+    ctx.beginPath();
     for (const [col, row] of cells) {
-      const point = coordToPixel(col, row, cellSize, ox, oy);
-      ctx.fillRect(point.x + 1, point.y + 1, Math.max(1, cellSize - 2), Math.max(1, cellSize - 2));
+      const { x, y } = coordToPixel(col, row, cellSize, ox, oy);
+      for (const [dc, dr, x0, y0, x1, y1] of [
+        [-1, 0, x, y, x, y + cellSize], [1, 0, x + cellSize, y, x + cellSize, y + cellSize],
+        [0, -1, x, y, x + cellSize, y], [0, 1, x, y + cellSize, x + cellSize, y + cellSize],
+      ]) {
+        if (occupied.has(`${col + dc},${row + dr}`)) continue;
+        ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
+      }
     }
+    ctx.strokeStyle = `${color}${selected ? "FF" : "B3"}`;
+    ctx.lineWidth = selected ? 2 : 1;
+    ctx.setLineDash([]);
+    ctx.stroke();
+    ctx.restore();
   }
 }
 
@@ -397,7 +431,7 @@ function drawContactVessel(ctx, center, size, color, heading, selected) {
   ctx.restore();
 }
 
-export function drawContacts(ctx, contacts, cellSize, ox, oy, selectedId, phase = 0) {
+export function drawContacts(ctx, contacts, cellSize, ox, oy, selectedId, phase = 0, assets) {
   for (const contact of contacts || []) {
     const position = contact.estimated_position;
     if (!Array.isArray(position) || position.length < 2) continue;
@@ -454,7 +488,12 @@ export function drawContacts(ctx, contacts, cellSize, ox, oy, selectedId, phase 
     const heading = speed > 1e-3
       ? Math.atan2(Number(velocity[1]), Number(velocity[0]))
       : null;
-    drawContactVessel(
+    const model = assets?.submarine;
+    // Contact velocity is already in screen-grid coordinates, unlike UUV world heading.
+    const rendered = Number.isFinite(heading) && drawSprite(ctx, model,
+      { x: 0, y: 0, width: model?.naturalWidth, height: model?.naturalHeight }, center,
+      vesselLength(cellSize, contact.contact_id === selectedId, true), Math.PI + heading);
+    if (!rendered) drawContactVessel(
       ctx,
       center,
       radius,
@@ -578,9 +617,9 @@ export function drawPaths(ctx, uavs, cellSize, ox, oy, selectedId, baseCenters) 
     }
 
     // ── Full mission route (dashed, dim) ──────────────────────────
-    if (mission.length >= 2 && uav.status !== "idle") {
+    if (isSelected && mission.length >= 2 && uav.status !== "idle") {
       ctx.save();
-      ctx.strokeStyle = isSelected ? "rgba(37, 99, 235, .48)" : "rgba(100, 116, 139, .28)";
+      ctx.strokeStyle = `${ownerColor(uav.id)}${isSelected ? "B0" : "55"}`;
       ctx.lineWidth = isSelected ? 1.4 : 0.9;
       ctx.setLineDash([4, 5]);
       ctx.beginPath();
@@ -612,7 +651,7 @@ export function drawPaths(ctx, uavs, cellSize, ox, oy, selectedId, baseCenters) 
     // ── Remaining planned path (solid, prominent) ─────────────────
     if (planned.length >= 2 && uav.status !== "idle") {
       ctx.save();
-      ctx.strokeStyle = isSelected ? "rgba(29, 78, 216, .88)" : "rgba(37, 99, 235, .44)";
+      ctx.strokeStyle = `${ownerColor(uav.id)}${isSelected ? "FF" : "C0"}`;
       ctx.lineWidth = isSelected ? 2.2 : 1.3;
       ctx.setLineDash([]);
       ctx.beginPath();
@@ -620,7 +659,7 @@ export function drawPaths(ctx, uavs, cellSize, ox, oy, selectedId, baseCenters) 
         ctx.moveTo(departBase.x, departBase.y);
         ctx.lineTo(departGridPt.x, departGridPt.y);
       }
-      planned.forEach((pose, index) => {
+      (isSelected ? planned : planned.slice(0, 18)).forEach((pose, index) => {
         const pt = gridCenter(pose[0], pose[1], cellSize, ox, oy);
         if (index === 0 && showDepartLeg) {
           // connected from base star
@@ -676,7 +715,7 @@ export function drawUavTrails(ctx, uavs, cellSize, ox, oy, selectedId, trailMode
   for (const uav of uavs || []) {
     const trail = uav.trail || [];
     if (trail.length < 2) continue;
-    const color = UAV_STATUS_COLORS[uav.status] || "#475569";
+    const color = ownerColor(uav.id);
     ctx.save();
     ctx.lineCap = "round";
 
@@ -841,6 +880,10 @@ function drawGroupRings(ctx, ships, cellSize, ox, oy) {
     ctx.restore();
     text(ctx, groupId, center.x + 5, center.y - Math.max(9, cellSize * 1.28), color, Math.max(7, cellSize * 0.25), 700);
   }
+}
+
+function vesselLength(cellSize, selected, target = false) {
+  return Math.max(target ? 34 : 22, Math.min(target ? 52 : 36, cellSize * (target ? 2.8 : 1.9))) * (selected ? 1.15 : 1);
 }
 
 function drawSprite(ctx, image, source, center, width, rotation) {
@@ -1030,10 +1073,10 @@ export function drawUavs(ctx, uavs, cellSize, ox, oy, selectedId, assets, baseCe
     const renderedModel = drawSprite(
       ctx,
       assets?.uav,
-      { x: 0, y: 0, width: 578, height: 900 },
+      { x: 0, y: 0, width: assets?.uav?.naturalWidth, height: assets?.uav?.naturalHeight },
       center,
-      Math.max(10, cellSize * (uav.id === selectedId ? 0.875 : 0.725)),
-      Number.isFinite(uav.heading_deg) ? Math.PI / 2 - uav.heading_deg * Math.PI / 180 : 0,
+      vesselLength(cellSize, uav.id === selectedId),
+      Math.PI - (Number.isFinite(uav.heading_deg) ? uav.heading_deg : 0) * Math.PI / 180,
     );
     if (!renderedModel) {
       ctx.translate(center.x, center.y);
@@ -1052,6 +1095,15 @@ export function drawUavs(ctx, uavs, cellSize, ox, oy, selectedId, assets, baseCe
       ctx.fill();
     }
     ctx.restore();
+    if (renderedModel) {
+      ctx.save();
+      ctx.strokeStyle = ownerColor(uav.id);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(center.x, center.y, vesselLength(cellSize, uav.id === selectedId) / 2 + 2, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
     if (uav.id === selectedId) {
       ctx.strokeStyle = "#0F172A";
       ctx.lineWidth = 1.5;
@@ -1136,9 +1188,9 @@ export function drawLabels(
     const display = uavDisplayState(uav);
     const selected = uav.id === selectedUavId;
     const size = Math.max(5, cellSize * (selected ? .42 : .32));
-    const spriteWidth = Math.max(10, cellSize * (selected ? .875 : .725));
+    const spriteWidth = vesselLength(cellSize, selected);
     const markerRadius = Math.max(
-      Math.hypot(spriteWidth, spriteWidth * 900 / 578) / 2,
+      Math.hypot(spriteWidth, spriteWidth / 3) / 2 + 2,
       size * Math.hypot(.85, 1),
       selected ? size + 5 : 0,
       teamMembers.has(uav.id) ? Math.max(8, cellSize * .6) : 0,
@@ -1173,7 +1225,7 @@ export function drawLabels(
       selected ? "selected" : contact.state === "tracking" ? 3.5 : classified ? "classified" : "contact",
       contactColor(contact),
       selected,
-      Math.max(4, cellSize * (selected ? .34 : .25)) + (selected ? 9.5 : 4),
+      Math.max(vesselLength(cellSize, selected, true) * .53, Math.max(4, cellSize * (selected ? .34 : .25)) + (selected ? 9.5 : 4)),
     );
   }
 
@@ -1236,11 +1288,10 @@ export function drawLabels(
   }
 
   for (const region of frame?.search_regions || []) {
-    const cell = taskCells(region)[0];
+    const cell = regionLabelCell(region);
     if (!cell) continue;
-    const ownerIndex = Number(String(region.assigned_uav_id || "").match(/\d+/)?.[0] || 0);
-    const color = ownerIndex ? GROUP_COLORS[(ownerIndex - 1) % GROUP_COLORS.length] : "#F59E0B";
-    const value = `${region.assigned_uav_id || region.id}${cellSize >= 14 ? ` ${Math.round(region.completion_pct || 0)}%` : ""}`;
+    const color = ownerColor(region.assigned_uav_id);
+    const value = `区 ${region.assigned_uav_id || region.id}${cellSize >= 14 ? ` ${Math.round(region.completion_pct || 0)}%` : ""}`;
     const anchor = gridCenter(cell[0], cell[1], cellSize, ox, oy);
     anchor.y = Math.max(anchor.y, oy + 24);
     addLabel(ctx, labels, styles, `region:${region.id}`, anchor, value, -1, color, false);
@@ -1279,8 +1330,9 @@ export function drawLabels(
       drawLabelLeader(ctx, label.anchor, label);
       ctx.stroke();
     }
-    ctx.fillStyle = style.selected ? "rgba(255, 255, 255, .98)" : "rgba(255, 255, 255, .88)";
-    ctx.strokeStyle = style.selected ? style.color : "rgba(100, 116, 139, .44)";
+    const regionLabel = label.id.startsWith("region:");
+    ctx.fillStyle = regionLabel ? "rgba(8, 35, 56, .86)" : style.selected ? "rgba(255, 255, 255, .98)" : "rgba(255, 255, 255, .88)";
+    ctx.strokeStyle = style.selected || regionLabel ? style.color : "rgba(100, 116, 139, .44)";
     ctx.lineWidth = style.selected ? 1.2 : 0.7;
     ctx.fillRect(label.x, label.y, label.width, label.height);
     ctx.strokeRect(label.x, label.y, label.width, label.height);
@@ -1356,20 +1408,19 @@ export function drawHoverTooltip(ctx, hover, cellSize, ox, oy, width, height) {
   ctx.strokeStyle = "#0F172A";
   ctx.lineWidth = 1.5;
   ctx.strokeRect(point.x, point.y, cellSize, cellSize);
-  const tipWidth = 188;
-  const tipHeight = 70;
-  const x = Math.min(width - tipWidth - 8, point.x + cellSize + 8);
+  if (width <= 620) return;
+  const tipWidth = Math.min(188, width - 16);
+  const tipHeight = 66;
+  const right = point.x + cellSize + 8;
+  const x = right + tipWidth <= width - 8 ? right : Math.max(8, point.x - tipWidth - 8);
   const y = Math.max(8, Math.min(height - tipHeight - 8, point.y));
   ctx.fillStyle = "rgba(255, 255, 255, .97)";
   ctx.strokeStyle = "#64748B";
   ctx.fillRect(x, y, tipWidth, tipHeight);
   ctx.strokeRect(x, y, tipWidth, tipHeight);
   text(ctx, `CELL ${String(hover.col).padStart(2, "0")} / ${String(hover.row).padStart(2, "0")}`, x + 9, y + 17, "#0F172A", 11);
-  text(ctx, `INFO ${hover.I.toFixed(2)}   VALUE ${hover.V.toFixed(2)}`, x + 9, y + 35, "#475569", 10);
-  text(ctx, `SHADE ${(0.1 - hover.I * 0.08).toFixed(2)}`, x + 9, y + 52, "#475569", 10);
-  const state = hover.category === "white" ? "FRESH" : hover.category === "gray" ? "AGING" : "UNSCANNED";
-  const stateColor = hover.category === "white" ? "#2DD4BF" : hover.category === "gray" ? "#FACC15" : "#F87171";
-  text(ctx, state, x + 112, y + 52, stateColor, 10, 700);
+  text(ctx, `扫描新鲜度  ${(hover.I * 100).toFixed(1)}%`, x + 9, y + 35, "#475569", 10);
+  text(ctx, `目标线索    ${(hover.V * 100).toFixed(1)}%`, x + 9, y + 52, "#475569", 10);
 }
 
 export function renderFrame(ctx, frame, options = {}) {
@@ -1421,12 +1472,11 @@ export function renderFrame(ctx, frame, options = {}) {
   );
   if (frame) {
     drawHeatmap(ctx, frame.info_matrix, frame.value_matrix, cellSize, offsetX, offsetY, gridCols, gridRows);
-    drawTransparencyOverlay(ctx, frame.info_matrix, cellSize, offsetX, offsetY, gridCols, gridRows);
-    drawOceanTexture(ctx, cellSize, offsetX, offsetY, gridCols, gridRows);
+    drawTargetInformation(ctx, frame.target_info_matrix, cellSize, offsetX, offsetY, gridCols, gridRows);
+    drawSearchRegions(ctx, frame.search_regions, cellSize, offsetX, offsetY, selectedUavId);
     drawGridLines(ctx, cellSize, offsetX, offsetY, showGrid, gridCols, gridRows);
     drawObstacles(ctx, frame.obstacles, cellSize, offsetX, offsetY, frameCount);
     drawIntents(ctx, frame.intents, frame.intent_statuses, cellSize, offsetX, offsetY);
-    drawSearchRegions(ctx, frame.search_regions, cellSize, offsetX, offsetY);
     const contacts = Array.isArray(frame.contacts) && frame.contacts.length
       ? frame.contacts : frame.ships;
     drawTrackRegions(ctx, frame.track_regions, contacts, cellSize, offsetX, offsetY);
@@ -1436,7 +1486,7 @@ export function renderFrame(ctx, frame, options = {}) {
     drawUavScanRanges(ctx, frame.uavs, cellSize, offsetX, offsetY, baseCenters, selectedUavId);
     drawMarkers(ctx, frame.markers, cellSize, offsetX, offsetY, frame.sim_time_min, frameCount);
     if (Array.isArray(frame.contacts) && frame.contacts.length) {
-      drawContacts(ctx, frame.contacts, cellSize, offsetX, offsetY, selectedContactId, frameCount);
+      drawContacts(ctx, frame.contacts, cellSize, offsetX, offsetY, selectedContactId, frameCount, assets);
     } else {
       drawShips(ctx, frame.ships, cellSize, offsetX, offsetY, assets, gridCols, gridRows);
     }

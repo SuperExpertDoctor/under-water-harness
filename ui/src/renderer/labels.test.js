@@ -8,7 +8,7 @@ test.after(() => server.close());
 
 function context() {
   const drawn = [];
-  return { drawn, save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, strokeRect() {}, fillRect() {},
+  return { drawn, save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, strokeRect() {}, fillRect() {}, setLineDash() {},
     measureText: (value) => ({ width: [...value].length * 6 }),
     fillText(value, x, y) { drawn.push({ value, x, y: y - 9, width: [...value].length * 6, height: 12 }); } };
 }

@@ -49,11 +49,12 @@ def test_scene_and_intent_receipts(client):
     episode = client.get("/api/state").json()["episode_id"]
     payload = {"episode_id": episode, "command_id": "scene-1", "vessel_class": "type_ii", "position_cells": [10, 10]}
     response = client.post("/api/vessels", json=payload)
-    assert response.status_code == 200
-    assert client.get("/api/vessel-commands/scene-1").json()["status"] == "applied"
+    assert response.status_code == 409
+    assert response.json()["error_code"] == "single_target_scene_locked"
+    assert client.get("/api/vessel-commands/scene-1").status_code == 404
     assert client.post("/api/vessels", json=payload).json() == response.json()
     assert client.get("/api/state").json()["scenario_vessels"] == []
-    assert len(client.get("/api/scene").json()["scenario_vessels"]) == 1
+    assert client.get("/api/scene").json()["scenario_vessels"] == []
     payload = {"episode_id": episode, "command_id": "intent-1", "label": "sector", "bbox": [4, 4, 12, 12], "mode": "search_priority", "valid_duration_min": 20}
     assert client.post("/api/intents", json=payload).status_code == 200
     assert client.get("/api/intent-commands/intent-1").json()["status"] == "applied"

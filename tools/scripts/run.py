@@ -35,6 +35,11 @@ def is_our_supervisor(pid):
         return False
 
 
+def worker_environments(env):
+    return ({key: value for key, value in env.items() if key != "UUV_ADVERSARY_TOKEN"},
+            {key: value for key, value in env.items() if key != "UUV_WORKER_TOKEN"})
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--foreground", action="store_true")
@@ -79,12 +84,18 @@ def main():
         token_path.write_text(secrets.token_urlsafe(32))
         os.chmod(token_path, 0o600)
     env["UUV_WORKER_TOKEN"] = token_path.read_text().strip()
+    enemy_token_path = RUNTIME / "adversary.token"
+    if not enemy_token_path.exists():
+        enemy_token_path.write_text(secrets.token_urlsafe(32))
+        os.chmod(enemy_token_path, 0o600)
+    env["UUV_ADVERSARY_TOKEN"] = enemy_token_path.read_text().strip()
     port, ui_port = free_port(args.port), free_port(args.ui_port)
     env["UUV_API_URL"] = f"http://127.0.0.1:{port}"
     env["VITE_BACKEND_PORT"] = str(port)
     env["PYTHONPATH"] = str(ROOT / "tools")
     env["UUV_DB"] = str(RUNTIME / "mission.sqlite")
     api_env = {key: value for key, value in env.items() if key != "LONGCAT_API_KEY"}
+    ui_env = {key: value for key, value in api_env.items() if key not in ("UUV_WORKER_TOKEN", "UUV_ADVERSARY_TOKEN")}
     children = []
     stopping = False
 
@@ -99,12 +110,14 @@ def main():
     signal.signal(signal.SIGINT, stop)
     commands = [
         ("api", [sys.executable, "-m", "uvicorn", "uuv_game.api:create_app", "--factory", "--host", "127.0.0.1", "--port", str(port), "--no-access-log"], ROOT, api_env),
-        ("ui", ["node", "node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", str(ui_port), "--strictPort"], ROOT/"ui", api_env),
+        ("ui", ["node", "node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", str(ui_port), "--strictPort"], ROOT/"ui", ui_env),
     ]
     if not args.no_model:
         if not env.get("LONGCAT_API_KEY"):
             raise RuntimeError("LONGCAT_API_KEY missing; configure tools/.runtime/credentials.env or use --no-model")
-        commands.append(("pi", ["node", "--import", "./packages/coding-agent/src/experimental/source-resolver.ts", "tools/pi/worker.ts"], ROOT, env))
+        friendly_env, enemy_env = worker_environments(env)
+        commands.append(("pi", ["node", "--import", "./packages/coding-agent/src/experimental/source-resolver.ts", "tools/pi/worker.ts"], ROOT, friendly_env))
+        commands.append(("pi-adversary", ["node", "--import", "./packages/coding-agent/src/experimental/source-resolver.ts", "tools/pi/adversary.ts"], ROOT, enemy_env))
     logs = []
     for name, command, cwd, child_env in commands:
         log = (RUNTIME/f"{name}.log").open("a")

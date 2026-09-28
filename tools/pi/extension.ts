@@ -6,7 +6,7 @@ const snapshot = {
   episode_id: Type.Optional(Type.String({ minLength: 1 })),
   mission_revision: Type.Optional(Type.Integer({ minimum: 0 })),
 };
-const bbox = Type.Optional(Type.Array(Type.Number({ minimum: 0, maximum: 4000 }), { minItems: 4, maxItems: 4, description: "[xmin,ymin,xmax,ymax] in meters, not UI cells." }));
+const bbox = Type.Optional(Type.Array(Type.Number({ minimum: 0, maximum: 4000 }), { minItems: 4, maxItems: 4, description: "Only for an explicitly scoped search with explicit members. Omit bbox for automatic whole-area search. [xmin,ymin,xmax,ymax] in meters, not UI cells." }));
 const fleet = Type.Optional(Type.Array(Type.String({ minLength: 1 }), { minItems: 1, maxItems: 8, uniqueItems: true }));
 function algorithm(id: string) {
   return Type.Optional(Type.Union([Type.Literal("default"), Type.Literal(id)]));
@@ -30,7 +30,7 @@ const descriptions: Record<string, string> = {
   partition_search_area: "Calculate connected one-boat-per-region search responsibilities and workload from current coverage. Omitted members uses available search boats. Candidate only; no assignment or movement.",
   compute_task_allocation: "Calculate candidate search assignments or two/three-boat tracking teams for contact_id, with feasibility, energy and coverage cost. Does not execute or produce an executable mission.",
   plan_path: "Calculate oriented Dubins-compatible path for ONE member. goal=[x_m,y_m,heading_rad]. Geometry only; use plan_search for executable looping missions.",
-  plan_search: "Calculate one atomic fleet-search plan when members is omitted, or responsibilities for up to eight explicit members. Includes connected regions and feasible closed search routes. Set standing_policy=true only when requested to include bounded energy rotation and local repair authorization. Returns result_id; no execution.",
+  plan_search: "For automatic whole-area coverage OMIT BOTH members and bbox: plan_search({standing_policy:true}) when that policy is requested. The backend selects available search boats and partitions the entire searchable sea into connected regions. Never add bbox=[0,0,4000,4000] to this automatic call. Explicit members+bbox are only for an explicitly requested scoped search, not a fallback for failed global planning. Includes feasible closed search routes. standing_policy adds bounded energy rotation and local repair to approval. Returns result_id; no execution.",
   plan_tracking: "Calculate cooperative passive-bearing tracking for confirmed contact_id. Omit members to select a feasible two/three-boat team automatically. Includes observation geometry, member-specific transit, acquisition conditions, energy and remaining search coverage repair. Accepted/transit is not effective tracking. Returns result_id; no execution.",
   evaluate_plan: "Validate candidate result_id against current geometry, members and permissions. Does not authorize or execute.",
   submit_mission_plan: "Submit result_id with current episode_id and unique command_id. Backend may return pending_approval. Only execution entry. Never retry with different IDs blindly.",

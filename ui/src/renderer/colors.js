@@ -14,6 +14,13 @@ export const UAV_STATUS_COLORS = {
   failed: "#7F1D1D",
 };
 
+export const OWNER_COLORS = ["#36D9A0", "#F3C845", "#4BBBEF", "#FA836A", "#B398F1", "#30C9D0", "#EA82B3", "#A4D74F"];
+
+export function ownerColor(id) {
+  const number = Number(String(id || "").match(/\d+/)?.[0]);
+  return number ? OWNER_COLORS[(number - 1) % OWNER_COLORS.length] : "#94A3B8";
+}
+
 export function markerColor(ageMinutes) {
   if (ageMinutes < 15) return { fill: "#EA580C", alpha: 1 };
   if (ageMinutes < 45) return { fill: "#CA8A04", alpha: 0.86 };

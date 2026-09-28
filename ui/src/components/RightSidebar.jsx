@@ -126,7 +126,7 @@ export default function RightSidebar({
 
           <CoveragePanel frame={frame} connectionStatus={connectionStatus} readOnly={readOnly} />
 
-          <details className="sidebar-section vessel-editor" open={sceneVisible} onToggle={(event) => { if (event.currentTarget.open !== sceneVisible) onToggleScene?.(event.currentTarget.open); }} aria-label="初始化船舶编辑">
+          {editingAllowed && <details className="sidebar-section vessel-editor" open={sceneVisible} onToggle={(event) => { if (event.currentTarget.open !== sceneVisible) onToggleScene?.(event.currentTarget.open); }} aria-label="初始化船舶编辑">
             <summary>场景编辑 · 调试真值</summary>
             <div className="section-heading">
               <span><Ship size={15} />场景船舶</span>
@@ -204,7 +204,7 @@ export default function RightSidebar({
                 {vesselCommandStatus.errorCode && <small>{vesselCommandStatus.errorCode}</small>}
               </div>
             )}
-          </details>
+          </details>}
 
           {selectedScenarioVessel && (
             <section className="sidebar-section selected-vessel-detail" aria-label="选中船舶详情">

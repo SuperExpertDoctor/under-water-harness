@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react";
 const backendPort = process.env.VITE_BACKEND_PORT || "8765";
 
 export default defineConfig({
+  // Separate live-service dependencies from middleware test servers.
+  cacheDir: `node_modules/.vite-${backendPort}`,
   plugins: [react()],
   server: {
     host: "127.0.0.1",

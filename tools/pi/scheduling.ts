@@ -10,3 +10,13 @@ export class RoutineCooldown {
     return { defer_routine: now < this.eligibleAt };
   }
 }
+
+/** Keep the lease alive until all run work, including its completion receipt, settles. */
+export async function withRunHeartbeat(operation: () => Promise<void>, heartbeat: () => Promise<void>, onError: (error: unknown) => void): Promise<void> {
+  const timer = setInterval(() => { void heartbeat().catch(onError); }, 3000);
+  try {
+    await operation();
+  } finally {
+    clearInterval(timer);
+  }
+}

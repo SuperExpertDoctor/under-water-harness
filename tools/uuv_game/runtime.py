@@ -22,9 +22,11 @@ from .mission_planning import search_bundle, explicit_regions
 from .lifecycle import prepare_exits, replacement_pose, apply_replacements
 from .handover import prepare_handover, finish_handover
 from .sensing import observe, sensor_mode
+from .information import information_fields
+from . import adversary as enemy
 
 
-CHECKPOINT_FIELDS = tuple(("episode sim_time frame_id revision policy_version mode status uuvs targets obstacles active results plans contacts observations events cursor scan_times intents vessels tasks messages agent_jobs agent last_periodic sensor_enabled contact_mapping contact_counter last_observation_time regions standing_policy metrics region_revision observation_cursor").split())
+CHECKPOINT_FIELDS = tuple(("episode sim_time frame_id revision policy_version mode status uuvs targets obstacles active results plans contacts observations events cursor scan_times intents vessels tasks messages agent_jobs agent last_periodic sensor_enabled contact_mapping contact_counter last_observation_time regions standing_policy metrics region_revision observation_cursor adversary").split())
 ALGORITHM_IDS = {"compute_task_allocation": "slot_assignment", "plan_path": "dubins_hybrid",
                  "plan_search": "strip_coverage", "plan_tracking": "distance_band", "partition_search_area": "connected_partition"}
 
@@ -67,6 +69,30 @@ class MissionRuntime:
             if state:
                 self.rng.setstate((state[0], tuple(state[1]), state[2]))
             self.agent["status"] = "offline"
+            self.adversary.update(job=None, parameters=None, status="offline", last_heartbeat=0.0, last_started_wall=0.0)
+            # Preserve the human mission and primary target, remove the old scene/AIS bypass.
+            self.targets = [next((target for target in self.targets if target["id"] == "TARGET-1"), self.targets[0])] if self.targets else [{"id": "TARGET-1", "pose": [900.0, 700.0, .5], "speed": 2.5}]
+            for target in self.targets:
+                target["ais_enabled"] = False
+            self.vessels = []
+            removed_contacts = {contact for target, contact in self.contact_mapping.items() if target != self.targets[0]["id"]}
+            retired_members = [member for member, action in self.active.items()
+                if action.get("kind") == "track" and action.get("contact_id") in removed_contacts]
+            for member in retired_members:
+                self.active.pop(member)
+            retired_plans = [plan for plan in self.plans.values() if plan.get("kind") == "track"
+                and plan.get("contact_id") in removed_contacts and plan["status"] in ("active", "pending_approval", "approved")]
+            for plan in retired_plans:
+                plan.update(status="superseded", active_members=[], migration_reason="single_target_scene_locked")
+            if retired_members or retired_plans:
+                self.revision += 1
+                self.event("single_target_checkpoint_migrated", {"retired_tracking_actions": len(retired_members),
+                    "retired_tracking_plans": len(retired_plans), "reason": "single_target_scene_locked"})
+            self.contact_mapping = {target: contact for target, contact in self.contact_mapping.items() if target == self.targets[0]["id"]}
+            self.contacts = {key: value for key, value in self.contacts.items() if key not in removed_contacts}
+            self.observations = [sample for sample in self.observations if sample.get("contact_id") not in removed_contacts and sample.get("source") != "ais"]
+            for contact in self.contacts.values():
+                contact["samples"] = [sample for sample in contact["samples"] if sample.get("source") != "ais"]
             self.contact_counter = max(self.contact_counter, max((int(key.split("-")[-1]) for key in self.contacts if key.startswith("CONTACT-") and key.split("-")[-1].isdigit()), default=0))
             self.agent["model"] = self.config.model
             for job in self.agent_jobs:
@@ -101,6 +127,7 @@ class MissionRuntime:
         self.uuvs = [{"id": f"UUV-{i+1}", "pose": [400.0+2600*(i//4), 400.0+(i%4)*1000, 0.0], "trail": [], "curvature": 0.0,
             "generation": 1, "remaining_range_m": self.config.range_capacity, "capabilities": ["active", "passive"]} for i in range(8)]
         self.targets = [{"id": "TARGET-1", "pose": [900.0, 700.0, 0.5], "speed": 2.5}]
+        self.adversary = enemy.initial_state()
         self.obstacles = [{"x": 2500.0, "y": 2300.0, "radius": 140.0}]
         self.active = {}
         self.results = {}
@@ -186,6 +213,7 @@ class MissionRuntime:
     @synchronized
     def stop(self):
         self.status = "stopped"
+        self.adversary.update(job=None, parameters=None, status="idle")
         self.revision += 1
         self.active = {}
         for plan in self.plans.values():
@@ -260,9 +288,15 @@ class MissionRuntime:
                 raise MissionError("bbox_requires_explicit_members", 422)
             episode, revision = self.episode, self.revision
             automatic = name in ("compute_task_allocation", "partition_search_area", "plan_search", "plan_tracking") and "members" not in data
+            global_coverage = automatic and (name in ("partition_search_area", "plan_search") or
+                (name == "compute_task_allocation" and "tasks" not in data and not data.get("contact_id")))
             members = copy.deepcopy([u for u in self.uuvs if self.active.get(u["id"], {}).get("kind") != "exit"]) if automatic else self._members(data, 8 if name in ("plan_search", "partition_search_area", "compute_task_allocation") else 3)
             if automatic and name != "plan_tracking":
                 members = [u for u in members if self.active.get(u["id"], {}).get("kind") != "track"]
+            if global_coverage:
+                members = [u for u in members if "active" in u["capabilities"]
+                    and self.active.get(u["id"], {}).get("kind", "idle") in ("idle", "search", "reacquire")
+                    and u["remaining_range_m"] > min(u["pose"][0], u["pose"][1], 4000-u["pose"][0], 4000-u["pose"][1])+self.config.exit_reserve+500]
             if name == "plan_tracking":
                 members = [u for u in members if self.active.get(u["id"], {}).get("kind") != "track" or self.active[u["id"]].get("contact_id") == data.get("contact_id")]
                 for boat in members:
@@ -292,7 +326,7 @@ class MissionRuntime:
             result.update(kind="allocation", algorithm="cooperative-geometry-allocation-v2", contact_id=data["contact_id"],
                 teams=[{"id": f"candidate-{data['contact_id']}", "task_id": data["contact_id"], "members": chosen}] if chosen else [])
         elif name == "partition_search_area" or (name == "compute_task_allocation" and "tasks" not in data):
-            result = partition_regions(members, scan_times, obstacles, regions)
+            result = partition_regions(members, scan_times, ownership_obstacles if global_coverage else obstacles, regions)
             result["algorithm"] = "connected-workload-assignment-v2"
             result["teams"] = [{"id": r["id"], "task_id": r["id"], "members": [r["owner"]], "bbox": r["bbox_m"]} for r in result["regions"]]
         elif name == "compute_task_allocation":
@@ -312,7 +346,9 @@ class MissionRuntime:
         elif name == "plan_search":
             if "standing_policy" in data and not isinstance(data["standing_policy"], bool):
                 raise MissionError("boolean_required", 422)
-            result = search_bundle(members, scan_times, obstacles, regions, allow_partial=data.get("standing_policy", automatic) or self.standing_policy["energy_rotation"]) if automatic else plan_search(members, bbox, obstacles=obstacles)
+            result = search_bundle(members, scan_times, ownership_obstacles, regions,
+                allow_partial=data.get("standing_policy", automatic) or self.standing_policy["energy_rotation"],
+                route_obstacles=obstacles) if automatic else plan_search(members, bbox, obstacles=obstacles)
             result["kind"] = "reacquire" if data.get("mode") == "reacquire" else "search"
             if not automatic:
                 result["bbox"] = bbox
@@ -341,6 +377,9 @@ class MissionRuntime:
                 result["repair_generations"] = {u["id"]: u["generation"] for u in remaining}
         else:
             raise MissionError("unknown_calculation", 404)
+        if global_coverage and not members:
+            result.update(status="infeasible", regions=[])
+            result["diagnostics"]["reason"] = "no_eligible_coverage_vehicles"
         result.update({"result_id": identifier("result"), "episode_id": episode, "mission_revision": revision,
             "snapshot_id": snapshot, "members": [u["id"] for u in members], "created_at_s": self.sim_time,
             "start_poses": {u["id"]: u["pose"] for u in members}, "assignments": assignments,
@@ -608,9 +647,22 @@ class MissionRuntime:
         observe(self)
 
     @synchronized
+    def adversary_observation(self):
+        target = self.targets[0]
+        return copy.deepcopy({"episode_id": self.episode, "sim_time_s": self.sim_time,
+            "own_pose": target["pose"], "own_speed_mps": target["speed"],
+            "sensor_range_m": self.config.enemy_sensor_range,
+            "bounds": [0, 0, self.config.width, self.config.height], "obstacles": self.obstacles,
+            "detections": self.adversary["detections"], "history": self.adversary["history"]})
+
+    @synchronized
     def tick(self):
         if self.status != "running":
             return
+        enemy_job = self.adversary["job"]
+        if enemy_job and enemy_job["status"] == "running" and enemy_job["lease_deadline"] <= time.monotonic():
+            enemy_job["status"] = "failed"
+            self.adversary.update(parameters=None, status="degraded")
         if self.frame_id % 25 == 0:
             prepare_handover(self)
             if not prepare_exits(self):
@@ -692,10 +744,12 @@ class MissionRuntime:
                     return
         target_poses = {}
         for target in self.targets:
-            x, y, heading = target["pose"]
-            desired = math.atan2(2000-y, 2000-x) if min(x, y, 4000-x, 4000-y) < 400 else heading+0.003
-            error = (desired-heading+math.pi) % (2*math.pi)-math.pi
-            target_poses[target["id"]] = integrate(target["pose"], target["speed"], max(-1/80, min(1/80, error/100)), self.config.dt)
+            enemy.sample(self.adversary, target["pose"], self.uuvs, self.obstacles,
+                         self.config.enemy_sensor_range, self.sim_time, self.config.seed+self.frame_id)
+            pose, speed, curvature = enemy.control(target["pose"], self.adversary["detections"],
+                self.adversary["parameters"], self.obstacles, self.config, self.sim_time)
+            target_poses[target["id"]] = pose
+            target.update(speed=speed, curvature=curvature)
         # Truth is used only by this simulator interlock, never to choose a control.
         if any(math.dist(pose[:2], target_pose[:2]) < self.config.separation for pose in next_poses.values() for target_pose in target_poses.values()):
             self.pause("safety_target_collision")
@@ -751,10 +805,10 @@ class MissionRuntime:
 
     @synchronized
     def frame(self):
-        information = [[0 if t < 0 else math.exp(-math.log(2)*(self.sim_time-t)/1800) for t in col] for col in self.scan_times]
         searchable = [(c, r) for c in range(40) for r in range(40) if not any(
             math.hypot(max(c*100, min(o["x"], (c+1)*100))-o["x"], max(3900-r*100, min(o["y"], 4000-r*100))-o["y"]) <= o["radius"]+8
             for o in self.obstacles)]
+        information = information_fields(self.scan_times, self.contacts, searchable, self.sim_time, self.config)
         count = sum(self.scan_times[c][r] >= 0 for c, r in searchable)
         coverage = 100*count/max(1, len(searchable))
         recent = sum(self.scan_times[c][r] >= 0 and 0 <= self.sim_time-self.scan_times[c][r] <= 1800 for c, r in searchable)
@@ -771,6 +825,9 @@ class MissionRuntime:
                 "speed_mps": 4 if action and self.status == "running" else 0,
                 "heading_deg": math.degrees(u["pose"][2]) % 360,
                 "sensor_mode": sensor_mode(action), "task_phase": action.get("phase", kind),
+                "effective_tracking": kind == "track" and action.get("phase") == "tracking" and sensor_mode(action) == "passive"
+                    and self.contacts.get(action.get("contact_id"), {}).get("state") == "tracking"
+                    and u["id"] in self.contacts.get(action.get("contact_id"), {}).get("observers", []),
                 "trail": [self.cells(p) for p in u["trail"]], "status": action.get("phase", "acquiring") if kind == "track" else "searching" if mode == "coverage" else "transit" if kind in ("loiter", "exit") else "idle",
                 "operation_mode": mode, "operational_status": "available", "control_owner": "system",
                 "assigned_region_id": region["id"] if region else None, "team_id": action.get("plan_id"), "target_group_id": action.get("contact_id"),
@@ -787,8 +844,8 @@ class MissionRuntime:
             "frame_id": self.frame_id, "sim_time_min": self.sim_time/60, "timestamp": f"{seconds//3600:02}:{seconds//60%60:02}:{seconds%60:02}",
             "cycle": self.agent["cycle"], "runtime_status": self.status, "mission_revision": self.revision, "autonomy_mode": self.mode,
             "agent_status": copy.deepcopy(self.agent), "event_cursor": self.cursor, "information_source": "backend", "information_version": self.frame_id,
-            "task_area": {"width_km": 4, "height_km": 4, "cell_size_km": .1}, "info_matrix": information,
-            "value_matrix": [[.1]*40 for _ in range(40)], "searchable_cells": len(searchable), "coverage_pct": coverage,
+            "task_area": {"width_km": 4, "height_km": 4, "cell_size_km": .1}, **information,
+            "value_matrix": copy.deepcopy(information["target_info_matrix"]), "searchable_cells": len(searchable), "coverage_pct": coverage,
             "coverage_metrics": {"schema_version": "persistent-coverage/v1", "status": "ok", "as_of_min": self.sim_time/60,
                 "fixed_searchable_area_km2": len(searchable)*.01, "cumulative_pct": coverage, "unseen_pct": 100-coverage,
                 "windows": [{"minutes": minutes, "window_complete": self.sim_time >= minutes*60,
@@ -809,5 +866,6 @@ class MissionRuntime:
                 "to": self.cells([s["observer_pose"][0]+350*math.cos(s["bearing_rad"]), s["observer_pose"][1]+350*math.sin(s["bearing_rad"])]),
                 "observer_id": s["observer_id"], "contact_id": s["contact_id"]} for s in self.observations if s.get("mode") == "passive" and self.sim_time-s["time_s"] < 2],
             "track_regions": [], "events": self.events[-120:], "messages": copy.deepcopy(self.messages[-30:]), "intents": copy.deepcopy(self.intents), "intent_statuses": [],
-            "scenario_vessels": [], "ships": [], "markers": [], "vessel_mutation_allowed": self.status != "stopped",
+            "scenario_vessels": [], "ships": [], "markers": [], "vessel_mutation_allowed": False,
+            "adversary_status": {"status": self.adversary["status"] if time.monotonic()-self.adversary["last_heartbeat"] < 30 else "offline", "model": self.config.model, "cycle": self.adversary["cycle"]},
             "obstacles": [{"id": f"obstacle-{i}", "vertices": [self.cells([o["x"]+o["radius"]*math.cos(a*math.pi/8), o["y"]+o["radius"]*math.sin(a*math.pi/8)]) for a in range(16)]} for i, o in enumerate(self.obstacles)]}

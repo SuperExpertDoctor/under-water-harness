@@ -5,7 +5,7 @@ import { createAgentSession, ModelRuntime, SessionManager, SettingsManager, type
 import { longcatConfig, redact, TOOL_NAMES } from "./config.ts";
 import { FeedbackDelivery, PublicEventProjector, runUntilSettled } from "./bridge.ts";
 import { createMissionResources } from "./resources.ts";
-import { RoutineCooldown } from "./scheduling.ts";
+import { RoutineCooldown, withRunHeartbeat } from "./scheduling.ts";
 
 const root = resolve(import.meta.dirname, "../..");
 const api = process.env.UUV_API_URL || "http://127.0.0.1:8765";
@@ -108,26 +108,23 @@ while (running) {
       });
     });
     const deadline = setTimeout(() => { runFailure = new Error("turn_deadline_exceeded"); void turnSession.abort(); }, 180000);
-    const heartbeat = setInterval(() => {
-      void heartbeatRun(job).catch((error: unknown) => {
+    try {
+      await withRunHeartbeat(async () => {
+        await runUntilSettled(turnSession, `Episode ${job.episode_id}. Trigger: ${job.source}. ${job.text}\nFirst read the multi-uuv-recon-tracking Skill using read, then get_mission_state. Preserve existing plans unless a change is needed.`);
+        await heartbeatRun(job);
+        await events;
+        if (runFailure) throw runFailure;
+        const last = [...turnSession.messages].reverse().find((message) => message.role === "assistant");
+        if (last?.role === "assistant" && (last.stopReason === "error" || last.stopReason === "aborted")) {
+          throw new Error(last.errorMessage || last.stopReason);
+        }
+        await request("/internal/agent/event", { run_id: job.run_id, episode_id: job.episode_id, type: "completed", text: redact(turnSession.getLastAssistantText() || "本轮没有新增操作。", secrets) });
+      }, () => heartbeatRun(job), (error: unknown) => {
         runFailure = error instanceof Error ? error : new Error("heartbeat_failed");
         void turnSession.abort();
       });
-    }, 3000);
-    try {
-      await runUntilSettled(turnSession, `Episode ${job.episode_id}. Trigger: ${job.source}. ${job.text}\nFirst read the multi-uuv-recon-tracking Skill using read, then get_mission_state. Preserve existing plans unless a change is needed.`);
-      clearInterval(heartbeat);
-      await heartbeatRun(job);
-      await events;
-      if (runFailure) throw runFailure;
-      const last = [...turnSession.messages].reverse().find((message) => message.role === "assistant");
-      if (last?.role === "assistant" && (last.stopReason === "error" || last.stopReason === "aborted")) {
-        throw new Error(last.errorMessage || last.stopReason);
-      }
-      await request("/internal/agent/event", { run_id: job.run_id, episode_id: job.episode_id, type: "completed", text: redact(turnSession.getLastAssistantText() || "本轮没有新增操作。", secrets) });
     } finally {
       clearTimeout(deadline);
-      clearInterval(heartbeat);
       unsubscribe();
       await turnSession.abort();
       await heartbeatTask.catch(() => {});

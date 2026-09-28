@@ -34,7 +34,6 @@ def observe(runtime):
         key = runtime.contact_mapping.get(target["id"])
         contact = runtime.contacts.get(key)
         batch = []
-        ais = target.get("ais_enabled") and target.get("vessel_class") in ("type_i", "type_ii")
         observers = runtime.uuvs if runtime.sensor_enabled else []
         for boat in observers:
             mode = observed_modes[boat["id"]]
@@ -50,10 +49,6 @@ def observe(runtime):
             sample.update(observer_pose=list(boat["pose"]), observer_id=boat["id"], generation=boat["generation"],
                           observers=[boat["id"]], source="sensor")
             batch.append(sample)
-        if ais:
-            sample = ekf.measure([0, 0, 0], target["pose"], "active", runtime.rng)
-            sample.update(observer_pose=[0, 0, 0], observer_id="ais", generation=0, observers=[], source="ais")
-            batch.append(sample)
         accepted = []
         for sample in batch:
             if not contact:
@@ -68,7 +63,7 @@ def observe(runtime):
                 runtime.contacts[key] = contact
                 runtime.event("contact_created", {"contact_id": key})
             if not ekf.correct(contact, sample):
-                maximum_range = math.hypot(runtime.config.width, runtime.config.height) if sample["source"] == "ais" else runtime.config.sensor_range
+                maximum_range = runtime.config.sensor_range
                 if contact["state"] != "lost" or accepted or sample["mode"] != "active" or not 0 < sample["range_m"] <= maximum_range+4*sample["range_sigma"]:
                     continue
                 contact.update(ekf.initialize_active(sample, now), tracking_streak=0)
@@ -78,6 +73,7 @@ def observe(runtime):
             sample.update(sample_id=f"obs-{runtime.observation_cursor}", sequence=runtime.observation_cursor,
                           contact_id=key, time_s=now)
             if sample["mode"] == "active":
+                contact["position_localized"] = True
                 sample.update(x=sample["observer_pose"][0]+sample["range_m"]*math.cos(sample["bearing_rad"]),
                               y=sample["observer_pose"][1]+sample["range_m"]*math.sin(sample["bearing_rad"]))
             runtime.observations.append(sample)
@@ -89,9 +85,7 @@ def observe(runtime):
         if accepted:
             contact["last_seen"] = now
             contact["hits"] = [t for t in contact["hits"] if now-t <= 5]+[now]
-            contact["observers"] = [s["observer_id"] for s in accepted if s["source"] != "ais"]
-            if ais:
-                contact.update(ais_mmsi=target["ais_mmsi"], ais_synthetic=True)
+            contact["observers"] = [s["observer_id"] for s in accepted]
         tracking = [u for u in runtime.uuvs if runtime.active.get(u["id"], {}).get("contact_id") == key
                     and runtime.active[u["id"]]["kind"] == "track"]
         active_received = {sample["observer_id"] for sample in accepted if sample["mode"] == "active" and sample["source"] == "sensor"}

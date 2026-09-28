@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Eye, EyeOff, Focus, Grid3X3, History, PanelBottom, PanelRight, Radio, Route, Wind } from "lucide-react";
+import { Focus, Grid3X3, History, PanelBottom, PanelRight, Radio, Route, Wind } from "lucide-react";
 
 import BottomDrawer from "./components/BottomDrawer";
 import CanvasMap from "./components/CanvasMap";
@@ -19,7 +19,7 @@ export default function App() {
   const [selectedUavId, setSelectedUavId] = useState(null);
   const [drawerVisible, setDrawerVisible] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showGrid, setShowGrid] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
   const [showScenario, setShowScenario] = useState(false);
   const [trailMode, setTrailMode] = useState("tail");
   const [selectionMode, setSelectionMode] = useState(false);
@@ -311,15 +311,6 @@ export default function App() {
           </button>
           <button className={showGrid ? "icon-btn active" : "icon-btn"} onClick={() => setShowGrid((value) => !value)} title="网格" aria-label="切换网格">
             <Grid3X3 size={17} />
-          </button>
-          <button
-            className={showScenario ? "icon-btn active" : "icon-btn"}
-            onClick={() => setShowScenario((value) => !value)}
-            title={showScenario ? "隐藏场景真值" : "显示场景真值"}
-            aria-label="切换场景真值图层"
-            aria-pressed={showScenario}
-          >
-            {showScenario ? <Eye size={17} /> : <EyeOff size={17} />}
           </button>
           <button className={drawerVisible ? "icon-btn active" : "icon-btn"} onClick={() => setDrawerVisible((value) => !value)} title="任务详情" aria-label="切换任务详情面板" aria-pressed={drawerVisible}>
             <PanelBottom size={17} />

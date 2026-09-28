@@ -27,9 +27,10 @@ WORKER_LEASE_SECONDS = 15
 WORKER_LIVENESS_SECONDS = 30  # Includes the healthy worker's 15-second success cooldown.
 
 
-def create_app(db_path=None, worker_token=None, ticking=True):
+def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=None):
     db_path = db_path or os.environ.get("UUV_DB", "tools/.runtime/mission.sqlite")
     token = worker_token or os.environ.get("UUV_WORKER_TOKEN", "")
+    enemy_token = adversary_token or os.environ.get("UUV_ADVERSARY_TOKEN", "")
     browser_secret = secrets.token_urlsafe(32)
     runtime = MissionRuntime(db_path)
 
@@ -161,7 +162,8 @@ def create_app(db_path=None, worker_token=None, ticking=True):
             return JSONResponse({"error_code": "origin_not_allowed"}, status_code=403)
         if request.url.path.startswith("/internal/"):
             provided = request.headers.get("authorization", "")
-            if not token or not secrets.compare_digest(provided, f"Bearer {token}"):
+            expected = enemy_token if request.url.path.startswith("/internal/adversary/") else token
+            if not expected or not secrets.compare_digest(provided, f"Bearer {expected}"):
                 return JSONResponse({"error_code": "worker_auth_required"}, status_code=403)
         elif request.method not in ("GET", "HEAD", "OPTIONS"):
             if not secrets.compare_digest(request.cookies.get("uuv_operator", ""), browser_secret):
@@ -246,7 +248,7 @@ def create_app(db_path=None, worker_token=None, ticking=True):
     @app.get("/api/scene")
     async def scene():
         with runtime.lock:
-            return {"episode_id": runtime.episode, "scenario_vessels": copy.deepcopy(runtime.vessels), "vessel_mutation_allowed": runtime.status != "stopped"}
+            return {"episode_id": runtime.episode, "scenario_vessels": [], "vessel_mutation_allowed": False}
 
     @app.post("/api/simulation/{operation}")
     async def simulation(operation, request: Request):
@@ -506,48 +508,74 @@ def create_app(db_path=None, worker_token=None, ticking=True):
     @app.delete("/api/vessels/{vessel_id}")
     @app.patch("/api/vessels/{vessel_id}/ais")
     async def vessel(request: Request, vessel_id: str = ""):
-        data = await payload(request)
-        if runtime.status == "stopped":
-            raise MissionError("mission_stopped")
-        def apply():
-            current = next((v for v in runtime.vessels if v["scenario_entity_id"] == vessel_id), None)
-            if vessel_id and (not current or data.get("expected_revision") != current["revision"]):
-                raise MissionError("stale_vessel")
-            if request.method == "DELETE":
-                runtime.vessels.remove(current)
-                runtime.targets = [target for target in runtime.targets if target["id"] != vessel_id]
-                contact_id = runtime.contact_mapping.pop(vessel_id, None)
-                runtime.contacts.pop(contact_id, None)
-                runtime.observations = [sample for sample in runtime.observations if sample["contact_id"] != contact_id]
-            elif request.method == "PATCH":
-                if not current["ais_controllable"]:
-                    raise MissionError("ais_fixed")
-                if not isinstance(data.get("ais_enabled"), bool):
-                    raise MissionError("boolean_required", 422)
-                current.update(ais_enabled=data["ais_enabled"], revision=current["revision"]+1)
-                for target in runtime.targets:
-                    if target["id"] == vessel_id:
-                        target["ais_enabled"] = data["ais_enabled"]
-            else:
-                position = data.get("position_cells")
-                if data.get("vessel_class") not in ("type_i", "type_ii") or not isinstance(position, list) or len(position) != 2 or not all(isinstance(v, (int, float)) and 0 <= v < 40 for v in position):
-                    raise MissionError("invalid_vessel", 422)
-                if len(runtime.vessels) >= 20:
-                    raise MissionError("scene_capacity")
-                entity_id = identifier("vessel")
-                x, y = (position[0]+.5)*100, 4000-(position[1]+.5)*100
-                if not 0 <= x <= 4000 or not 0 <= y <= 4000:
-                    raise MissionError("invalid_vessel", 422)
-                heading = math.atan2(2000-y, 2000-x)
-                ais_mmsi = str(900000000+int(entity_id[-8:], 16) % 100000000)
-                runtime.targets.append({"id": entity_id, "pose": [x, y, heading], "speed": 2.5,
-                    "vessel_class": data["vessel_class"], "ais_enabled": True, "ais_mmsi": ais_mmsi, "ais_synthetic": True})
-                runtime.vessels.append({"scenario_entity_id": entity_id, "vessel_class": data["vessel_class"], "position": position,
-                    "heading_deg": -math.degrees(heading), "ais_mmsi": ais_mmsi, "ais_synthetic": True,
-                    "revision": 1, "ais_enabled": True, "ais_controllable": data["vessel_class"] == "type_ii", "surveillance_stage": "undetected"})
-            runtime.event("scene_changed", {})
-            return {}
-        return receipt(data, apply)
+        await payload(request)
+        raise MissionError("single_target_scene_locked")
+
+    def enemy_run(data):
+        runtime.check_episode(data.get("episode_id"))
+        job = runtime.adversary["job"]
+        if runtime.status != "running" or not job or job["run_id"] != data.get("run_id") or job["status"] != "running" or job["lease_deadline"] <= time.monotonic():
+            raise MissionError("adversary_run_not_active")
+        return job
+
+    @app.post("/internal/adversary/next")
+    async def adversary_next(request: Request):
+        data = await payload(request, episode=False)
+        if data:
+            raise MissionError("unexpected_parameters", 422)
+        with runtime.lock:
+            state, now = runtime.adversary, time.monotonic()
+            state["last_heartbeat"] = now
+            job = state["job"]
+            if job and job["status"] == "running":
+                if job["lease_deadline"] > now and runtime.status == "running":
+                    return {"job": None}
+                job["status"] = "failed"
+                state["parameters"] = None
+            state["status"] = "idle"
+            if runtime.status != "running" or now-state["last_started_wall"] < 15 or runtime.sim_time-state["last_started_s"] < 30:
+                return {"job": None}
+            job = {"run_id": identifier("adversary-run"), "episode_id": runtime.episode,
+                   "status": "running", "lease_deadline": now+15}
+            state.update(job=job, status="running", last_started_s=runtime.sim_time,
+                         last_started_wall=now, cycle=state["cycle"]+1)
+            runtime.save()
+            return {"job": {key: job[key] for key in ("run_id", "episode_id")}}
+
+    @app.post("/internal/adversary/{operation}")
+    async def adversary_operation(operation, request: Request):
+        data = await payload(request, episode=False)
+        extras = {"parameters": {"speed_mps", "turn_bias", "duration_s"}, "complete": {"status"}}
+        if operation not in ("heartbeat", "observation", "parameters", "complete"):
+            raise MissionError("unknown_adversary_operation", 404)
+        if set(data)-({"episode_id", "run_id"} | extras.get(operation, set())):
+            raise MissionError("unexpected_parameters", 422)
+        with runtime.lock:
+            job = enemy_run(data)
+            state = runtime.adversary
+            if operation == "observation":
+                return runtime.adversary_observation()
+            if operation == "heartbeat":
+                state["last_heartbeat"] = time.monotonic()
+                job["lease_deadline"] = state["last_heartbeat"]+15
+                return {"cancel": False}
+            if operation == "parameters":
+                for key, low, high in (("speed_mps", 0, runtime.config.enemy_max_speed), ("turn_bias", -1, 1), ("duration_s", 1, 60)):
+                    value = data.get(key)
+                    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
+                        raise MissionError("invalid_adversary_parameters", 422)
+                state["parameters"] = {key: data[key] for key in ("speed_mps", "turn_bias")}
+                state["parameters"]["expires_at_s"] = runtime.sim_time+data["duration_s"]
+                runtime.save()
+                return {"status": "applied", "expires_at_s": state["parameters"]["expires_at_s"]}
+            if data.get("status") not in ("completed", "failed"):
+                raise MissionError("invalid_adversary_status", 422)
+            job["status"] = data["status"]
+            state["status"] = "idle" if data["status"] == "completed" else "degraded"
+            if data["status"] == "failed":
+                state["parameters"] = None
+            runtime.save()
+            return {"status": "ok"}
 
     @app.get("/api/replay/list")
     async def replay_list():

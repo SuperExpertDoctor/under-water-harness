@@ -175,7 +175,7 @@ def test_skill_endpoint_returns_the_real_trusted_skill(client):
     assert client.get("/api/skills/multi-uuv-recon-tracking").json()["content"] == path.read_text()
 
 
-def test_scene_receipts_and_task_mutations_hold_the_runtime_lock(client, monkeypatch):
+def test_intent_receipts_and_task_mutations_hold_the_runtime_lock(client, monkeypatch):
     runtime = client.app.state.runtime
     original_receipts = runtime.receipts
 
@@ -197,7 +197,7 @@ def test_scene_receipts_and_task_mutations_hold_the_runtime_lock(client, monkeyp
     monkeypatch.setattr(runtime, "tasks", LockedTasks())
     candidate = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
     episode = runtime.episode
-    client.post("/api/vessels", json={"episode_id": episode, "command_id": "scene-locked", "vessel_class": "type_ii", "position_cells": [10, 10]}).raise_for_status()
+    client.post("/api/intents", json={"episode_id": episode, "command_id": "intent-locked", "bbox": [4, 4, 12, 12]}).raise_for_status()
     client.post("/api/task-assembly/assemble", json={"episode_id": episode, "result_id": candidate["result_id"]}).raise_for_status()
 
 

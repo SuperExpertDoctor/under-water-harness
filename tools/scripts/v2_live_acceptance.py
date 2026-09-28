@@ -152,7 +152,8 @@ class Acceptance:
         self.operator("/api/permissions/mode", "allow low-risk fleet search", mode="assisted")
         self.phase = "fleet_search"
         run_id = self.send(self.phase, "Load multi-uuv-recon-tracking with the native read tool. Read mission state. "
-            "Generate one atomic eight-UUV search plan using plan_search with members OMITTED and standing_policy=true. "
+            "Generate one atomic eight-UUV search plan using plan_search({standing_policy:true}) with BOTH members AND bbox OMITTED. "
+            "Do not switch to explicit members or a bounding box; do not use the old strip-sweep planner. "
             "Evaluate then submit that plan exactly once. Each of the eight boats must own one distinct region. "
             "Keep simulation paused; do not start it. Do not change the operator's permission mode.")
         state = self.wait_run(run_id)
@@ -166,6 +167,13 @@ class Acceptance:
         require(any(call.get("standing_policy") is True and "members" not in call for call in search_calls),
             "Fleet plan did not request atomic omitted-members standing policy")
         boats, regions = state["uavs"], state["search_regions"]
+        submitted = [event["data"] for event in receipts if event["type"] == "tool_completed"
+            and event["data"].get("tool") == "submit_mission_plan"]
+        require(len(submitted) == 1 and submitted[0].get("algorithm") == "connected-coverage-dubins-v2",
+            "Submitted plan was not the automatic connected full-area candidate")
+        owned = [tuple(cell) for region in regions for cell in region["cells"]]
+        require(len(owned) == len(set(owned)) == state["searchable_cells"],
+            "Search regions must cover every searchable cell exactly once")
         require(len(boats) == len(regions) == 8, "Eight active search regions required")
         require(len({region["id"] for region in regions}) == 8 and
             {region["assigned_uav_id"] for region in regions} == {boat["id"] for boat in boats}, "Search ownership not unique")

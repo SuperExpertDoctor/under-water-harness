@@ -24,7 +24,7 @@ def explicit_regions(boats, bbox, obstacles, previous):
     return regions
 
 
-def search_bundle(boats, scan_times, obstacles, previous=None, allow_partial=False):
+def search_bundle(boats, scan_times, obstacles, previous=None, allow_partial=False, route_obstacles=None):
     boats = [{**boat, "allow_partial_patrol": True} for boat in boats] if allow_partial else boats
     partition = partition_regions(boats, scan_times, obstacles, previous)
     result = {**partition, "kind": "search", "algorithm": "connected-coverage-dubins-v2", "routes": {},
@@ -35,7 +35,8 @@ def search_bundle(boats, scan_times, obstacles, previous=None, allow_partial=Fal
         result["requires_energy_rotation"] = True
     for region in partition["regions"]:
         boat = next(u for u in boats if u["id"] == region["owner"])
-        route = plan_region_search(boat, region, obstacles)
+        # Temporary vehicle collision envelopes must not remove task-area ownership.
+        route = plan_region_search(boat, region, obstacles if route_obstacles is None else route_obstacles)
         if route["status"] != "succeeded":
             result.update(status=route["status"], diagnostics={"reason": "region_route_failed", "owner": boat["id"], "details": route["diagnostics"]})
             return result

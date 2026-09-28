@@ -26,8 +26,9 @@ export function computeLayout(
   const legendWidth = includeLegend && canvasW >= 900 ? 168 : 0;
   const availableWidth = Math.max(1, canvasW - inset * 2 - legendWidth - (legendWidth ? 10 : 0));
   const availableHeight = Math.max(1, canvasH - inset * 2);
-  const chartWidth = Math.min(availableWidth, availableHeight * BACKGROUND_ASPECT_RATIO);
-  const chartHeight = chartWidth / BACKGROUND_ASPECT_RATIO;
+  const aspectRatio = canvasW <= 620 ? 1.05 : BACKGROUND_ASPECT_RATIO;
+  const chartWidth = Math.min(availableWidth, availableHeight * aspectRatio);
+  const chartHeight = chartWidth / aspectRatio;
   const groupWidth = chartWidth + (legendWidth ? legendWidth + 10 : 0);
   const chartX = Math.max(inset, (canvasW - groupWidth) / 2);
   const chartY = inset;

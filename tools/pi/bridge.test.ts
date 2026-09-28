@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { AgentSessionEvent } from "@earendil-works/pi-coding-agent";
 import type { AssistantMessage } from "@earendil-works/pi-ai";
-import { FeedbackDelivery, PublicEventProjector, runUntilSettled } from "./bridge.ts";
+import { FeedbackDelivery, PublicEventProjector, runUntilSettled, runWithReasonRetry } from "./bridge.ts";
 
 const assistant: AssistantMessage = { role: "assistant", content: [{ type: "text", text: "public" }, { type: "thinking", thinking: "hidden" }], api: "openai-completions", provider: "longcat", model: "test", usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } }, stopReason: "stop", timestamp: 1 };
 
@@ -68,4 +68,17 @@ test("prompt completion waits for native idle before job completion", async () =
   release?.();
   await running;
   assert.equal(complete, true);
+});
+
+test("a missing public plan reason prompts exactly one corrective retry", async () => {
+  const reason = { missing: true };
+  const prompts: string[] = [];
+  const session = { prompt: async (text: string) => { prompts.push(text); if (prompts.length === 2) reason.missing = false; }, waitForIdle: async () => {} };
+  await runWithReasonRetry(session, "initial", reason);
+  assert.equal(prompts.length, 2);
+  assert.match(prompts[1], /decision_reason/);
+  reason.missing = true;
+  const failing = { prompt: async (text: string) => { prompts.push(text); reason.missing = true; }, waitForIdle: async () => {} };
+  await assert.rejects(runWithReasonRetry(failing, "initial", reason), /decision_reason_missing_after_retry/);
+  assert.equal(prompts.length, 4);
 });

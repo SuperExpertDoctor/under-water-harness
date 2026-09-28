@@ -16,6 +16,53 @@ export function annotationPayload(message, selection) {
   return { message_id: message.id, quote, plan_id: message.plan_id ?? null };
 }
 
+export function groupApprovalsByMessage(messages, plans, events) {
+  const requested = new Set((events || []).filter((event) => event.type === "approval_requested").map((event) => event.data?.plan_id));
+  const runs = new Map((events || []).filter((event) => event.type === "tool_completed" && event.data?.plan_id && event.data?.run_id)
+    .map((event) => [event.data.plan_id, event.data.run_id]));
+  const byMessage = new Map();
+  const unlinked = [];
+  for (const plan of plans || []) {
+    if (!plan.plan_id || (plan.status !== "pending_approval" && plan.status !== "rejected" && plan.status !== "expired" && !requested.has(plan.plan_id))) continue;
+    const runId = runs.get(plan.plan_id);
+    const request = (events || []).find((event) => event.type === "approval_requested" && event.data?.plan_id === plan.plan_id);
+    const starts = (events || []).filter((event) => event.type === "message_start" && event.data?.run_id === runId && Number.isFinite(event.id));
+    const preceding = Number.isFinite(request?.id) && starts.length
+      ? starts.filter((event) => event.id < request.id).at(-1)?.data.message_id : null;
+    const message = [...(messages || [])].reverse().find((item) => item.role === "assistant" && item.plan_id === plan.plan_id)
+      || (preceding ? (messages || []).find((item) => item.id === preceding) : null)
+      || (starts.length && Number.isFinite(request?.id) ? (messages || []).find((item) => item.role === "user" && item.run_id === runId)
+        : [...(messages || [])].reverse().find((item) => runId && item.run_id === runId && item.role === "assistant"))
+      || (starts.length ? null : [...(messages || [])].reverse().find((item) => runId && item.run_id === runId));
+    if (message) byMessage.set(message.id, [...(byMessage.get(message.id) || []), plan]);
+    else unlinked.push(plan);
+  }
+  return { byMessage, unlinked };
+}
+
+export function buildDecisionRows(events, plans, episodeId) {
+  if (!episodeId || episodeId === "local-demo") return [];
+  const relevant = (events || []).filter((event) => event.episode_id === episodeId);
+  const byId = new Map((plans || []).filter((plan) => plan.plan_id).map((plan) => [plan.plan_id, plan]));
+  for (const event of relevant) if (event.data?.plan_id && !byId.has(event.data.plan_id)) byId.set(event.data.plan_id, { plan_id: event.data.plan_id });
+  const actions = { search: "区域搜索", reacquire: "重新搜索", track: "协同跟踪", path: "路径规划" };
+  return [...byId.values()].map((plan) => {
+    const related = relevant.filter((event) => event.data?.plan_id === plan.plan_id);
+    const latest = [...related].reverse().find((event) => ["approval_requested", "approval_decided", "approval_expired", "mission_assignment_committed"].includes(event.type)) || related.at(-1);
+    return {
+      planId: plan.plan_id,
+      members: plan.members || related.find((event) => Array.isArray(event.data?.members))?.data.members || [],
+      contactId: plan.contact_id || null,
+      action: actions[plan.kind] || "任务计划",
+      reason: plan.decision_reason?.trim() || "未提供公开理由",
+      timeSeconds: latest ? Number(latest.time) * 60 : Number(plan.created_at_s),
+      status: plan.status || "unknown",
+      event: latest || null,
+      lastEventId: latest?.id || 0,
+    };
+  }).sort((a, b) => b.lastEventId - a.lastEventId || b.timeSeconds - a.timeSeconds);
+}
+
 export function interpolateUuv(previous, current, progress) {
   if (!previous || previous.generation !== current.generation) return current;
   return { ...current, position: current.position.map((value, index) => previous.position[index] + (value - previous.position[index]) * progress) };

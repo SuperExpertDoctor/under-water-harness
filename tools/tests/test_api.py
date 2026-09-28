@@ -71,6 +71,42 @@ def test_chat_job_and_worker_completion(client):
     assert client.get("/api/pi-agent/messages").json()["messages"][-1]["text"] == "Observed"
 
 
+def test_inline_approval_decision_controls_future_worker_jobs(client):
+    runtime = client.app.state.runtime
+    runtime.set_mode("request")
+    candidate = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
+    pending = client.post("/api/algorithm/commands", json={"episode_id": runtime.episode,
+        "result_id": candidate["result_id"], "command_id": "approval-test", "decision_reason": "覆盖北部空白"}).json()
+    assert pending["status"] == "pending_approval"
+    assert pending["decision_reason"] == "覆盖北部空白"
+    client.post("/api/pi-agent/messages", json={"episode_id": runtime.episode, "text": "Inspect"})
+    headers = {"Authorization": "Bearer test-worker"}
+    assert client.post("/internal/agent/next", json={}, headers=headers).json()["job"] is None
+    assert client.post(f"/api/approvals/{pending['plan_id']}/decision", json={"episode_id": runtime.episode,
+        "decision": "invalid"}).status_code == 422
+    approved = client.post(f"/api/approvals/{pending['plan_id']}/decision", json={"episode_id": runtime.episode,
+        "decision": "approve_session"}).json()
+    assert approved["status"] == "active"
+    assert approved["approval_scope"] == "approve_session"
+    assert client.post("/internal/agent/next", json={}, headers=headers).json()["job"] is not None
+
+
+def test_worker_submission_requires_public_decision_reason(client):
+    runtime = client.app.state.runtime
+    candidate = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
+    client.post("/api/pi-agent/messages", json={"episode_id": runtime.episode, "text": "Review coverage"})
+    headers = {"Authorization": "Bearer test-worker"}
+    job = client.post("/internal/agent/next", json={}, headers=headers).json()["job"]
+    payload = {"episode_id": runtime.episode, "run_id": job["run_id"], "result_id": candidate["result_id"], "command_id": "no-reason"}
+    missing = client.post("/internal/tools/submit_mission_plan", json=payload, headers=headers)
+    assert missing.status_code == 422
+    assert missing.json()["error_code"] == "decision_reason_required"
+    assert runtime.plans == {}
+    accepted = client.post("/internal/tools/submit_mission_plan", json={**payload, "decision_reason": "覆盖北侧空白"}, headers=headers)
+    assert accepted.status_code == 200
+    assert accepted.json()["decision_reason"] == "覆盖北侧空白"
+
+
 def test_debug_events_are_explicit(client):
     episode = client.get("/api/state").json()["episode_id"]
     assert client.post("/api/test/target-lost", json={"episode_id": episode}).status_code == 403

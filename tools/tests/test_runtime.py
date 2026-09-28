@@ -120,6 +120,48 @@ def test_candidate_never_executes_and_request_needs_approval(runtime):
     assert "UUV-1" in runtime.active
 
 
+def test_session_grant_is_scoped_to_kind_and_domain_and_cleared_by_mode(runtime):
+    runtime.set_mode("request")
+    first = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
+    pending = runtime.submit(first["result_id"], "first", runtime.episode, "填补未覆盖区域")
+    assert pending["decision_reason"] == "填补未覆盖区域"
+    runtime.decide(pending["plan_id"], "approve_session")
+    assert runtime.session_grants
+    again = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
+    assert again["status"] == "succeeded"
+    runtime.session_grants[0]["domain"] = [0, 0, runtime.config.width, runtime.config.height]
+    assert runtime.submit(again["result_id"], "second", runtime.episode)["status"] == "active"
+    outside = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
+    assert outside["status"] == "succeeded"
+    runtime.session_grants[0]["domain"] = [0, 0, 1, 1]
+    assert runtime.submit(outside["result_id"], "outside", runtime.episode)["status"] == "pending_approval"
+    runtime.set_mode("assisted")
+    assert runtime.session_grants == []
+
+
+def test_rejection_never_creates_session_grant(runtime):
+    runtime.set_mode("request")
+    candidate = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
+    pending = runtime.submit(candidate["result_id"], "reject", runtime.episode)
+    assert runtime.decide(pending["plan_id"], "reject")["status"] == "rejected"
+    assert not runtime.session_grants
+
+
+def test_session_grant_survives_restart_but_reset_clears_it(tmp_path):
+    path = tmp_path / "grant.sqlite"
+    first = MissionRuntime(path)
+    first.set_mode("request")
+    candidate = first.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
+    plan = first.submit(candidate["result_id"], "grant", first.episode)
+    first.decide(plan["plan_id"], "approve_session")
+    first.close()
+    second = MissionRuntime(path)
+    assert len(second.session_grants) == 1
+    second.reset()
+    assert second.session_grants == []
+    second.close()
+
+
 def test_idempotency_stale_episode_and_stop(runtime):
     runtime.set_mode("full")
     candidate = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})

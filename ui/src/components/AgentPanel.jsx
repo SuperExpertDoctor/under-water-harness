@@ -55,21 +55,12 @@ export default function AgentPanel({ tab, mission, frame, readOnly, selection })
   </div>;
 
   if (tab === "approvals") return <div className="agent-panel">
-    <div className="section-heading"><span>待审批计划</span><small>{pending.length}</small></div>
-    {!pending.length && <p className="panel-empty">暂无待审批计划</p>}
-    {pending.map((plan) => <article className="approval-item" key={plan.plan_id}>
-      <strong>{plan.kind} · {plan.members?.join(", ")}</strong>
-      <dl className="plan-facts"><div><dt>计划</dt><dd>{plan.plan_id}</dd></div><div><dt>风险</dt><dd>{plan.risk}</dd></div>
-        <div><dt>原因</dt><dd>{plan.reason}</dd></div><div><dt>期限</dt><dd>{Math.max(0, plan.expires_at_s - (frame?.sim_time_min || 0) * 60).toFixed(0)} s</dd></div>
-        <div className="execution-domain"><dt>授权范围（含转场）</dt><dd>{plan.execution_domain?.map((value) => Number(value).toFixed(0)).join(", ") || "未提供"} m</dd></div>
-        <div><dt>范围策略</dt><dd>{plan.domain_policy || "未提供"}</dd></div>
-        <div><dt>回退</dt><dd>{plan.fallback}</dd></div><div><dt>任务版本</dt><dd>{plan.mission_revision}</dd></div></dl>
-      <div className="mission-actions">
-        <button className="primary-action" onClick={() => mission.preview(plan.plan_id)}><Eye size={14} />预览</button>
-        <button className="primary-action" disabled={disabled} onClick={() => mission.act("批准计划", `/api/approvals/${encodeURIComponent(plan.plan_id)}/decision`, { decision: "approve" })}><Check size={14} />批准</button>
-        <button className="primary-action danger-action" disabled={disabled} onClick={() => mission.act("拒绝计划", `/api/approvals/${encodeURIComponent(plan.plan_id)}/decision`, { decision: "reject" })}><X size={14} />拒绝</button>
-      </div>
-    </article>)}
+    <div className="section-heading"><span>审批记录</span><small>{pending.length} 待处理</small></div>
+    {!plans.length && <p className="panel-empty">暂无审批记录</p>}
+    {[...plans].reverse().slice(0, 20).map((plan) => <div className="mission-list-row" key={plan.plan_id}>
+      <span>{plan.kind} · {plan.members?.join(", ") || "成员未记录"}<small>{plan.status} · {plan.plan_id}</small></span>
+      <button className="icon-btn" onClick={() => mission.preview(plan.plan_id)} aria-label={`预览 ${plan.plan_id}`} title="地图预览"><Eye size={15} /></button>
+    </div>)}
     <div className="section-heading"><span>计划状态</span></div>
     {[...plans].reverse().slice(0, 20).map((plan) => <div className="mission-list-row" key={plan.plan_id}><span>{plan.kind} · {plan.members?.join(", ")}<small>{plan.status} · {plan.plan_id}</small></span><button className="icon-btn" onClick={() => mission.preview(plan.plan_id)} aria-label={`预览 ${plan.plan_id}`} title="预览计划"><Eye size={15} /></button></div>)}
   </div>;

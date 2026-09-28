@@ -140,3 +140,11 @@ export async function runUntilSettled(session: { prompt(text: string): Promise<v
   await session.prompt(text);
   await session.waitForIdle();
 }
+
+export async function runWithReasonRetry(session: { prompt(text: string): Promise<void>; waitForIdle(): Promise<void> }, text: string, reason: { missing: boolean }): Promise<void> {
+  await runUntilSettled(session, text);
+  if (!reason.missing) return;
+  reason.missing = false;
+  await runUntilSettled(session, "上次提交任务计划时缺少公开调度理由。请检查任务状态；如仍需提交，提供真实、简短的 decision_reason 并重新调用 submit_mission_plan。不要编造观测或审批。");
+  if (reason.missing) throw new Error("decision_reason_missing_after_retry");
+}

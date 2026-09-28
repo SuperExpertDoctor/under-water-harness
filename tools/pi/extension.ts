@@ -20,7 +20,7 @@ const schemas: Record<string, TSchema> = {
   plan_search: Type.Object({ ...snapshot, algorithm_id: algorithm("strip_coverage"), members: fleet, bbox, mode: Type.Optional(Type.Union([Type.Literal("search"), Type.Literal("reacquire")])), standing_policy: Type.Optional(Type.Boolean({ description: "Include bounded energy exit, boundary replacement and local coverage repair in this plan's approval. Not an approval itself." })) }, { additionalProperties: false }),
   plan_tracking: Type.Object({ ...snapshot, algorithm_id: algorithm("distance_band"), contact_id: Type.String({ minLength: 1 }), members: Type.Optional(Type.Array(Type.String({ minLength: 1 }), { minItems: 2, maxItems: 3, uniqueItems: true })) }, { additionalProperties: false }),
   evaluate_plan: Type.Object({ result_id: Type.String({ minLength: 1 }) }, { additionalProperties: false }),
-  submit_mission_plan: Type.Object({ episode_id: Type.String({ minLength: 1 }), result_id: Type.String({ minLength: 1 }), command_id: Type.String({ minLength: 1 }) }, { additionalProperties: false }),
+  submit_mission_plan: Type.Object({ episode_id: Type.String({ minLength: 1 }), result_id: Type.String({ minLength: 1 }), command_id: Type.String({ minLength: 1 }), decision_reason: Type.String({ minLength: 1, maxLength: 500, description: "One concise PUBLIC explanation of why this plan and these UUVs are scheduled. Do not include private reasoning or secrets." }) }, { additionalProperties: false }),
   get_action_status: Type.Object({ action_id: Type.String({ minLength: 1 }) }, { additionalProperties: false }),
 };
 
@@ -33,7 +33,7 @@ const descriptions: Record<string, string> = {
   plan_search: "For automatic whole-area coverage OMIT BOTH members and bbox: plan_search({standing_policy:true}) when that policy is requested. The backend selects available search boats and partitions the entire searchable sea into connected regions. Never add bbox=[0,0,4000,4000] to this automatic call. Explicit members+bbox are only for an explicitly requested scoped search, not a fallback for failed global planning. Includes feasible closed search routes. standing_policy adds bounded energy rotation and local repair to approval. Returns result_id; no execution.",
   plan_tracking: "Calculate cooperative passive-bearing tracking for confirmed contact_id. Omit members to select a feasible two/three-boat team automatically. Includes observation geometry, member-specific transit, acquisition conditions, energy and remaining search coverage repair. Accepted/transit is not effective tracking. Returns result_id; no execution.",
   evaluate_plan: "Validate candidate result_id against current geometry, members and permissions. Does not authorize or execute.",
-  submit_mission_plan: "Submit result_id with current episode_id and unique command_id. Backend may return pending_approval. Only execution entry. Never retry with different IDs blindly.",
+  submit_mission_plan: "Submit result_id with current episode_id, unique command_id and a concise public decision_reason explaining why the UUVs are scheduled. Backend may return pending_approval. Only execution entry. Never retry with different IDs blindly.",
   get_action_status: "Query candidate, plan or run by action_id. Accepted is not completed; pending approval means humans must decide.",
 };
 

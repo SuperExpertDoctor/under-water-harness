@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { createAgentSession, ModelRuntime, SessionManager, SettingsManager, type AgentSession } from "@earendil-works/pi-coding-agent";
 import { longcatConfig, redact, TOOL_NAMES } from "./config.ts";
-import { FeedbackDelivery, PublicEventProjector, runUntilSettled } from "./bridge.ts";
+import { FeedbackDelivery, PublicEventProjector, runWithReasonRetry } from "./bridge.ts";
 import { createMissionResources } from "./resources.ts";
 import { RoutineCooldown, withRunHeartbeat } from "./scheduling.ts";
 
@@ -30,6 +30,8 @@ let calls = 0;
 let feedback: FeedbackDelivery | undefined;
 let heartbeatTask: Promise<void> = Promise.resolve();
 let runFailure: Error | undefined;
+let deadline: ReturnType<typeof setTimeout> | undefined;
+let startDeadline: (() => void) | undefined;
 const schedule = new RoutineCooldown();
 
 async function request(path: string, data: unknown, signal?: AbortSignal): Promise<Record<string, unknown>> {
@@ -47,7 +49,22 @@ async function makeSession(episode: string): Promise<AgentSession> {
       const job = activeJob;
       await heartbeatRun(job, signal);
       if (runFailure) throw runFailure;
-      return request(`/internal/tools/${name}`, { ...params, run_id: job.run_id, episode_id: job.episode_id }, signal);
+      const result = await request(`/internal/tools/${name}`, { ...params, run_id: job.run_id, episode_id: job.episode_id }, signal);
+      if (name !== "submit_mission_plan" || result.status !== "pending_approval" || typeof result.plan_id !== "string") return result;
+      clearTimeout(deadline);
+      deadline = undefined;
+      try {
+        let current = result;
+        while (current.status === "pending_approval") {
+          await delay(2000, undefined, { signal });
+          if (activeJob !== job || runFailure) throw runFailure || new Error("run_cancelled");
+          await heartbeatRun(job, signal);
+          current = await request("/internal/tools/get_action_status", { action_id: result.plan_id, run_id: job.run_id, episode_id: job.episode_id }, signal);
+        }
+        return current;
+      } finally {
+        if (activeJob === job && !runFailure) startDeadline?.();
+      }
   });
   await loader.reload();
   const { session: created } = await createAgentSession({ cwd: runtimeDir, agentDir: runtimeDir, modelRuntime, model,
@@ -91,9 +108,20 @@ while (running) {
     const projector = new PublicEventProjector(job.run_id, secrets);
     let events: Promise<void> = Promise.resolve();
     let eventCount = 0;
+    const reasonState = { missing: false };
+    const invalidReasonCalls = new Set<string>();
     const unsubscribe = turnSession.subscribe((event) => {
       const projected = projector.project(event);
       if (!projected) return;
+      if (event.type === "tool_execution_start" && event.toolName === "submit_mission_plan") {
+        const args: unknown = event.args;
+        if (!args || typeof args !== "object" || !("decision_reason" in args)
+          || typeof args.decision_reason !== "string" || !args.decision_reason.trim() || args.decision_reason.trim().length > 500) invalidReasonCalls.add(event.toolCallId);
+      }
+      if (event.type === "tool_execution_end" && event.toolName === "submit_mission_plan") {
+        if (!event.isError) reasonState.missing = false;
+        else if (invalidReasonCalls.has(event.toolCallId) || projected.text?.includes("decision_reason_required") || projected.text?.includes("invalid_decision_reason")) reasonState.missing = true;
+      }
       if (++eventCount > 12000) {
         runFailure = new Error("turn_event_budget_exceeded");
         void turnSession.abort();
@@ -107,10 +135,11 @@ while (running) {
         void turnSession.abort();
       });
     });
-    const deadline = setTimeout(() => { runFailure = new Error("turn_deadline_exceeded"); void turnSession.abort(); }, 180000);
+    startDeadline = () => { deadline = setTimeout(() => { runFailure = new Error("turn_deadline_exceeded"); void turnSession.abort(); }, 180000); };
+    startDeadline();
     try {
       await withRunHeartbeat(async () => {
-        await runUntilSettled(turnSession, `Episode ${job.episode_id}. Trigger: ${job.source}. ${job.text}\nFirst read the multi-uuv-recon-tracking Skill using read, then get_mission_state. Preserve existing plans unless a change is needed.`);
+        await runWithReasonRetry(turnSession, `Episode ${job.episode_id}. Trigger: ${job.source}. ${job.text}\nFirst read the multi-uuv-recon-tracking Skill using read, then get_mission_state. Preserve existing plans unless a change is needed.`, reasonState);
         await heartbeatRun(job);
         await events;
         if (runFailure) throw runFailure;
@@ -125,6 +154,8 @@ while (running) {
       });
     } finally {
       clearTimeout(deadline);
+      deadline = undefined;
+      startDeadline = undefined;
       unsubscribe();
       await turnSession.abort();
       await heartbeatTask.catch(() => {});

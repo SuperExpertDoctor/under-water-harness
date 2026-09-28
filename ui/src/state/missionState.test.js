@@ -86,6 +86,54 @@ test("decision traces expose missing evidence and historical truncation", () => 
   assert.deepEqual(missionState.buildDecisionTraces([], [], "e1"), []);
 });
 
+test("approval requests attach only to an explicitly linked assistant turn", () => {
+  const messages = [
+    { id: "user-1", role: "user", run_id: "run-1" },
+    { id: "answer-1", role: "assistant", run_id: "run-1" },
+    { id: "answer-2", role: "assistant", run_id: "run-1" },
+    { id: "answer-other", role: "assistant", run_id: "run-2", plan_id: "plan-direct" },
+  ];
+  const events = [
+    { type: "tool_completed", data: { plan_id: "plan-linked", run_id: "run-1" } },
+    { type: "tool_completed", data: { plan_id: "plan-missing", run_id: "run-3" } },
+    { type: "approval_requested", data: { plan_id: "plan-linked" } },
+  ];
+  const plans = ["plan-linked", "plan-direct", "plan-missing", "plan-unlinked"].map((plan_id) => ({ plan_id, status: "pending_approval" }));
+  const grouped = missionState.groupApprovalsByMessage(messages, plans, events);
+  assert.deepEqual(grouped.byMessage.get("answer-2").map((plan) => plan.plan_id), ["plan-linked"]);
+  assert.deepEqual(grouped.byMessage.get("answer-other").map((plan) => plan.plan_id), ["plan-direct"]);
+  assert.deepEqual(grouped.unlinked.map((plan) => plan.plan_id), ["plan-missing", "plan-unlinked"]);
+});
+
+test("approval history retains decisions only when a request was recorded", () => {
+  const messages = [{ id: "answer", role: "assistant", run_id: "run-1" }];
+  const plans = [{ plan_id: "approved", status: "active" }, { plan_id: "automatic", status: "active" }, { plan_id: "denied", status: "rejected" }];
+  const events = [
+    { type: "tool_completed", data: { plan_id: "approved", run_id: "run-1" } },
+    { type: "approval_requested", data: { plan_id: "approved" } },
+  ];
+  const grouped = missionState.groupApprovalsByMessage(messages, plans, events);
+  assert.deepEqual(grouped.byMessage.get("answer").map((plan) => plan.plan_id), ["approved"]);
+  assert.deepEqual(grouped.unlinked.map((plan) => plan.plan_id), ["denied"]);
+});
+
+test("resolved approval stays anchored to the message before the request", () => {
+  const messages = [
+    { id: "before", role: "assistant", run_id: "r1" },
+    { id: "after", role: "assistant", run_id: "r1" },
+  ];
+  const events = [
+    { id: 1, type: "message_start", data: { message_id: "before", run_id: "r1" } },
+    { id: 2, type: "approval_requested", data: { plan_id: "p1" } },
+    { id: 3, type: "tool_completed", data: { plan_id: "p1", run_id: "r1" } },
+    { id: 4, type: "approval_decided", data: { plan_id: "p1" } },
+    { id: 5, type: "message_start", data: { message_id: "after", run_id: "r1" } },
+  ];
+  const result = missionState.groupApprovalsByMessage(messages, [{ plan_id: "p1", status: "active" }], events);
+  assert.deepEqual(result.byMessage.get("before")?.map((plan) => plan.plan_id), ["p1"]);
+  assert.equal(result.byMessage.get("after"), undefined);
+});
+
 test("manual planning links the recorded candidate by result id", () => {
   const [trace] = missionState.buildDecisionTraces([
     { id: 1, episode_id: "e1", type: "tool_result", data: { result_id: "result-1", status: "succeeded" } },
@@ -93,6 +141,36 @@ test("manual planning links the recorded candidate by result id", () => {
   ], [{ plan_id: "p1", result_id: "result-1", status: "pending_approval" }], "e1");
   assert.equal(trace.steps.plan.event.id, 1);
   assert.equal(trace.steps.trigger.event, null);
+});
+
+test("decision rows show mission time, exact public reason and participating boats", () => {
+  const events = [
+    { id: 1, episode_id: "e1", time: 2, type: "approval_requested", data: { plan_id: "p1", members: ["UUV-1"] } },
+    { id: 2, episode_id: "e1", time: 3, type: "mission_assignment_committed", data: { plan_id: "p2", members: ["UUV-2"] } },
+  ];
+  const rows = missionState.buildDecisionRows(events, [
+    { plan_id: "p1", kind: "search", members: ["UUV-1"], decision_reason: "补齐北部覆盖空白", status: "pending_approval" },
+    { plan_id: "p2", kind: "track", members: ["UUV-2"], status: "active" },
+  ], "e1");
+  assert.deepEqual(rows.map((row) => row.planId), ["p2", "p1"]);
+  assert.equal(rows[0].timeSeconds, 180);
+  assert.equal(rows[0].reason, "未提供公开理由");
+  assert.equal(rows[1].reason, "补齐北部覆盖空白");
+  assert.deepEqual(rows[1].members, ["UUV-1"]);
+  assert.equal(rows[1].action, "区域搜索");
+  assert.deepEqual(missionState.buildDecisionRows(events, [], "local-demo"), []);
+});
+
+test("decision row time follows the latest recorded approval or dispatch change", () => {
+  const events = [
+    { id: 1, episode_id: "e1", time: 2, type: "approval_requested", data: { plan_id: "p1" } },
+    { id: 2, episode_id: "e1", time: 5, type: "approval_decided", data: { plan_id: "p1", status: "approved" } },
+    { id: 3, episode_id: "e1", time: 5, type: "mission_assignment_committed", data: { plan_id: "p1" } },
+    { id: 4, episode_id: "e1", time: 5.2, type: "tool_completed", data: { plan_id: "p1" } },
+  ];
+  const [row] = missionState.buildDecisionRows(events, [{ plan_id: "p1", kind: "search", status: "active" }], "e1");
+  assert.equal(row.timeSeconds, 300);
+  assert.equal(row.event.id, 3);
 });
 
 test("coverage descriptions distinguish historical coverage and window freshness", () => {

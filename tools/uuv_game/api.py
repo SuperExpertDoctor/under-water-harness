@@ -224,7 +224,9 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
             if name == "submit_mission_plan":
                 if not data.get("command_id"):
                     raise MissionError("command_id_required", 422)
-                return runtime.submit(data.get("result_id"), data["command_id"], data.get("episode_id"))
+                if worker and (not isinstance(data.get("decision_reason"), str) or not 1 <= len(data["decision_reason"].strip()) <= 500):
+                    raise MissionError("decision_reason_required", 422)
+                return runtime.submit(data.get("result_id"), data["command_id"], data.get("episode_id"), data.get("decision_reason"))
             action_id = data.get("action_id")
             result = runtime.plans.get(action_id) or runtime.results.get(action_id) or runtime.receipts.get(action_id) or runtime.store.get_plan(action_id)
             result = result or next((j for j in runtime.agent_jobs if j["run_id"] == action_id), None)
@@ -449,9 +451,9 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
     @app.post("/api/approvals/{plan_id}/decision")
     async def decide(plan_id, request: Request):
         data = await payload(request)
-        if data.get("decision") not in ("approve", "reject"):
+        if data.get("decision") not in ("approve_once", "approve_session", "reject"):
             raise MissionError("invalid_decision", 422)
-        return runtime.decide(plan_id, data["decision"] == "approve")
+        return runtime.decide(plan_id, data["decision"])
 
     @app.post("/api/permissions/mode")
     async def mode(request: Request):
@@ -682,7 +684,8 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
             priorities = {"human": 0, "feedback": 0, "target_found": 1, "target_lost": 1, "energy_exit": 1}
             eligible = [job for job in runtime.agent_jobs if job["status"] == "queued"
                 and (not defer_routine or priorities.get(job["source"], 2) < 2)]
-            job = None if running else min(eligible, key=lambda job: priorities.get(job["source"], 2), default=None)
+            waiting = any(plan["status"] == "pending_approval" for plan in runtime.plans.values())
+            job = None if running or waiting else min(eligible, key=lambda job: priorities.get(job["source"], 2), default=None)
             if job:
                 job.update(status="running", lease_deadline=now+WORKER_LEASE_SECONDS)
                 runtime.agent.update(status="running", error=None, cycle=runtime.agent["cycle"]+1)

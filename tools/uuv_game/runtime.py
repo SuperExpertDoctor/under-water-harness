@@ -26,7 +26,7 @@ from .information import information_fields
 from . import adversary as enemy
 
 
-CHECKPOINT_FIELDS = tuple(("episode sim_time frame_id revision policy_version mode status uuvs targets obstacles active results plans contacts observations obstacle_observations events cursor scan_times intents vessels tasks messages agent_jobs agent last_periodic sensor_enabled contact_mapping contact_counter last_observation_time regions standing_policy metrics region_revision observation_cursor adversary").split())
+CHECKPOINT_FIELDS = tuple(("episode sim_time frame_id revision policy_version mode session_grants status uuvs targets obstacles active results plans contacts observations obstacle_observations events cursor scan_times intents vessels tasks messages agent_jobs agent last_periodic sensor_enabled contact_mapping contact_counter last_observation_time regions standing_policy metrics region_revision observation_cursor adversary").split())
 ALGORITHM_IDS = {"compute_task_allocation": "slot_assignment", "plan_path": "dubins_hybrid",
                  "plan_search": "strip_coverage", "plan_tracking": "distance_band", "partition_search_area": "connected_partition"}
 _RUNTIME = algorithm_settings("runtime")
@@ -131,6 +131,7 @@ class MissionRuntime:
         self.revision = 0
         self.policy_version = 0
         self.mode = "assisted"
+        self.session_grants = []
         self.status = "ready"
         sides = [side for _ in range((self.config.fleet_size+3)//4) for side in ("left", "right", "bottom", "top")]
         self.rng.shuffle(sides)
@@ -261,6 +262,7 @@ class MissionRuntime:
             raise MissionError("invalid_mode", 422)
         self.mode = mode
         self.policy_version += 1
+        self.session_grants = []
         for plan in self.plans.values():
             if plan["status"] == "pending_approval":
                 plan["status"] = "expired"
@@ -513,8 +515,16 @@ class MissionRuntime:
         uncertainty = self.contacts.get(result.get("contact_id"), {}).get("uncertainty_m", 0)
         risk = min(1, (_RUNTIME["tracking_base_risk"] if result.get("kind") in ("track", "reacquire") else _RUNTIME["search_base_risk"])
             + _RUNTIME["energy_risk_weight"]*energy_risk + min(_RUNTIME["uncertainty_risk_cap"], uncertainty/_RUNTIME["uncertainty_risk_scale_m"]))
+        permitted = any(grant["policy_version"] == self.policy_version and grant["kind"] == result.get("kind")
+            and grant["standing_policy"] == bool(result.get("standing_policy"))
+            and grant["contact_id"] == result.get("contact_id")
+            and len(result.get("execution_domain", [])) == 4
+            and grant["domain"][0] <= result["execution_domain"][0]
+            and grant["domain"][1] <= result["execution_domain"][1]
+            and grant["domain"][2] >= result["execution_domain"][2]
+            and grant["domain"][3] >= result["execution_domain"][3] for grant in self.session_grants)
         return {"result_id": result["result_id"], "valid": not errors, "errors": sorted(set(errors)), "risk": risk,
-            "requires_approval": self.mode == "request" or (self.mode == "assisted" and risk > _RUNTIME["risk_approval_threshold"])}
+            "requires_approval": not permitted and (self.mode == "request" or (self.mode == "assisted" and risk > _RUNTIME["risk_approval_threshold"]))}
 
     @staticmethod
     def region_signature(region):
@@ -522,10 +532,12 @@ class MissionRuntime:
             return None
         return hashlib.sha256(json.dumps([region["id"], sorted(region["cells"])]).encode()).hexdigest()
 
-    def submit(self, result_id, command_id, episode):
+    def submit(self, result_id, command_id, episode, decision_reason=None):
         with self.transaction():
             self.check_episode(episode)
-            digest = hashlib.sha256(json.dumps([result_id, episode]).encode()).hexdigest()
+            if decision_reason is not None and (not isinstance(decision_reason, str) or not 1 <= len(decision_reason.strip()) <= 500):
+                raise MissionError("invalid_decision_reason", 422)
+            digest = hashlib.sha256(json.dumps([result_id, episode, decision_reason]).encode()).hexdigest()
             if command_id in self.receipts:
                 prior = self.receipts[command_id]
                 if prior["digest"] != digest:
@@ -540,6 +552,7 @@ class MissionRuntime:
                 raise MissionError(";".join(assessment["errors"]))
             result = copy.deepcopy(self.results[result_id])
             plan = {**result, "plan_id": identifier("plan"), "status": "pending_approval" if assessment["requires_approval"] else "approved",
+                "decision_reason": decision_reason.strip() if decision_reason else None,
                 "risk": assessment["risk"], "policy_version": self.policy_version, "expires_at_s": self.sim_time+_RUNTIME["approved_plan_expiration_s"],
                 "fallback": "repeat_approved_closed_route" if result["kind"] in ("search", "reacquire") else "authorized_active_reacquisition" if self.standing_policy["lost_reacquire"] else "protective_pause",
                 "approval_timeout_behavior": "expire_pending_only_continue_existing_authorized_tasks",
@@ -613,7 +626,13 @@ class MissionRuntime:
         self.event("mission_assignment_committed", {"plan_id": plan["plan_id"], "members": plan["members"]})
 
     @synchronized
-    def decide(self, plan_id, approve):
+    def decide(self, plan_id, decision):
+        if decision is True:
+            decision = "approve_once"
+        elif decision is False:
+            decision = "reject"
+        if decision not in ("approve_once", "approve_session", "reject"):
+            raise MissionError("invalid_decision", 422)
         plan = self.plans.get(plan_id)
         if not plan:
             raise MissionError("plan_not_found", 404)
@@ -623,16 +642,21 @@ class MissionRuntime:
             plan["status"] = "expired"
             self.save()
             raise MissionError("approval_expired")
-        if approve:
+        if decision != "reject":
             assessment = self._assessment(plan)
             if not assessment["valid"]:
                 plan["status"] = "expired"
                 self.save()
                 raise MissionError(";".join(assessment["errors"]))
             self._activate(plan)
+            if decision == "approve_session":
+                self.session_grants.append({"kind": plan["kind"], "standing_policy": bool(plan.get("standing_policy")),
+                    "contact_id": plan.get("contact_id"), "domain": list(plan["execution_domain"]),
+                    "policy_version": self.policy_version})
         else:
             plan["status"] = "rejected"
-        self.event("approval_decided", {"plan_id": plan_id, "status": plan["status"]})
+        plan["approval_scope"] = decision
+        self.event("approval_decided", {"plan_id": plan_id, "status": plan["status"], "decision": decision})
         self.save()
         return self.summary(plan)
 

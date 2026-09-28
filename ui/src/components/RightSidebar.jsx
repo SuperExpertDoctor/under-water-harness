@@ -61,8 +61,10 @@ export default function RightSidebar({
   onToggleScene,
 }) {
   const [tab, setTab] = useState("chat");
+  const pendingCount = readOnly ? 0 : mission?.state.plans?.filter((plan) => plan.status === "pending_approval").length || 0;
   useEffect(() => { if (selection) setTab("state"); }, [selection]);
   useEffect(() => { if (selectedMessageId) setTab("chat"); }, [selectedMessageId]);
+  useEffect(() => { if (pendingCount) setTab("chat"); }, [pendingCount]);
   const uavs = frame?.uavs || [];
   const ships = frame?.ships || [];
   const contacts = frame?.contacts || [];
@@ -103,7 +105,7 @@ export default function RightSidebar({
         <button className="icon-btn mobile-only" onClick={onClose} aria-label="关闭编队状态" title="关闭"><CircleX size={17} /></button>
       </div>
       <div className="sidebar-tabs" role="tablist" aria-label="任务视图">
-        {[["chat", "对话"], ["state", "数据"]].map(([id, label]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>{label}{id === "state" && mission?.state.plans?.some((plan) => plan.status === "pending_approval") && <span className="sidebar-tab-count">{mission.state.plans.filter((plan) => plan.status === "pending_approval").length}</span>}</button>)}
+        {[["chat", "对话"], ["state", "数据"]].map(([id, label]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "active" : ""} onClick={() => setTab(id)}>{label}{id === "chat" && pendingCount > 0 && <span className="sidebar-tab-count">{pendingCount}</span>}</button>)}
       </div>
       {tab === "chat" && mission ? (
         <ConversationPanel key={frame?.episode_id} mission={mission} frame={frame} readOnly={readOnly} selectedMessageId={selectedMessageId} />

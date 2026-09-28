@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Activity, ArrowDown, BarChart3, Bot, Clipboard, GripHorizontal, Map, Satellite, SlidersHorizontal, X } from "lucide-react";
 import AgentPanel from "./AgentPanel";
-import { buildDecisionTraces, coalesceMissionEvents, coverageDescriptions, filterMissionEvents } from "../state/missionState";
+import { buildDecisionRows, coalesceMissionEvents, coverageDescriptions, filterMissionEvents } from "../state/missionState";
 
 const TABS = [
   { label: "决策过程", icon: Activity },
@@ -140,18 +140,20 @@ export default function BottomDrawer({ frame, events = [], llmCycle, visible, on
 }
 
 function DecisionTab({ frame, events, plans, onSelectEvent, onSelectDecision }) {
-  const traces = buildDecisionTraces(events, plans, frame?.episode_id);
-  if (!traces.length) return <EmptyState text={frame?.episode_id === "local-demo" ? "本地演示帧没有真实决策记录" : "暂无可关联的计划。历史记录可能已截断，可在时间线查看原始事件。"} />;
-  return <div className="decision-list" aria-label="计划决策过程">{traces.map((trace) => <section className="decision-item" key={trace.planId}>
-    <button className="decision-title" type="button" onClick={() => onSelectDecision?.(trace)} title={`定位计划 ${trace.planId}`}>
-      <span><strong>{trace.planId}</strong><small>{trace.members.join(" · ") || "未记录执行单元"}{trace.contactId ? ` · ${trace.contactId}` : ""}</small></span>
-      <span className="decision-status">{trace.status === "pending_approval" ? "待审批" : trace.status === "active" ? "执行中" : trace.status === "rejected" ? "已拒绝" : trace.status}</span>
-    </button>
-    <div className="decision-steps">{[["触发观测", trace.steps.trigger], ["候选规划", trace.steps.plan], ["评估与审批", trace.steps.approval], ["执行与效果", trace.steps.execution]].map(([label, step]) => <div className={`decision-step ${step.event ? "recorded" : "missing"}`} key={label}>
-      <span className="decision-stage">{label}</span><span className="decision-evidence">{step.label}</span>
-      {step.event && <button type="button" className="decision-source" onClick={() => onSelectEvent?.(step.event)} title="定位地图并查看原始事件">查看证据 #{step.event.id}</button>}
-    </div>)}</div>
-  </section>)}</div>;
+  const rows = buildDecisionRows(events, plans, frame?.episode_id);
+  if (!rows.length) return <EmptyState text={frame?.episode_id === "local-demo" ? "本地演示帧没有真实决策记录" : "尚无调度记录"} />;
+  const states = { pending_approval: "待审批", active: "执行中", rejected: "已拒绝", expired: "已过期", superseded: "已接替", approved: "已批准" };
+  return <div className="decision-table-wrap" aria-label="实时调度决策">
+    <table className="decision-table"><thead><tr><th>时间</th><th>决策/调度</th><th>为什么</th><th>参与 UUV</th><th>状态</th><th>记录</th></tr></thead>
+      <tbody>{rows.map((row) => <tr key={row.planId}>
+        <td data-label="时间" className="decision-time">{Number.isFinite(row.timeSeconds) ? `${row.timeSeconds.toFixed(1)} s` : "未记录"}</td>
+        <td data-label="决策/调度"><button type="button" className="decision-focus" onClick={() => onSelectDecision?.(row)} title={`定位计划 ${row.planId}`}>{row.action}{row.contactId ? ` · ${row.contactId}` : ""}<small>{row.planId}</small></button></td>
+        <td data-label="为什么" className="decision-reason">{row.reason}</td><td data-label="参与 UUV">{row.members.join("、") || "未记录"}</td>
+        <td data-label="状态"><span className={`decision-status ${row.status}`}>{states[row.status] || row.status}</span></td>
+        <td data-label="记录">{row.event ? <button className="decision-source" type="button" onClick={() => onSelectEvent?.(row.event)}>#{row.event.id}</button> : "-"}</td>
+      </tr>)}</tbody>
+    </table>
+  </div>;
 }
 
 function TimelineTab({ events, frame, focusedEventId, onSelectEvent }) {

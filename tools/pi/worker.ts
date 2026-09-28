@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { createAgentSession, ModelRuntime, SessionManager, SettingsManager, type AgentSession } from "@earendil-works/pi-coding-agent";
 import { longcatConfig, redact, TOOL_NAMES } from "./config.ts";
-import { FeedbackDelivery, PublicEventProjector, runWithReasonRetry } from "./bridge.ts";
+import { FeedbackDelivery, PublicEventProjector, publicDecisionReason, runUntilSettled, runWithReasonRetry } from "./bridge.ts";
 import { createMissionResources } from "./resources.ts";
 import { RoutineCooldown, withRunHeartbeat } from "./scheduling.ts";
 
@@ -109,6 +109,7 @@ while (running) {
     let events: Promise<void> = Promise.resolve();
     let eventCount = 0;
     const reasonState = { missing: false };
+    let planSubmitted = false;
     const invalidReasonCalls = new Set<string>();
     const unsubscribe = turnSession.subscribe((event) => {
       const projected = projector.project(event);
@@ -119,7 +120,7 @@ while (running) {
           || typeof args.decision_reason !== "string" || !args.decision_reason.trim() || args.decision_reason.trim().length > 500) invalidReasonCalls.add(event.toolCallId);
       }
       if (event.type === "tool_execution_end" && event.toolName === "submit_mission_plan") {
-        if (!event.isError) reasonState.missing = false;
+        if (!event.isError) { reasonState.missing = false; planSubmitted = true; }
         else if (invalidReasonCalls.has(event.toolCallId) || projected.text?.includes("decision_reason_required") || projected.text?.includes("invalid_decision_reason")) reasonState.missing = true;
       }
       if (++eventCount > 12000) {
@@ -139,7 +140,11 @@ while (running) {
     startDeadline();
     try {
       await withRunHeartbeat(async () => {
-        await runWithReasonRetry(turnSession, `Episode ${job.episode_id}. Trigger: ${job.source}. ${job.text}\nFirst read the multi-uuv-recon-tracking Skill using read, then get_mission_state. Preserve existing plans unless a change is needed.`, reasonState);
+        await runWithReasonRetry(turnSession, `Episode ${job.episode_id}. Trigger: ${job.source}. ${job.text}\nFirst read the multi-uuv-recon-tracking Skill using read, then get_mission_state. Preserve existing plans unless a change is needed. If no new plan is submitted, finish with one line 决策原因： followed by the actual public reason for maintaining existing plans.`, reasonState);
+        if (!planSubmitted && !publicDecisionReason(turnSession.getLastAssistantText() || "")) {
+          await runUntilSettled(turnSession, "本轮没有提交新计划，缺少公开决策原因。请基于真实观测，用一行“决策原因：...”说明为什么维持现有计划。");
+          if (!planSubmitted && !publicDecisionReason(turnSession.getLastAssistantText() || "")) throw new Error("decision_reason_missing_after_retry");
+        }
         await heartbeatRun(job);
         await events;
         if (runFailure) throw runFailure;
@@ -147,7 +152,9 @@ while (running) {
         if (last?.role === "assistant" && (last.stopReason === "error" || last.stopReason === "aborted")) {
           throw new Error(last.errorMessage || last.stopReason);
         }
-        await request("/internal/agent/event", { run_id: job.run_id, episode_id: job.episode_id, type: "completed", text: redact(turnSession.getLastAssistantText() || "本轮没有新增操作。", secrets) });
+        const finalText = redact(turnSession.getLastAssistantText() || "本轮没有新增操作。", secrets);
+        await request("/internal/agent/event", { run_id: job.run_id, episode_id: job.episode_id, type: "completed", text: finalText,
+          ...(!planSubmitted ? { decision_reason: publicDecisionReason(finalText) } : {}) });
       }, () => heartbeatRun(job), (error: unknown) => {
         runFailure = error instanceof Error ? error : new Error("heartbeat_failed");
         void turnSession.abort();

@@ -101,6 +101,8 @@ test("decision tab renders a time ordered scheduling table", async () => {
   assert.match(html, /<table class="decision-table"/);
   assert.match(html, /时间[\s\S]*决策\/调度[\s\S]*为什么[\s\S]*参与 UUV/);
   assert.match(html, /补充覆盖/);
+  assert.match(html, /目标状态/);
+  assert.doesNotMatch(html, /aria-label="参数"|aria-label="任务操作"|aria-label="AIS"/);
 });
 
 test("operations view lists approval history without duplicate decision actions", async () => {

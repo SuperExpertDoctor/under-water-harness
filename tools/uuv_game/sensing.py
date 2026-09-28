@@ -159,6 +159,17 @@ def observe(runtime):
         elif len(contact["hits"]) >= _OBS["contact_confirmation_hits"]:
             contact["state"] = "confirmed"
         if old != contact["state"]:
+            if old == "tracking" and contact["state"] != "tracking":
+                started = contact.get("tracking_started_at_s")
+                contact["last_tracking_duration_s"] = max(0, now-started) if started is not None else 0
+                contact["tracking_started_at_s"] = None
+            if contact["state"] == "tracking":
+                contact["tracking_started_at_s"] = now
+                contact["last_tracking_duration_s"] = 0
+            if contact["state"] == "lost":
+                contact["lost_started_at_s"] = now
+            elif old == "lost":
+                contact["lost_started_at_s"] = None
             runtime.event("tracking_established" if contact["state"] == "tracking" else "target_lost" if contact["state"] == "lost" else "contact_state_changed",
                           {"contact_id": key, "state": contact["state"], "observers": contact["observers"]})
             if contact["state"] == "confirmed" and old in ("tentative", "lost"):

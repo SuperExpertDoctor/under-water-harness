@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { AgentSessionEvent } from "@earendil-works/pi-coding-agent";
 import type { AssistantMessage } from "@earendil-works/pi-ai";
-import { FeedbackDelivery, PublicEventProjector, runUntilSettled, runWithReasonRetry } from "./bridge.ts";
+import { FeedbackDelivery, PublicEventProjector, publicDecisionReason, runUntilSettled, runWithAdversaryReasonRetry, runWithReasonRetry } from "./bridge.ts";
+
+test("no-plan reason is explicit public content, never implicit assistant text", () => {
+  assert.equal(publicDecisionReason("无需变更。\n决策原因：目标观测稳定"), "目标观测稳定");
+  assert.equal(publicDecisionReason("因为稳定所以不变"), null);
+  assert.equal(publicDecisionReason("决策原因：  "), null);
+});
 
 const assistant: AssistantMessage = { role: "assistant", content: [{ type: "text", text: "public" }, { type: "thinking", thinking: "hidden" }], api: "openai-completions", provider: "longcat", model: "test", usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } }, stopReason: "stop", timestamp: 1 };
 
@@ -80,5 +86,17 @@ test("a missing public plan reason prompts exactly one corrective retry", async 
   reason.missing = true;
   const failing = { prompt: async (text: string) => { prompts.push(text); reason.missing = true; }, waitForIdle: async () => {} };
   await assert.rejects(runWithReasonRetry(failing, "initial", reason), /decision_reason_missing_after_retry/);
+  assert.equal(prompts.length, 4);
+});
+
+test("target parameter reason retries once and reports a second omission", async () => {
+  const reason = { missing: false };
+  const prompts: string[] = [];
+  const session = { prompt: async (text: string) => { prompts.push(text); reason.missing = prompts.length === 1; }, waitForIdle: async () => {} };
+  await runWithAdversaryReasonRetry(session, "initial", reason);
+  assert.equal(prompts.length, 2);
+  assert.match(prompts[1], /公开.*原因/);
+  const failing = { prompt: async (text: string) => { prompts.push(text); reason.missing = true; }, waitForIdle: async () => {} };
+  await assert.rejects(runWithAdversaryReasonRetry(failing, "initial", reason), /adversary_reason_missing_after_retry/);
   assert.equal(prompts.length, 4);
 });

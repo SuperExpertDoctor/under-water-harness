@@ -168,6 +168,27 @@ class AdversaryApiTests(unittest.TestCase):
     def post(self, path, data):
         return self.client.post('/internal/adversary/' + path, json=data, headers=self.headers)
 
+    def test_operator_maneuver_history_requires_public_reason_and_records_changes_only(self):
+        job = self.post('next', {}).json()['job']
+        ids = {'episode_id': self.game.episode, 'run_id': job['run_id']}
+        fields = {**ids, 'speed_mps': 2.5, 'turn_bias': .2, 'duration_s': 5}
+        self.assertEqual(self.post('parameters', fields).status_code, 422)
+        self.assertEqual(self.post('parameters', {**fields, 'reason': '  '}).status_code, 422)
+        before = copy.deepcopy(self.game.events)
+        self.post('parameters', {**fields, 'reason': '远离已知声呐接触'}).raise_for_status()
+        self.assertEqual(len(self.game.frame()['target_maneuver_history']), 1)
+        self.assertEqual(self.game.frame()['target_maneuver_history'][0]['reason'], '远离已知声呐接触')
+        self.post('parameters', {**fields, 'reason': '再次评估但维持机动'}).raise_for_status()
+        self.assertEqual(len(self.game.frame()['target_maneuver_history']), 1)
+        self.post('parameters', {**fields, 'turn_bias': -.2, 'reason': '避开障碍'}).raise_for_status()
+        self.assertEqual(len(self.game.frame()['target_maneuver_history']), 2)
+        self.assertEqual(self.game.events, before)
+        self.assertNotIn('target_maneuver_history', self.game.mission_state())
+        self.game.sim_time = 6
+        self.game.tick()
+        self.assertEqual(self.game.frame()['target_maneuver_history'][-1]['source'], 'system')
+        self.assertEqual(len(self.game.frame()['target_maneuver_history']), 3)
+
     def test_authentication_cross_side_runs_and_strict_parameters(self):
         self.assertEqual(self.client.post('/internal/adversary/next', json={}).status_code, 403)
         self.assertEqual(self.client.post('/internal/agent/next', json={}, headers=self.headers).status_code, 403)
@@ -180,7 +201,7 @@ class AdversaryApiTests(unittest.TestCase):
         for value in (-1, 5):
             self.assertEqual(self.post('parameters', {**ids, 'speed_mps': value, 'turn_bias': 0, 'duration_s': 10}).status_code, 422)
         before = copy.deepcopy(self.game.events)
-        self.assertEqual(self.post('parameters', {**ids, 'speed_mps': 3, 'turn_bias': .2, 'duration_s': 10}).status_code, 200)
+        self.assertEqual(self.post('parameters', {**ids, 'speed_mps': 3, 'turn_bias': .2, 'duration_s': 10, 'reason': '安全机动'}).status_code, 200)
         self.assertEqual(self.game.events, before)
         self.assertNotIn('detections', json.dumps(self.game.frame()))
         self.game.adversary['job']['lease_deadline'] = 0
@@ -198,7 +219,7 @@ class AdversaryApiTests(unittest.TestCase):
     def test_reset_stop_and_expired_lease_cannot_keep_control(self):
         job = self.post('next', {}).json()['job']
         ids = {'episode_id': self.game.episode, 'run_id': job['run_id']}
-        parameters = {**ids, 'speed_mps': 3, 'turn_bias': 1, 'duration_s': 60}
+        parameters = {**ids, 'speed_mps': 3, 'turn_bias': 1, 'duration_s': 60, 'reason': '规避观测'}
         self.post('parameters', parameters).raise_for_status()
         self.game.adversary['job']['lease_deadline'] = 0
         self.game.tick()
@@ -239,7 +260,7 @@ class AdversaryApiTests(unittest.TestCase):
         while game.sim_time < 2400:
             if game.frame_id % 150 == 0:
                 self.post('heartbeat', ids).raise_for_status()
-                self.post('parameters', {**ids, 'speed_mps': speed, 'turn_bias': .2, 'duration_s': 60}).raise_for_status()
+                self.post('parameters', {**ids, 'speed_mps': speed, 'turn_bias': .2, 'duration_s': 60, 'reason': '保持与声呐接触距离'}).raise_for_status()
             game.tick()
             self.assertEqual(game.status, 'running', {
                 'events': game.events[-3:],

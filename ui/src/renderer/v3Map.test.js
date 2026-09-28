@@ -63,6 +63,27 @@ test("eight owners have distinct stable outlines without region fills", async ()
   assert.ok(ctx.calls.strokes.length >= 8);
 });
 
+test("UUV sprites do not have permanent or selected outline circles", async () => {
+  const { drawUavs } = await server.ssrLoadModule("/src/renderer/layers.js");
+  const ctx = canvas();
+  const circles = [];
+  ctx.arc = (...args) => circles.push(args);
+  drawUavs(ctx, [{ id: "UUV-1", position: [2, 3], heading_deg: 0, status: "idle" }], 15, 0, 0, "UUV-1", { uav: sprite }, []);
+  assert.equal(ctx.calls.images.length, 1);
+  assert.equal(circles.length, 0);
+});
+
+test("team overlay does not draw a ring around tracking UUVs", async () => {
+  const { drawMissionOverlay } = await server.ssrLoadModule("/src/renderer/missionOverlay.js");
+  const ctx = canvas();
+  const circles = [];
+  ctx.arc = (...args) => circles.push(args);
+  drawMissionOverlay(ctx, { episode_id: "e", task_area: { cell_size_km: .1 }, teams: [{ task: "track", members: ["UUV-1"] }],
+    uavs: [{ id: "UUV-1", position: [3, 4] }] }, null,
+  { cellSize: 10, offsetX: 0, offsetY: 0, gridCols: 40, gridRows: 40 });
+  assert.equal(circles.length, 0);
+});
+
 test("search path uses the same owner palette as the region", async () => {
   const { drawPaths, drawSearchRegions } = await server.ssrLoadModule("/src/renderer/layers.js");
   const ctx = canvas();

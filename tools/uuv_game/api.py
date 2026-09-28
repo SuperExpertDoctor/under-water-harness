@@ -541,7 +541,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
                 if job["lease_deadline"] > now and runtime.status == "running":
                     return {"job": None}
                 job["status"] = "failed"
-                state["parameters"] = None
+                runtime.clear_target_maneuver("目标控制会话失效，恢复默认控制")
             state["status"] = "idle"
             if runtime.status != "running" or now-state["last_started_wall"] < 15 or runtime.sim_time-state["last_started_s"] < 30:
                 return {"job": None}
@@ -555,7 +555,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
     @app.post("/internal/adversary/{operation}")
     async def adversary_operation(operation, request: Request):
         data = await payload(request, episode=False)
-        extras = {"parameters": {"speed_mps", "turn_bias", "duration_s"}, "complete": {"status"}}
+        extras = {"parameters": {"speed_mps", "turn_bias", "duration_s", "reason"}, "complete": {"status"}}
         if operation not in ("heartbeat", "observation", "parameters", "complete"):
             raise MissionError("unknown_adversary_operation", 404)
         if set(data)-({"episode_id", "run_id"} | extras.get(operation, set())):
@@ -570,12 +570,14 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
                 job["lease_deadline"] = state["last_heartbeat"]+15
                 return {"cancel": False}
             if operation == "parameters":
+                reason = data.get("reason")
+                if not isinstance(reason, str) or not 1 <= len(reason.strip()) <= 500:
+                    raise MissionError("adversary_reason_required", 422)
                 for key, low, high in (("speed_mps", 0, runtime.config.enemy_max_speed), ("turn_bias", -1, 1), ("duration_s", 1, 60)):
                     value = data.get(key)
                     if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
                         raise MissionError("invalid_adversary_parameters", 422)
-                state["parameters"] = {key: data[key] for key in ("speed_mps", "turn_bias")}
-                state["parameters"]["expires_at_s"] = runtime.sim_time+data["duration_s"]
+                runtime.set_target_maneuver({key: data[key] for key in ("speed_mps", "turn_bias", "duration_s")}, reason.strip(), job["run_id"])
                 runtime.save()
                 return {"status": "applied", "expires_at_s": state["parameters"]["expires_at_s"]}
             if data.get("status") not in ("completed", "failed"):
@@ -583,7 +585,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
             job["status"] = data["status"]
             state["status"] = "idle" if data["status"] == "completed" else "degraded"
             if data["status"] == "failed":
-                state["parameters"] = None
+                runtime.clear_target_maneuver("目标控制运行失败，恢复默认控制")
             runtime.save()
             return {"status": "ok"}
 
@@ -658,6 +660,12 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
             result = await invoke(name, data, worker=True)
             with runtime.lock:
                 active_run(data)
+                if name == "submit_mission_plan" and result.get("plan_id"):
+                    if not any(event["type"] == "agent_plan_decided" and event["data"].get("run_id") == data["run_id"]
+                        and event["data"].get("plan_id") == result["plan_id"] for event in runtime.events):
+                        runtime.event("agent_plan_decided", {"run_id": data["run_id"], "plan_id": result["plan_id"],
+                            "decision_reason": result.get("decision_reason")})
+                        runtime.save()
                 summary = {key: copy.deepcopy(result[key]) for key in ("result_id", "plan_id", "valid", "errors", "risk",
                     "requires_approval", "members", "kind", "algorithm", "mission_revision", "policy_version") if key in result}
                 runtime.event("tool_completed", {"tool": name, "run_id": data["run_id"],
@@ -735,6 +743,12 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
                 return {"status": "ok"}
             if kind not in ("completed", "failed"):
                 raise MissionError("invalid_agent_event", 422)
+            planned = any(event["type"] in ("agent_plan_decided", "tool_completed") and event["data"].get("run_id") == job["run_id"]
+                and (event["type"] == "agent_plan_decided" or event["data"].get("tool") == "submit_mission_plan")
+                and event["data"].get("plan_id") for event in runtime.events)
+            reason = data.get("decision_reason")
+            if kind == "completed" and not planned and (not isinstance(reason, str) or not 1 <= len(reason.strip()) <= 500):
+                raise MissionError("decision_reason_required", 422)
             with runtime.transaction():
                 job["status"] = kind
                 runtime.agent.update(status="idle" if kind == "completed" else "degraded", error=data.get("error"))
@@ -750,6 +764,8 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
                         if message.get("feedback_id") == job.get("source_feedback_id") and job.get("source_feedback_id"):
                             message.update(status="completed", delivery_status="processed")
                 requeue_feedback(job)
+                if kind == "completed" and not planned:
+                    runtime.event("agent_decision_recorded", {"run_id": job["run_id"], "decision_reason": reason.strip()})
                 runtime.event(f"agent_{kind}", {"run_id": job["run_id"], "error": data.get("error")})
                 runtime.save()
             return {"status": "ok"}

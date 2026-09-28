@@ -1127,22 +1127,6 @@ export function drawUavs(ctx, uavs, cellSize, ox, oy, selectedId, assets, baseCe
       ctx.fill();
     }
     ctx.restore();
-    if (renderedModel) {
-      ctx.save();
-      ctx.strokeStyle = ownerColor(uav.id);
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(center.x, center.y, vesselLength(cellSize, uav.id === selectedId) / 2 + 2, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-    if (uav.id === selectedId) {
-      ctx.strokeStyle = "#0F172A";
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(center.x, center.y, size + 5, 0, Math.PI * 2);
-      ctx.stroke();
-    }
     if (uav.avoidance_level > 0) {
       const level = Number(uav.avoidance_level);
       const levelColor = level >= 3 ? "#F87171" : level === 2 ? "#FBBF24" : "#67E8F9";

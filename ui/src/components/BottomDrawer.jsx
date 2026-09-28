@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Activity, ArrowDown, BarChart3, Bot, Clipboard, GripHorizontal, Map, Satellite, SlidersHorizontal, X } from "lucide-react";
-import AgentPanel from "./AgentPanel";
-import { buildDecisionRows, coalesceMissionEvents, coverageDescriptions, filterMissionEvents } from "../state/missionState";
+import { Activity, BarChart3, Bot, Clipboard, GripHorizontal, Map, Radar, X } from "lucide-react";
+import { buildAgentRuntimeRows, buildDecisionRows, buildTimelineRows, coverageDescriptions } from "../state/missionState";
 
 const TABS = [
   { label: "决策过程", icon: Activity },
@@ -9,91 +8,12 @@ const TABS = [
   { label: "Agent 运行", icon: Bot },
   { label: "任务指标", icon: BarChart3 },
   { label: "区域", icon: Map },
-  { label: "任务操作", icon: Clipboard },
-  { label: "参数", icon: SlidersHorizontal },
-  { label: "AIS", icon: Satellite },
+  { label: "目标状态", icon: Radar },
 ];
-const EVENT_NAMES = {
-  target_found: "发现目标",
-  provisional_contact_started: "临时保持接触",
-  provisional_contact_expired: "接触保持到期",
-  provisional_contact_aborted: "临时接触中止",
-  tracking_reacquisition_started: "主动重新捕获",
-  stale_contact_search_resumed: "失联归还搜索",
-  ship_detected: "舰船确认",
-  target_lost: "目标丢失",
-  uav_returned: "UAV 返航",
-  search_complete: "搜索完成",
-  llm_decision: "模型决策",
-  route_plan_failed: "航路失败",
-  route_replanned: "航路重规划",
-  environment_reset: "环境重置",
-  mission_assignment_committed: "任务已提交",
-  contact_created: "创建接触",
-  probe_phase_changed: "调查阶段变化",
-  type_i_assessed: "I 类研判",
-  type_ii_assessed: "II 类研判",
-  assessment_applied: "研判完成",
-  probe_timed_out: "调查超时",
-  task_failed: "任务失败",
-  task_completed: "任务结束",
-  tool_started: "工具调用",
-  tool_completed: "工具完成",
-  tool_failed: "工具失败",
-  tool_result: "候选结果",
-  approval_requested: "等待审批",
-  approval_decided: "审批决定",
-  approval_expired: "审批过期",
-  agent_started: "模型开始",
-  agent_completed: "模型完成",
-  agent_failed: "模型异常",
-  safety_pause: "安全暂停",
-  message_start: "消息开始",
-  message_update: "消息流式更新",
-  message_end: "消息完成",
-  tool_execution_start: "工具开始",
-  tool_execution_update: "工具进度",
-  tool_execution_end: "工具结束",
-  agent_start: "Agent 回合开始",
-  agent_end: "Agent 回合结束",
-  agent_settled: "Agent 已收尾",
-  compaction_start: "上下文压缩开始",
-  compaction_end: "上下文压缩完成",
-  auto_retry_start: "自动重试",
-  auto_retry_end: "重试结束",
-  turn_start: "模型轮次开始",
-  turn_end: "模型轮次结束",
-  queue_update: "队列更新",
-  agent_queued: "Agent 已排队",
-  tracking_established: "协同跟踪建立",
-  contact_state_changed: "接触状态变化",
-  tracking_position_reached: "跟踪入位",
-  tracking_relief_required: "请求跟踪接替",
-  coverage_repartitioned: "搜索区域调整",
-  energy_exit_started: "低能量退出",
-  uuv_replenished: "新代次补入",
-  energy_authorization_required: "能源轮换待授权",
-  allocation_blocked: "分区不可行",
-};
-
-export default function BottomDrawer({ frame, events = [], llmCycle, visible, onToggle, mission, onSelectEvent, onSelectDecision, readOnly, selection }) {
+export default function BottomDrawer({ frame, events = [], llmCycle, visible, onToggle, mission, onSelectEvent, onSelectDecision, readOnly }) {
   const [activeTab, setActiveTab] = useState(0);
-  const [focusedEventId, setFocusedEventId] = useState(null);
   const [height, setHeight] = useState(220);
-  const [config, setConfig] = useState(null);
-  const [configError, setConfigError] = useState("");
   const drag = useRef(null);
-
-  useEffect(() => {
-  if (activeTab !== 6 || config || configError) return;
-    fetch("/api/config")
-      .then((response) => {
-        if (!response.ok) throw new Error();
-        return response.json();
-      })
-      .then(setConfig)
-      .catch(() => setConfigError("参数接口不可用"));
-  }, [activeTab, config, configError]);
 
   useEffect(() => {
     const move = (event) => {
@@ -126,14 +46,12 @@ export default function BottomDrawer({ frame, events = [], llmCycle, visible, on
         <button className="drawer-close" onClick={onToggle} aria-label="关闭任务详情" title="关闭"><X size={16} /></button>
       </div>
       <div className="drawer-content">
-        {activeTab === 0 && <DecisionTab frame={frame} events={events} plans={readOnly ? frame?.plans : mission?.state.plans} onSelectEvent={(event) => { onSelectEvent?.(event); setFocusedEventId(event.id); setActiveTab(1); }} onSelectDecision={onSelectDecision} />}
-        {activeTab === 1 && <TimelineTab key={focusedEventId} events={events} frame={frame} focusedEventId={focusedEventId} onSelectEvent={onSelectEvent} />}
-        {activeTab === 2 && <AgentTab events={events} mission={mission} llm={llmCycle} onSelectEvent={onSelectEvent} />}
+        {activeTab === 0 && <DecisionTab frame={frame} events={events} plans={readOnly ? frame?.plans : mission?.state.plans} onSelectEvent={(event) => { onSelectEvent?.(event); setActiveTab(1); }} onSelectDecision={onSelectDecision} />}
+        {activeTab === 1 && <TimelineTab events={events} plans={readOnly ? frame?.plans : mission?.state.plans} frame={frame} onSelectDecision={onSelectDecision} />}
+        {activeTab === 2 && <AgentTab events={events} frame={frame} mission={mission} llm={llmCycle} />}
         {activeTab === 3 && <MetricsTab frame={frame} onShowRegions={() => setActiveTab(4)} />}
         {activeTab === 4 && <RegionTab frame={frame} onSelectEvent={onSelectEvent} />}
-        {activeTab === 5 && <div className="task-operations"><AgentPanel tab="approvals" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /><AgentPanel tab="tasks" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /></div>}
-        {activeTab === 6 && <ParamsTab config={config} error={configError} />}
-        {activeTab === 7 && <AisTab frame={frame} />}
+        {activeTab === 5 && <TargetStatusTab frame={frame} />}
       </div>
     </section>
   );
@@ -156,52 +74,29 @@ function DecisionTab({ frame, events, plans, onSelectEvent, onSelectDecision }) 
   </div>;
 }
 
-function TimelineTab({ events, frame, focusedEventId, onSelectEvent }) {
-  const [filters, setFilters] = useState({ uuv: "", contact: "", task: "", level: "" });
-  const [following, setFollowing] = useState(true);
-  const [unseen, setUnseen] = useState(0);
-  const scroll = useRef(null);
-  const lastId = useRef(events.at(-1)?.id);
-  const visible = coalesceMissionEvents(filterMissionEvents(events, filters)).slice(-180);
-  useEffect(() => {
-    if (focusedEventId != null) [...(scroll.current?.querySelectorAll("[data-event-id]") || [])].find((element) => element.dataset.eventId === String(focusedEventId))?.scrollIntoView({ block: "center" });
-  }, [focusedEventId]);
-  useEffect(() => {
-    const changed = lastId.current !== events.at(-1)?.id;
-    lastId.current = events.at(-1)?.id;
-    if (following && scroll.current) { scroll.current.scrollTop = scroll.current.scrollHeight; setUnseen(0); }
-    else if (changed) setUnseen((count) => count + 1);
-  }, [events, following]);
-  if (!events.length) return <EmptyState text="暂无任务事件" />;
-  return (
-    <div className="timeline-view">
-      <div className="event-filters">
-        <select aria-label="按艇筛选" value={filters.uuv} onChange={(event) => setFilters({ ...filters, uuv: event.target.value })}><option value="">全部艇</option>{(frame?.uavs || []).map((uuv) => <option key={uuv.id}>{uuv.id}</option>)}</select>
-        <select aria-label="按接触筛选" value={filters.contact} onChange={(event) => setFilters({ ...filters, contact: event.target.value })}><option value="">全部接触</option>{[...new Set(events.map((event) => event.data?.contact_id).filter(Boolean))].map((id) => <option key={id}>{id}</option>)}</select>
-        <select aria-label="按任务筛选" value={filters.task} onChange={(event) => setFilters({ ...filters, task: event.target.value })}><option value="">全部任务</option>{[...new Set(events.flatMap((event) => [event.data?.plan_id, event.data?.task_id, event.data?.run_id]).filter(Boolean))].map((id) => <option key={id}>{id}</option>)}</select>
-        <select aria-label="按级别筛选" value={filters.level} onChange={(event) => setFilters({ ...filters, level: event.target.value })}><option value="">全部级别</option><option value="info">信息</option><option value="warning">警告</option><option value="error">错误</option></select>
-        {!following && <button className="follow-latest" onClick={() => setFollowing(true)}><ArrowDown size={13} />{unseen ? `${unseen} 次更新` : "跟随最新"}</button>}
-      </div>
-      <div className="timeline-list" ref={scroll} onScroll={(event) => { const node = event.currentTarget; setFollowing(node.scrollHeight - node.scrollTop - node.clientHeight < 30); }}>
-      {!visible.length && <EmptyState text="没有符合筛选的事件" />}
-      {visible.map((event, index) => (
-        <details className="timeline-detail" key={event.id || `${event.time}-${event.type}-${index}`} data-event-id={event.id} open={event.id === focusedEventId || undefined}>
-        <summary className={`timeline-item event-${event.type}`} onClick={() => onSelectEvent?.(event)}>
-          <time>{Number(event.sim_time_s ?? event.time_s ?? (event.time || 0) * 60).toFixed(1)} s</time>
-          <i />
-          <strong>{EVENT_NAMES[event.type] || event.type}{event.repeat_count > 1 ? ` ×${event.repeat_count}` : ""}</strong>
-          <span>{event.data?.tool_name || event.data?.tool || event.data?.plan_id || event.data?.uuv_id || event.data?.uav_id || event.data?.contact_id || event.data?.ship_id || event.data?.group_id || ""}</span>
-        </summary><pre>{JSON.stringify(event.data || {}, null, 2)}</pre></details>
-      ))}</div>
-    </div>
-  );
+function TimelineTab({ events, frame, plans, onSelectDecision }) {
+  const { rows, unlinked } = buildTimelineRows(events, plans, frame?.episode_id);
+  return <div className="decision-table-wrap">
+    {unlinked > 0 && <p className="table-warning">{unlinked} 条历史决策缺少运行关联，无法确定触发类型</p>}
+    {events[0]?.id > 1 && <p className="table-warning">部分早期事件已截断，历史可能不完整</p>}
+    {!rows.length ? <EmptyState text="尚无完成的调度决策" /> : <table className="decision-table mission-log-table"><thead><tr><th>决策时间</th><th>触发类型</th><th>决策原因</th><th>决策内容</th><th>参与调度的 UUV</th></tr></thead>
+      <tbody>{rows.map((row) => <tr key={row.id}>
+        <td data-label="决策时间" className="decision-time">{row.timeSeconds.toFixed(1)} s</td><td data-label="触发类型">{row.trigger}</td>
+        <td data-label="决策原因" className="decision-reason">{row.reason}</td>
+        <td data-label="决策内容">{row.planId ? <button type="button" className="decision-focus" onClick={() => onSelectDecision?.(row)}>{row.action}<small>{row.planId}</small></button> : row.action}</td>
+        <td data-label="参与调度的 UUV">{row.members.join("、") || "无新增调度"}</td>
+      </tr>)}</tbody></table>}
+  </div>;
 }
 
-function AgentTab({ events, mission, llm, onSelectEvent }) {
-  const activity = coalesceMissionEvents(events.filter((event) => /agent|tool|message|turn|compaction|queue/.test(event.type))).slice(-100).reverse();
-  return <div className="agent-runtime"><div className="runtime-facts"><span>状态 <b>{mission?.state.agent?.status || "--"}</b></span><span>模型 <b>{mission?.state.agent?.model || "--"}</b></span><span>排队 <b>{mission?.state.jobs?.filter((job) => job.status === "queued").length || 0}</b></span></div>
-    {!activity.length && <EmptyState text="暂无 Agent 运行事件" />}
-    {activity.map((event) => <details className="tool-output" key={event.id}><summary onClick={() => onSelectEvent?.(event)}><time>{Number(event.sim_time_s ?? event.time_s ?? (event.time || 0) * 60).toFixed(1)} s</time> {EVENT_NAMES[event.type] || event.type} · {event.data?.tool_name || event.data?.tool || event.data?.reason || ""}{Number.isFinite(event.data?.duration_ms) && <span> · 墙钟 {event.data.duration_ms} ms</span>}</summary><pre>{JSON.stringify(event.data || {}, null, 2)}</pre></details>)}
+function AgentTab({ events, frame, mission, llm }) {
+  const rows = buildAgentRuntimeRows(events, frame?.episode_id);
+  return <div className="agent-runtime decision-table-wrap">
+    <div className="runtime-facts"><span>Worker <b>{({ offline: "离线", idle: "空闲", running: "运行中", degraded: "异常" })[mission?.state.agent?.status || frame?.agent_status?.status] || "离线"}</b></span><span>模型 <b>{mission?.state.agent?.model || frame?.agent_status?.model || "--"}</b></span></div>
+    {events[0]?.id > 1 && <p className="table-warning">部分早期事件已截断，历史可能不完整</p>}
+    {!rows.length ? <EmptyState text="暂无 Agent 运行记录" /> : <table className="decision-table mission-log-table"><thead><tr><th>时间</th><th>运行</th><th>状态</th><th>当前步骤/结果</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}>
+      <td data-label="时间" className="decision-time">{row.timeSeconds.toFixed(1)} s</td><td data-label="运行" className="mono">{row.runId}</td><td data-label="状态">{row.status}</td><td data-label="当前步骤/结果">{row.detail}</td>
+    </tr>)}</tbody></table>}
     {llm && <details className="workspace-details"><summary>历史模型记录</summary><LLMTab llm={llm} /></details>}
   </div>;
 }
@@ -209,11 +104,15 @@ function AgentTab({ events, mission, llm, onSelectEvent }) {
 export function MetricsTab({ frame, onShowRegions }) {
   const metrics = frame?.mission_metrics || {};
   const window = metrics.coverage_window_min || frame?.coverage_metrics?.primary_window_min || 30;
-  const names = { search_boats: "搜索艇", search_regions: "搜索区", effective_tracking_seconds: "有效协同跟踪 / s", lost_seconds: "丢失时长 / s", handoff_count: "已完成接替", handoff_attempts: "已发起接替", rotation_count: "轮换次数", coverage_pct: "累计覆盖 / %", effective_coverage_pct: "有效覆盖 / %", recent_coverage_pct: `近 ${window} 分钟覆盖 / %`, revisit_timeliness_pct: `${window} 分钟重访及时率 / %`, unscanned_cells: "未扫描积压 / 格", handoff_success_rate: "接替成功率 / %", coverage_window_min: "覆盖窗口 / 分钟" };
   const descriptions = coverageDescriptions(frame);
-  return <div className="mission-metrics"><dl>{Object.entries(metrics).map(([key, value]) => <div key={key}><dt>{names[key] || key}</dt><dd>{value == null ? "无数据" : typeof value === "number" ? Number(value.toFixed(2)) : String(value)}</dd>{descriptions[key] && <details className="metric-definition"><summary>计算口径</summary><p>{descriptions[key]}</p><button type="button" onClick={onShowRegions}>查看区域</button></details>}</div>)}</dl>{!Object.keys(metrics).length && <EmptyState text="暂无任务指标" />}
-    {frame?.standing_policy && <details className="workspace-details"><summary>常驻授权策略 · {frame.standing_policy.enabled ? "已授权" : "未启用"}</summary><pre>{JSON.stringify(frame.standing_policy, null, 2)}</pre></details>}
-  </div>;
+  const value = (number, suffix) => Number.isFinite(number) ? `${Number(number.toFixed(1))}${suffix}` : "尚无数据";
+  const handoffs = metrics.handoff_attempts == null ? "历史记录不完整" : metrics.handoff_attempts === 0 ? "尚无接替" : `${metrics.handoff_count} / ${metrics.handoff_attempts}`;
+  return <div className="mission-metrics"><dl>
+    <div><dt>持续区域覆盖率 · 近 {window} 分钟</dt><dd>{value(metrics.recent_coverage_pct, "%")}</dd><details className="metric-definition"><summary>计算口径</summary><p>{descriptions.recent_coverage_pct}</p><button type="button" onClick={onShowRegions}>查看区域</button></details></div>
+    <div><dt>单次目标有效跟踪时间</dt><dd>{value(metrics.single_tracking_seconds, " s")}</dd></div>
+    <div><dt>当前目标失联时长</dt><dd>{Number.isFinite(metrics.current_lost_seconds) ? value(metrics.current_lost_seconds, " s") : frame?.contacts?.length ? "未失联" : "尚未发现目标"}</dd></div>
+    <div><dt>跟踪接替成功情况</dt><dd>{handoffs}</dd></div>
+  </dl></div>;
 }
 
 function regionInformationMean(matrix, cells) {
@@ -268,60 +167,16 @@ function LLMTab({ llm }) {
   );
 }
 
-function AisTab({ frame }) {
-  const rows = frame?.contacts?.length
-    ? frame.contacts.map((contact) => {
-      const ais = [...(contact.samples || [])].reverse().find((sample) => sample.source === "ais");
-      return { id: contact.contact_id, mmsi: contact.ais_mmsi, aisPosition: ais?.position, position: contact.estimated_position, state: contact.vessel_class || "unknown" };
-    })
-    : (frame?.ships || []).map((ship) => ({
-      id: ship.id,
-      mmsi: ship.ais?.mmsi,
-      aisPosition: ship.ais?.reported_position,
-      position: ship.estimated_position,
-      state: "historical",
-    }));
-  return (
-    <div className="table-wrap">
-      <table className="region-table ais-table">
-        <thead><tr><th>接触</th><th>MMSI</th><th>AIS 位置</th><th>估计位置</th><th>样本</th><th>状态</th></tr></thead>
-        <tbody>{rows.map((contact) => (
-          <tr key={contact.id}>
-            <td><b>{contact.id}</b></td>
-            <td>{contact.mmsi || "无"}</td>
-            <td className="mono">{formatPosition(contact.aisPosition)}</td>
-            <td className="mono">{formatPosition(contact.position)}</td>
-            <td>{frame?.contacts?.length ? (frame.contacts.find((item) => item.contact_id === contact.id)?.samples?.length || 0) : "-"}</td>
-            <td>{contact.state === "unknown" ? "待核查" : contact.state === "type_i" ? "I 类船舶" : contact.state === "type_ii" ? "II 类船舶" : "历史帧"}</td>
-          </tr>
-        ))}</tbody>
-      </table>
-    </div>
-  );
-}
-
-function formatPosition(position) {
-  return Array.isArray(position) ? position.map((value) => Number(value).toFixed(1)).join(", ") : "-";
-}
-
-function ParamsTab({ config, error }) {
-  if (error) return <EmptyState text={error} />;
-  if (!config) return <div className="loading-state"><span />加载参数</div>;
-  return <div className="params-grid">{Object.entries(config).map(([section, values]) => (
-    <section key={section}><h3>{section}</h3>{Object.entries(values && typeof values === "object" && !Array.isArray(values) ? values : { value: values }).map(([key, value]) => (
-      <div key={key}><span>{key}</span><b>{formatParamValue(value)}</b></div>
-    ))}</section>
-  ))}</div>;
-}
-
-function formatParamValue(value) {
-  if (Array.isArray(value)) return value.join(" × ");
-  if (value && typeof value === "object") {
-    return Object.entries(value)
-      .map(([key, child]) => `${key}: ${formatParamValue(child)}`)
-      .join("; ");
-  }
-  return String(value);
+function TargetStatusTab({ frame }) {
+  const rows = frame?.target_maneuver_history || [];
+  return <div className="decision-table-wrap">
+    {rows.length >= 200 && <p className="table-warning">早期目标机动记录已截断</p>}
+    {!rows.length ? <EmptyState text="暂无目标机动参数变化" /> : <table className="decision-table mission-log-table"><thead><tr><th>时间</th><th>机动参数变化的原因</th><th>机动模型参数</th></tr></thead><tbody>{rows.map((row, index) => <tr key={`${row.run_id || "system"}-${row.time_s}-${index}`}>
+      <td data-label="时间" className="decision-time">{Number(row.time_s).toFixed(1)} s</td>
+      <td data-label="机动参数变化的原因">{row.source === "system" ? `系统回退 · ${row.reason}` : row.reason}</td>
+      <td data-label="机动模型参数" className="mono">速度 {Number(row.speed_mps).toFixed(1)} m/s · 转向偏置 {Number(row.turn_bias).toFixed(2)} · {row.duration_s == null ? "持续：默认控制" : `持续 ${Number(row.duration_s).toFixed(0)} s`}</td>
+    </tr>)}</tbody></table>}
+  </div>;
 }
 
 function EmptyState({ text }) {

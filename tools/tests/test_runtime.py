@@ -8,6 +8,7 @@ from uuv_game.lifecycle import exit_route, replacement_pose, prepare_exits
 from uuv_game.algorithms.control import TIMES
 from uuv_game.algorithms.motion import integrate
 from uuv_game.algorithms.planning import path_safe
+from uuv_game.observations import initialize
 
 
 @pytest.fixture
@@ -28,6 +29,10 @@ def test_initial_observations_do_not_reveal_truth(runtime):
 
 def test_all_initial_boats_start_at_random_boundary_points(runtime, tmp_path):
     width, height = runtime.config.width, runtime.config.height
+    entry = runtime.fleet_entry
+    assert entry["count"] == 8
+    assert max(math.dist(boat["pose"][:2], entry["position"]) for boat in runtime.uuvs) <= 600
+    assert len({"left" if u["pose"][0] == 0 else "right" if u["pose"][0] == width else "bottom" if u["pose"][1] == 0 else "top" for u in runtime.uuvs}) == 1
     for boat in runtime.uuvs:
         x, y, heading = boat["pose"]
         assert min(x, y, width - x, height - y) == pytest.approx(0)
@@ -36,8 +41,34 @@ def test_all_initial_boats_start_at_random_boundary_points(runtime, tmp_path):
     other = MissionRuntime(tmp_path / "seeded.sqlite")
     try:
         assert [boat["pose"] for boat in runtime.uuvs] == [boat["pose"] for boat in other.uuvs]
+        runtime.reset()
+        assert [boat["pose"] for boat in runtime.uuvs] == [boat["pose"] for boat in other.uuvs]
     finally:
         other.close()
+
+
+def test_single_tracking_and_lost_intervals_restart_on_state_change(runtime):
+    contact = {**initialize(2000, 2000, 0, 100), "samples": [], "state": "tracking", "tracking_started_at_s": 10, "last_tracking_duration_s": 0}
+    runtime.contacts["CONTACT-1"] = contact
+    runtime.sim_time = 15
+    assert runtime.frame()["mission_metrics"]["single_tracking_seconds"] == 5
+    contact.update(state="degraded", tracking_started_at_s=None, last_tracking_duration_s=5)
+    runtime.sim_time = 20
+    assert runtime.frame()["mission_metrics"]["single_tracking_seconds"] == 5
+    contact.update(state="lost", lost_started_at_s=20)
+    runtime.sim_time = 24
+    assert runtime.frame()["mission_metrics"]["current_lost_seconds"] == 4
+    contact.update(state="tracking", tracking_started_at_s=24, last_tracking_duration_s=0, lost_started_at_s=None)
+    runtime.sim_time = 27
+    assert runtime.frame()["mission_metrics"]["single_tracking_seconds"] == 3
+    assert runtime.frame()["mission_metrics"]["current_lost_seconds"] is None
+
+
+def test_agent_cancellation_records_run_state(runtime):
+    job = runtime.queue_agent("Review", "human")
+    runtime.cancel_agent(job["run_id"])
+    assert job["status"] == "cancelled"
+    assert any(event["type"] == "agent_cancelled" and event["data"]["run_id"] == job["run_id"] for event in runtime.events)
 
 
 def test_turnover_exits_to_nearest_boundary_and_reenters_at_that_point(runtime, monkeypatch):

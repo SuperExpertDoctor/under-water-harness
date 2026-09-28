@@ -148,3 +148,16 @@ export async function runWithReasonRetry(session: { prompt(text: string): Promis
   await runUntilSettled(session, "上次提交任务计划时缺少公开调度理由。请检查任务状态；如仍需提交，提供真实、简短的 decision_reason 并重新调用 submit_mission_plan。不要编造观测或审批。");
   if (reason.missing) throw new Error("decision_reason_missing_after_retry");
 }
+
+export async function runWithAdversaryReasonRetry(session: { prompt(text: string): Promise<void>; waitForIdle(): Promise<void> }, text: string, reason: { missing: boolean }): Promise<void> {
+  await runUntilSettled(session, text);
+  if (!reason.missing) return;
+  reason.missing = false;
+  await runUntilSettled(session, "上次目标机动参数调用缺少公开的机动原因。请重新读取有效观测，给 set_evasion_parameters 提供真实、简短的 reason；不要编造对手位置。");
+  if (reason.missing) throw new Error("adversary_reason_missing_after_retry");
+}
+
+export function publicDecisionReason(text: string): string | null {
+  const reason = text.match(/(?:^|\n)决策原因[：:]\s*([^\n]+)/)?.[1]?.trim();
+  return reason && reason.length <= 500 ? reason : null;
+}

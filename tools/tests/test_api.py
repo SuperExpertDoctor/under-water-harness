@@ -67,8 +67,21 @@ def test_chat_job_and_worker_completion(client):
     headers = {"Authorization": "Bearer test-worker"}
     job = client.post("/internal/agent/next", json={}, headers=headers).json()["job"]
     assert job["run_id"] == response.json()["run_id"]
-    assert client.post("/internal/agent/event", json={"run_id": job["run_id"], "episode_id": episode, "type": "completed", "text": "Observed"}, headers=headers).status_code == 200
+    assert client.post("/internal/agent/event", json={"run_id": job["run_id"], "episode_id": episode, "type": "completed", "text": "Observed", "decision_reason": "当前观测不要求调整"}, headers=headers).status_code == 200
     assert client.get("/api/pi-agent/messages").json()["messages"][-1]["text"] == "Observed"
+    assert any(event["type"] == "agent_decision_recorded" and event["data"]["decision_reason"] == "当前观测不要求调整" for event in client.app.state.runtime.events)
+
+
+def test_completion_without_plan_requires_public_reason(client):
+    runtime = client.app.state.runtime
+    client.post("/api/pi-agent/messages", json={"episode_id": runtime.episode, "text": "Observe"})
+    headers = {"Authorization": "Bearer test-worker"}
+    job = client.post("/internal/agent/next", json={}, headers=headers).json()["job"]
+    data = {"run_id": job["run_id"], "episode_id": runtime.episode, "type": "completed", "text": "No change"}
+    response = client.post("/internal/agent/event", json=data, headers=headers)
+    assert response.status_code == 422
+    assert response.json()["error_code"] == "decision_reason_required"
+    assert job["run_id"] in [item["run_id"] for item in runtime.agent_jobs if item["status"] == "running"]
 
 
 def test_inline_approval_decision_controls_future_worker_jobs(client):
@@ -105,6 +118,8 @@ def test_worker_submission_requires_public_decision_reason(client):
     accepted = client.post("/internal/tools/submit_mission_plan", json={**payload, "decision_reason": "覆盖北侧空白"}, headers=headers)
     assert accepted.status_code == 200
     assert accepted.json()["decision_reason"] == "覆盖北侧空白"
+    assert any(event["type"] == "agent_plan_decided" and event["data"]["run_id"] == job["run_id"]
+        and event["data"]["plan_id"] == accepted.json()["plan_id"] for event in runtime.events)
 
 
 def test_debug_events_are_explicit(client):

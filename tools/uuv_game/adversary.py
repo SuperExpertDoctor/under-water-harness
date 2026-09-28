@@ -17,6 +17,7 @@ _ADVERSARY = algorithm_settings("adversary")
 
 def initial_state():
     return {"detections": [], "history": [], "mapping": {}, "parameters": None,
+            "maneuver_history": [],
             "job": None, "last_started_s": -_ADVERSARY["observation_history_s"], "last_started_wall": 0.0,
             "last_heartbeat": 0.0, "status": "offline", "cycle": 0}
 

@@ -26,7 +26,7 @@ from .information import information_fields
 from . import adversary as enemy
 
 
-CHECKPOINT_FIELDS = tuple(("episode sim_time frame_id revision policy_version mode session_grants status uuvs targets obstacles active results plans contacts observations obstacle_observations events cursor scan_times intents vessels tasks messages agent_jobs agent last_periodic sensor_enabled contact_mapping contact_counter last_observation_time regions standing_policy metrics region_revision observation_cursor adversary").split())
+CHECKPOINT_FIELDS = tuple(("episode sim_time frame_id revision policy_version mode session_grants status uuvs fleet_entry targets obstacles active results plans contacts observations obstacle_observations events cursor scan_times intents vessels tasks messages agent_jobs agent last_periodic sensor_enabled contact_mapping contact_counter last_observation_time regions standing_policy metrics region_revision observation_cursor adversary").split())
 ALGORITHM_IDS = {"compute_task_allocation": "slot_assignment", "plan_path": "dubins_hybrid",
                  "plan_search": "strip_coverage", "plan_tracking": "distance_band", "partition_search_area": "connected_partition"}
 _RUNTIME = algorithm_settings("runtime")
@@ -37,6 +37,7 @@ _CBS = algorithm_settings("cbs")
 _CONTROL = algorithm_settings("control")
 _ASSIGNMENT = algorithm_settings("assignment")
 _MISSION = algorithm_settings("mission_planning")
+_ENEMY = algorithm_settings("adversary")
 
 
 class MissionError(ValueError):
@@ -77,6 +78,11 @@ class MissionRuntime:
             if state:
                 self.rng.setstate((state[0], tuple(state[1]), state[2]))
             self.agent["status"] = "offline"
+            if "fleet_entry" not in saved:
+                self.fleet_entry = None
+            self.adversary.setdefault("maneuver_history", [])
+            if self.adversary.get("parameters"):
+                self.clear_target_maneuver("目标控制进程重启，恢复默认控制")
             self.adversary.update(job=None, parameters=None, status="offline", last_heartbeat=0.0, last_started_wall=0.0)
             # Preserve the human mission and primary target, remove the old scene/AIS bypass.
             self.targets = [next((target for target in self.targets if target["id"] == _SCENE["target"]["id"]), self.targets[0])] if self.targets else [copy.deepcopy(_SCENE["target"])]
@@ -133,20 +139,20 @@ class MissionRuntime:
         self.mode = "assisted"
         self.session_grants = []
         self.status = "ready"
-        sides = [side for _ in range((self.config.fleet_size+3)//4) for side in ("left", "right", "bottom", "top")]
-        self.rng.shuffle(sides)
+        side = self.rng.choice(("bottom", "right", "left", "top"))
+        span = self.config.height if side in ("left", "right") else self.config.width
+        gap = _SCENE["fleet_entry_min_separation_m"]
+        half_spread = (self.config.fleet_size-1)*gap/2
+        clearance = min(_SCENE["fleet_entry_corner_clearance_m"], span/4)
+        center = self.rng.uniform(clearance+half_spread, span-clearance-half_spread)
+        entry_point = {"left": [0, center], "right": [self.config.width, center],
+            "bottom": [center, 0], "top": [center, self.config.height]}[side]
+        self.fleet_entry = {"position": entry_point, "count": self.config.fleet_size, "side": side}
         self.uuvs = []
-        for i, side in enumerate(sides[:self.config.fleet_size]):
-            span = self.config.height if side in ("left", "right") else self.config.width
-            clearance = min(_SCENE["fleet_entry_corner_clearance_m"], span/4)
-            for _ in range(200):
-                value = self.rng.uniform(clearance, span-clearance)
-                pose = {"left": [0, value, 0], "right": [self.config.width, value, math.pi],
-                    "bottom": [value, 0, math.pi/2], "top": [value, self.config.height, -math.pi/2]}[side]
-                if all(math.dist(pose[:2], u["pose"][:2]) >= _SCENE["fleet_entry_min_separation_m"] for u in self.uuvs):
-                    break
-            else:
-                raise RuntimeError("No separated fleet entry point on the task boundary")
+        for i in range(self.config.fleet_size):
+            value = center+(i-(self.config.fleet_size-1)/2)*gap
+            pose = {"left": [0, value, 0], "right": [self.config.width, value, math.pi],
+                "bottom": [value, 0, math.pi/2], "top": [value, self.config.height, -math.pi/2]}[side]
             self.uuvs.append({"id": f"UUV-{i+1}", "pose": pose, "trail": [], "curvature": 0.0,
                 "generation": 1, "remaining_range_m": self.config.range_capacity, "capabilities": ["active", "passive"]})
         self.targets = [copy.deepcopy(_SCENE["target"])]
@@ -251,8 +257,8 @@ class MissionRuntime:
     def reset(self):
         for plan in self.plans.values():
             self.store.archive_plan({**plan, "status": "cancelled" if plan["status"] in ("active", "pending_approval") else plan["status"]})
-        self._initial()
         self.rng = random.Random(self.config.seed)
+        self._initial()
         self.event("environment_reset", {})
         self.save()
 
@@ -715,6 +721,8 @@ class MissionRuntime:
         for message in self.messages:
             if message.get("run_id") in cancelled and message.get("status") in ("queued", "streaming"):
                 message["status"] = "cancelled"
+        for cancelled_id in cancelled:
+            self.event("agent_cancelled", {"run_id": cancelled_id})
         self.agent["status"] = "idle"
         self.save()
 
@@ -784,6 +792,27 @@ class MissionRuntime:
             "bounds": [0, 0, self.config.width, self.config.height], "obstacles": self.obstacles,
             "detections": self.adversary["detections"], "history": self.adversary["history"]})
 
+    def set_target_maneuver(self, parameters, reason, run_id):
+        previous = self.adversary.get("parameters")
+        changed = not previous or any(previous.get(key) != parameters[key] for key in ("speed_mps", "turn_bias", "duration_s"))
+        self.adversary["parameters"] = {**parameters, "expires_at_s": self.sim_time+parameters["duration_s"]}
+        if changed:
+            history = self.adversary.setdefault("maneuver_history", [])
+            history.append({"time_s": self.sim_time, "run_id": run_id, "reason": reason,
+                "speed_mps": parameters["speed_mps"], "turn_bias": parameters["turn_bias"],
+                "duration_s": parameters["duration_s"], "expires_at_s": self.adversary["parameters"]["expires_at_s"], "source": "llm"})
+            self.adversary["maneuver_history"] = history[-200:]
+
+    def clear_target_maneuver(self, reason):
+        if not self.adversary.get("parameters"):
+            return
+        self.adversary["parameters"] = None
+        history = self.adversary.setdefault("maneuver_history", [])
+        history.append({"time_s": self.sim_time, "run_id": None, "reason": reason,
+            "speed_mps": _ENEMY["fallback_speed_mps"], "turn_bias": 0,
+            "duration_s": None, "expires_at_s": None, "source": "system"})
+        self.adversary["maneuver_history"] = history[-200:]
+
     @synchronized
     def tick(self):
         if self.status != "running":
@@ -791,7 +820,10 @@ class MissionRuntime:
         enemy_job = self.adversary["job"]
         if enemy_job and enemy_job["status"] == "running" and enemy_job["lease_deadline"] <= time.monotonic():
             enemy_job["status"] = "failed"
-            self.adversary.update(parameters=None, status="degraded")
+            self.clear_target_maneuver("目标控制会话失效，恢复默认控制")
+            self.adversary["status"] = "degraded"
+        if self.adversary.get("parameters") and self.adversary["parameters"]["expires_at_s"] <= self.sim_time:
+            self.clear_target_maneuver("机动参数到期，恢复默认控制")
         for member, action in list(self.active.items()):
             if action.get("provisional") and self.sim_time >= action["expires_at_s"]:
                 if not self._end_provisional_contact(member, "lease_expired"):
@@ -1017,12 +1049,16 @@ class MissionRuntime:
                 "estimated_velocity": [c["vx"]/cell, -c["vy"]/cell],
                 "samples": [{**s, **({"position": self.cells([s["x"], s["y"]])} if "x" in s else {})} for s in c["samples"]]})
         plans = [self.summary(p) for p in self.plans.values()]
+        current_contact = next(iter(self.contacts.values()), None)
+        tracking_started = current_contact.get("tracking_started_at_s") if current_contact else None
+        lost_started = current_contact.get("lost_started_at_s") if current_contact else None
         seconds = int(self.sim_time)
         return {"schema_version": "mission-frame/v2", "visual_schema_version": "mission-visual/v1", "episode_id": self.episode,
             "frame_id": self.frame_id, "sim_time_min": self.sim_time/60, "timestamp": f"{seconds//3600:02}:{seconds//60%60:02}:{seconds%60:02}",
             "cycle": self.agent["cycle"], "runtime_status": self.status, "mission_revision": self.revision, "autonomy_mode": self.mode,
             "agent_status": copy.deepcopy(self.agent), "event_cursor": self.cursor, "information_source": "backend", "information_version": self.frame_id,
             "task_area": {"width_km": width/1000, "height_km": height/1000, "cell_size_km": cell/1000}, **information,
+            "fleet_entry": {**self.fleet_entry, "position": self.cells(self.fleet_entry["position"])} if self.fleet_entry else None,
             "value_matrix": copy.deepcopy(information["target_info_matrix"]), "searchable_cells": len(searchable), "coverage_pct": coverage,
             "coverage_metrics": {"schema_version": "persistent-coverage/v1", "status": "ok", "as_of_min": self.sim_time/60,
                 "primary_window_min": window_min, "primary_coverage_pct": 100*recent/max(1, len(searchable)),
@@ -1037,6 +1073,8 @@ class MissionRuntime:
                 "cells": r["cells"], "assigned_uav_id": r["owner"], "revision": self.region_revision, "priority": "medium",
                 "completion_pct": 100*sum(self.scan_times[c][row] >= 0 for c, row in r["cells"])/max(1, len(r["cells"]))} for r in self.regions],
             "mission_metrics": {**self.metrics, "search_boats": sum(a["kind"] in ("search", "reacquire") for a in self.active.values()),
+                "single_tracking_seconds": max(0, self.sim_time-tracking_started) if tracking_started is not None and current_contact["state"] == "tracking" else current_contact.get("last_tracking_duration_s") if current_contact else None,
+                "current_lost_seconds": max(0, self.sim_time-lost_started) if lost_started is not None and current_contact["state"] == "lost" else None,
                 "search_regions": len(self.regions), "coverage_pct": coverage, "unscanned_cells": len(searchable)-count,
                 "recent_coverage_pct": 100*recent/max(1, len(searchable)), "coverage_window_min": window_min,
                 "revisit_timeliness_pct": 100*recent/count if count else None,
@@ -1049,4 +1087,5 @@ class MissionRuntime:
             "track_regions": [], "events": self.events[-_RUNTIME["recent_frame_events"]:], "messages": copy.deepcopy(self.messages[-_RUNTIME["recent_frame_messages"]:]), "intents": copy.deepcopy(self.intents), "intent_statuses": [],
             "scenario_vessels": [], "ships": [], "markers": [], "vessel_mutation_allowed": False,
             "adversary_status": {"status": self.adversary["status"] if time.monotonic()-self.adversary["last_heartbeat"] < _RUNTIME["enemy_heartbeat_timeout_s"] else "offline", "model": self.config.model, "cycle": self.adversary["cycle"]},
+            "target_maneuver_history": copy.deepcopy(self.adversary.get("maneuver_history", [])),
             "obstacles": [{"id": f"obstacle-{i}", "vertices": [self.cells([o["x"]+o["radius"]*math.cos(a*math.pi/8), o["y"]+o["radius"]*math.sin(a*math.pi/8)]) for a in range(16)]} for i, o in enumerate(self.obstacles)]}

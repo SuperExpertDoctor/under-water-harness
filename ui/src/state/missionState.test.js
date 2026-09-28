@@ -161,6 +161,43 @@ test("decision rows show mission time, exact public reason and participating boa
   assert.deepEqual(missionState.buildDecisionRows(events, [], "local-demo"), []);
 });
 
+test("timeline correlates plan to run, uses public reason and never duplicates approval", () => {
+  const events = [
+    { id: 1, episode_id: "e1", time: 1, type: "agent_queued", data: { run_id: "r1", source: "coverage_gap" } },
+    { id: 2, episode_id: "e1", time: 2, type: "tool_completed", data: { run_id: "r1", plan_id: "p1", tool: "submit_mission_plan" } },
+    { id: 3, episode_id: "e1", time: 3, type: "approval_requested", data: { plan_id: "p1" } },
+    { id: 4, episode_id: "e1", time: 4, type: "approval_decided", data: { plan_id: "p1" } },
+    { id: 5, episode_id: "e1", time: 5, type: "agent_decision_recorded", data: { run_id: "r2", decision_reason: "观察稳定" } },
+    { id: 6, episode_id: "e1", time: 4.5, type: "agent_queued", data: { run_id: "r2", source: "target_found" } },
+    { id: 7, episode_id: "e1", time: 1.9, type: "agent_plan_decided", data: { run_id: "r1", plan_id: "p1" } },
+  ];
+  const result = missionState.buildTimelineRows(events, [{ plan_id: "p1", kind: "track", members: ["UUV-1"], decision_reason: "需要协同跟踪" }], "e1");
+  assert.equal(result.unlinked, 0);
+  assert.equal(result.rows.length, 2);
+  assert.deepEqual(result.rows.map((row) => row.trigger), ["周期性主动触发", "事件被动触发"]);
+  assert.equal(result.rows[0].reason, "需要协同跟踪");
+  assert.equal(result.rows[0].timeSeconds, 114);
+  assert.deepEqual(result.rows[0].members, ["UUV-1"]);
+  assert.equal(result.rows[1].action, "维持现有计划");
+  assert.equal(result.rows[1].reason, "观察稳定");
+  assert.equal(result.rows[1].timeSeconds, 300);
+});
+
+test("agent table reflects recorded transitions rather than message fragments", () => {
+  const events = [
+    { id: 1, episode_id: "e1", time: 1, type: "agent_queued", data: { run_id: "r1" } },
+    { id: 2, episode_id: "e1", time: 2, type: "tool_started", data: { run_id: "r1", tool: "get_mission_state" } },
+    { id: 2.5, episode_id: "e1", time: 2.5, type: "tool_completed", data: { run_id: "r1", plan_id: "p1", tool: "submit_mission_plan" } },
+    { id: 3, episode_id: "e1", time: 3, type: "message_update", data: { run_id: "r1" } },
+    { id: 4, episode_id: "e1", time: 4, type: "approval_requested", data: { plan_id: "p1" } },
+    { id: 5, episode_id: "e1", time: 5, type: "approval_decided", data: { plan_id: "p1" } },
+    { id: 6, episode_id: "e1", time: 6, type: "agent_completed", data: { run_id: "r1" } },
+  ];
+  const rows = missionState.buildAgentRuntimeRows(events, "e1");
+  assert.deepEqual(rows.map((row) => row.status), ["排队中", "读取观测", "等待审批", "继续执行", "已完成"]);
+  assert.ok(rows.every((row) => row.runId === "r1"));
+});
+
 test("decision row time follows the latest recorded approval or dispatch change", () => {
   const events = [
     { id: 1, episode_id: "e1", time: 2, type: "approval_requested", data: { plan_id: "p1" } },

@@ -34,17 +34,6 @@ export function drawMissionOverlay(context, frame, candidate, layout) {
     });
   }
   context.setLineDash([]);
-  (frame.teams || []).forEach((team, index) => {
-    if (team.task === "search") return;
-    context.strokeStyle = colors[index % colors.length];
-    context.lineWidth = 2;
-    for (const uuv of frame.uavs || []) {
-      if (!team.members.includes(uuv.id)) continue;
-      context.beginPath();
-      context.arc(offsetX + (uuv.position[0] + .5) * cellSize, offsetY + (uuv.position[1] + .5) * cellSize, Math.max(8, cellSize * .6), 0, Math.PI * 2);
-      context.stroke();
-    }
-  });
   for (const contact of frame.contacts || []) {
     if (!contact.estimated_position || !Number.isFinite(contact.uncertainty_m)) continue;
     const scale = cellSize / (frame.task_area.cell_size_km * 1000);

@@ -18,7 +18,7 @@ export function annotationPayload(message, selection) {
 
 export function groupApprovalsByMessage(messages, plans, events) {
   const requested = new Set((events || []).filter((event) => event.type === "approval_requested").map((event) => event.data?.plan_id));
-  const runs = new Map((events || []).filter((event) => event.type === "tool_completed" && event.data?.plan_id && event.data?.run_id)
+  const runs = new Map((events || []).filter((event) => ["tool_completed", "agent_plan_decided"].includes(event.type) && event.data?.plan_id && event.data?.run_id)
     .map((event) => [event.data.plan_id, event.data.run_id]));
   const byMessage = new Map();
   const unlinked = [];
@@ -63,6 +63,54 @@ export function buildDecisionRows(events, plans, episodeId) {
   }).sort((a, b) => b.lastEventId - a.lastEventId || b.timeSeconds - a.timeSeconds);
 }
 
+export function buildTimelineRows(events, plans, episodeId) {
+  const relevant = (events || []).filter((event) => event.episode_id === episodeId && episodeId !== "local-demo");
+  const queued = new Map(relevant.filter((event) => event.type === "agent_queued" && event.data?.run_id).map((event) => [event.data.run_id, event]));
+  const byId = new Map((plans || []).filter((plan) => plan.plan_id).map((plan) => [plan.plan_id, plan]));
+  const rows = [];
+  let unlinked = 0;
+  const triggerOf = (runId) => {
+    const source = queued.get(runId)?.data?.source;
+    return source ? (source === "coverage_gap" ? "周期性主动触发" : "事件被动触发") : null;
+  };
+  for (const event of relevant) {
+    if ((event.type === "agent_plan_decided" || event.type === "tool_completed" && event.data?.tool === "submit_mission_plan"
+      && !relevant.some((item) => item.type === "agent_plan_decided" && item.data?.plan_id === event.data.plan_id)) && event.data?.plan_id) {
+      const plan = byId.get(event.data.plan_id);
+      const trigger = triggerOf(event.data.run_id);
+      if (!trigger) { unlinked++; continue; }
+      const kinds = { search: "区域搜索", reacquire: "重新搜索", track: "协同跟踪", path: "路径规划" };
+      rows.push({ id: event.data.plan_id, planId: event.data.plan_id, event, timeSeconds: Number(event.time) * 60,
+        trigger, reason: plan?.decision_reason?.trim() || event.data.decision_reason?.trim() || "公开决策原因缺失（历史记录）",
+        action: kinds[plan?.kind] || "任务计划", members: plan?.members || event.data.members || [] });
+    }
+    if (event.type === "agent_decision_recorded") {
+      const trigger = triggerOf(event.data?.run_id);
+      if (!trigger) { unlinked++; continue; }
+      rows.push({ id: event.id, event, timeSeconds: Number(event.time) * 60, trigger,
+        reason: event.data.decision_reason, action: "维持现有计划", members: [] });
+    }
+  }
+  return { rows: rows.sort((a, b) => a.timeSeconds-b.timeSeconds || a.event.id-b.event.id), unlinked };
+}
+
+export function buildAgentRuntimeRows(events, episodeId) {
+  const relevant = (events || []).filter((event) => event.episode_id === episodeId && episodeId !== "local-demo");
+  const byPlan = new Map(relevant.filter((event) => ["tool_completed", "agent_plan_decided"].includes(event.type) && event.data?.plan_id && event.data?.run_id)
+    .map((event) => [event.data.plan_id, event.data.run_id]));
+  const names = { agent_queued: "排队中", agent_started: "读取观测", agent_completed: "已完成", agent_failed: "失败", agent_cancelled: "已取消",
+    approval_requested: "等待审批", approval_decided: "继续执行", approval_expired: "继续执行" };
+  return relevant.flatMap((event) => {
+    const data = event.data || {};
+    const runId = data.run_id || byPlan.get(data.plan_id);
+    let status = names[event.type];
+    if (event.type === "tool_started" || event.type === "tool_execution_start") status = ["get_mission_state", "get_observations"].includes(data.tool || data.tool_name) ? "读取观测" : "规划/调用工具";
+    if (!runId || !status) return [];
+    return [{ id: event.id, runId, status, timeSeconds: Number(event.time) * 60, event,
+      detail: data.tool || data.tool_name || data.plan_id || data.error || data.source || "-" }];
+  });
+}
+
 export function interpolateUuv(previous, current, progress) {
   if (!previous || previous.generation !== current.generation) return current;
   return { ...current, position: current.position.map((value, index) => previous.position[index] + (value - previous.position[index]) * progress) };
@@ -96,7 +144,7 @@ export function buildDecisionTraces(events, plans, episodeId) {
   const relevant = events.filter((event) => event.episode_id === episodeId);
   const runByPlan = new Map();
   for (const event of relevant) {
-    if (event.data?.plan_id && event.data?.run_id && event.type === "tool_completed") {
+    if (event.data?.plan_id && event.data?.run_id && ["tool_completed", "agent_plan_decided"].includes(event.type)) {
       runByPlan.set(event.data.plan_id, event.data.run_id);
     }
   }

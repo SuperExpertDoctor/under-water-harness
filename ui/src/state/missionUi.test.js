@@ -11,10 +11,12 @@ test.after(() => server.close());
 test("console exposes timeline agent metrics and retained secondary views", async () => {
   const { default: Drawer } = await server.ssrLoadModule("/src/components/BottomDrawer.jsx");
   const html = renderToStaticMarkup(createElement(Drawer, { frame: {}, visible: true }));
-  for (const label of ["时间线", "Agent 运行", "任务指标", "区域", "参数", "AIS"]) assert.ok(html.includes(label), label);
+  for (const label of ["时间线", "Agent 运行", "任务指标", "区域", "目标状态"]) assert.ok(html.includes(label), label);
+  assert.ok(!html.includes('aria-label="参数"'));
+  assert.ok(!html.includes('aria-label="任务操作"'));
 });
 
-test("contact transition events read as mission actions in the timeline", async () => {
+test("contact transitions do not masquerade as completed decisions", async () => {
   const { default: Drawer } = await server.ssrLoadModule("/src/components/BottomDrawer.jsx");
   const events = [
     { id: 1, type: "provisional_contact_aborted", time: 1, data: { uuv_id: "UUV-1" } },
@@ -22,7 +24,7 @@ test("contact transition events read as mission actions in the timeline", async 
     { id: 3, type: "stale_contact_search_resumed", time: 3, data: { members: ["UUV-1", "UUV-2"] } },
   ];
   const html = renderToStaticMarkup(createElement(Drawer, { frame: {}, events, visible: true }));
-  for (const label of ["临时接触中止", "主动重新捕获", "失联归还搜索"]) assert.ok(html.includes(label), label);
+  for (const label of ["临时接触中止", "主动重新捕获", "失联归还搜索"]) assert.ok(!html.includes(label), label);
 });
 
 test("conversation renders safe Markdown without raw HTML or executable links", async () => {
@@ -83,7 +85,8 @@ test("top-row region labels leave clearance for the task-area header", async () 
   const { drawLabels } = await server.ssrLoadModule("/src/renderer/layers.js");
   const rectangles = [];
   const context = { save() {}, restore() {}, strokeRect() {}, measureText: () => ({ width: 30 }), fillText() {}, fillRect(...rect) { rectangles.push(rect); } };
-  drawLabels(context, { search_regions: [{ id: "r1", assigned_uav_id: "UUV-1", cells: [[0, 0]], bbox: [0, 0, 10, 20] }] },
+  const placed = drawLabels(context, { search_regions: [{ id: "r1", assigned_uav_id: "UUV-1", cells: [[0, 0]], bbox: [0, 0, 10, 20] }] },
     10, 0, 0, { x: 0, y: 0, width: 400, height: 400 }, null, null, null, []);
-  assert.ok(rectangles.at(-1)[1] >= 22);
+  assert.ok(placed.every((label) => label.hidden || label.y >= 22));
+  assert.ok(rectangles.every((rect) => rect[1] >= 22));
 });

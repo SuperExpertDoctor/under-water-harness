@@ -21,9 +21,9 @@ test("native adversary session has only two restrictive tools and no filesystem 
     assert.ok(observation && parameters);
     assert.equal(Value.Check(observation.parameters, {}), true);
     assert.equal(Value.Check(observation.parameters, { truth: true }), false);
-    const valid = { speed_mps: 2.5, turn_bias: 0, duration_s: 30 };
+    const valid = { speed_mps: 2.5, turn_bias: 0, duration_s: 30, reason: "Move away from detected sonar" };
     assert.equal(Value.Check(parameters.parameters, valid), true);
-    for (const invalid of [{ ...valid, target_position: [1, 2] }, { ...valid, speed_mps: 5 }, { ...valid, duration_s: 61 }, { ...valid, turn_bias: -2 }]) {
+    for (const invalid of [{ ...valid, target_position: [1, 2] }, { ...valid, speed_mps: 5 }, { ...valid, duration_s: 61 }, { ...valid, turn_bias: -2 }, { speed_mps: 2.5, turn_bias: 0, duration_s: 30 }]) {
       assert.equal(Value.Check(parameters.parameters, invalid), false);
     }
     for (let index = 0; index < 4; index++) await observation.execute(`call-${index}`, {});

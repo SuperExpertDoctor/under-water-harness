@@ -135,9 +135,10 @@ export function drawBackground(
   ctx.strokeRect(ox - 1, oy - 1, taskWidth + 2, taskHeight + 2);
   ctx.restore();
   ctx.save();
+  const areaLabelY = oy + Math.max(28, cellSize * 2.2);
   ctx.fillStyle = "rgba(255, 255, 255, .88)";
-  ctx.fillRect(ox + 5, oy + 5, Math.min(taskWidth - 10, Math.max(158, cellSize * 8.7)), Math.max(15, cellSize * 0.7));
-  text(ctx, `TASK AREA / ${areaLabel}`, ox + 9, oy + Math.max(16, cellSize * 0.62), "#0B3857", Math.max(7, cellSize * 0.27), 700);
+  ctx.fillRect(ox + 5, areaLabelY, Math.min(taskWidth - 10, Math.max(158, cellSize * 8.7)), Math.max(15, cellSize * 0.7));
+  text(ctx, `TASK AREA / ${areaLabel}`, ox + 9, areaLabelY + Math.max(11, cellSize * 0.38), "#0B3857", Math.max(7, cellSize * 0.27), 700);
   ctx.restore();
 
   ctx.save();
@@ -1338,7 +1339,9 @@ export function drawLabels(
     reserved.push({ x: center.x - 6, y: center.y - 6, width: 12, height: 12 });
   }
   // Background annotations predate the object label pass and must also reserve screen space.
-  reserved.push({ x: ox, y: oy, width: Math.max(0, bounds.x + bounds.width - ox), height: 24 });
+  reserved.push({ x: ox + 5, y: oy + Math.max(28, cellSize * 2.2),
+    width: Math.min(cellSize * (frame?.info_matrix?.length || 40) - 10, Math.max(158, cellSize * 8.7)),
+    height: Math.max(15, cellSize * 0.7) });
   for (const obstacle of frame?.obstacles || []) {
     const vertices = obstacle.vertices || [];
     if (!vertices.length) continue;
@@ -1460,6 +1463,7 @@ export function renderFrame(ctx, frame, options = {}) {
     offsetX,
     offsetY,
     showGrid,
+    mapMode = "situation",
     hoverInfo,
     selectedUavId,
     frameCount = 0,
@@ -1502,8 +1506,10 @@ export function renderFrame(ctx, frame, options = {}) {
     frame?.task_area,
   );
   if (frame) {
-    drawHeatmap(ctx, frame.info_matrix, frame.value_matrix, cellSize, offsetX, offsetY, gridCols, gridRows);
-    drawTargetInformation(ctx, frame.target_info_matrix, cellSize, offsetX, offsetY, gridCols, gridRows);
+    if (mapMode === "situation") {
+      drawHeatmap(ctx, frame.info_matrix, frame.value_matrix, cellSize, offsetX, offsetY, gridCols, gridRows);
+      drawTargetInformation(ctx, frame.target_info_matrix, cellSize, offsetX, offsetY, gridCols, gridRows);
+    }
     drawSearchRegions(ctx, frame.search_regions, cellSize, offsetX, offsetY, selectedUavId);
     drawGridLines(ctx, cellSize, offsetX, offsetY, showGrid, gridCols, gridRows);
     drawObstacles(ctx, frame.obstacles, cellSize, offsetX, offsetY, frameCount);
@@ -1512,9 +1518,9 @@ export function renderFrame(ctx, frame, options = {}) {
       ? frame.contacts : frame.ships;
     drawTrackRegions(ctx, frame.track_regions, contacts, cellSize, offsetX, offsetY);
     drawPassiveEvidence(ctx, frame.evidence, cellSize, offsetX, offsetY, frameCount);
-    drawUavTrails(ctx, frame.uavs, cellSize, offsetX, offsetY, selectedUavId, trailMode);
+    if (mapMode === "situation") drawUavTrails(ctx, frame.uavs, cellSize, offsetX, offsetY, selectedUavId, trailMode);
     drawPaths(ctx, frame.uavs, cellSize, offsetX, offsetY, selectedUavId, baseCenters);
-    drawUavScanRanges(ctx, frame.uavs, cellSize, offsetX, offsetY, baseCenters, selectedUavId);
+    if (mapMode === "situation") drawUavScanRanges(ctx, frame.uavs, cellSize, offsetX, offsetY, baseCenters, selectedUavId);
     drawMarkers(ctx, frame.markers, cellSize, offsetX, offsetY, frame.sim_time_min, frameCount);
     if (Array.isArray(frame.contacts) && frame.contacts.length) {
       drawContacts(ctx, frame.contacts, cellSize, offsetX, offsetY, selectedContactId, frameCount, assets);
@@ -1539,7 +1545,7 @@ export function renderFrame(ctx, frame, options = {}) {
       baseCenters,
       showScenario,
     );
-    drawTransparencyLegend(ctx, legendBounds);
+    if (mapMode === "situation") drawTransparencyLegend(ctx, legendBounds);
   }
   drawHoverTooltip(ctx, hoverInfo, cellSize, offsetX, offsetY, width, height);
 }

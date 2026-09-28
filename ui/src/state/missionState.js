@@ -44,6 +44,58 @@ export function coalesceMissionEvents(events) {
   return result;
 }
 
+export function buildDecisionTraces(events, plans, episodeId) {
+  if (!episodeId || episodeId === "local-demo") return [];
+  const relevant = events.filter((event) => event.episode_id === episodeId);
+  const runByPlan = new Map();
+  for (const event of relevant) {
+    if (event.data?.plan_id && event.data?.run_id && event.type === "tool_completed") {
+      runByPlan.set(event.data.plan_id, event.data.run_id);
+    }
+  }
+  const byId = new Map((plans || []).filter((plan) => plan.plan_id).map((plan) => [plan.plan_id, plan]));
+  for (const event of relevant) {
+    if (event.data?.plan_id && !byId.has(event.data.plan_id)) byId.set(event.data.plan_id, { plan_id: event.data.plan_id });
+  }
+  return [...byId.values()].map((plan) => {
+    const related = relevant.filter((event) => event.data?.plan_id === plan.plan_id);
+    const last = (type) => [...related].reverse().find((event) => type.includes(event.type)) || null;
+    const runId = runByPlan.get(plan.plan_id) || null;
+    const trigger = runId ? relevant.find((event) => event.type === "agent_queued" && event.data?.run_id === runId) || null : null;
+    const sourceLabels = { target_found: "目标发现", target_lost: "目标失联", energy_exit: "能源轮换", human: "人工指令", feedback: "用户反馈" };
+    const step = (event, label) => ({ event, label: event ? label : "未记录/无法关联" });
+    const approval = last(["approval_decided", "approval_expired"]) || last(["approval_requested"]);
+    const execution = last(["mission_assignment_committed", "task_completed", "search_complete", "task_failed"]);
+    const planEvent = last(["tool_completed"]) || relevant.find((event) => event.type === "tool_result" && event.data?.result_id === plan.result_id) || null;
+    const contactId = plan.contact_id || related.find((event) => event.data?.contact_id)?.data.contact_id || null;
+    return {
+      planId: plan.plan_id, runId, contactId,
+      members: plan.members || related.find((event) => Array.isArray(event.data?.members))?.data.members || [],
+      status: plan.status || "unknown",
+      steps: {
+        trigger: step(trigger, `${sourceLabels[trigger?.data?.source] || trigger?.data?.source || "任务"}触发运行`),
+        plan: step(planEvent, "候选方案已生成"),
+        approval: step(approval, approval?.type === "approval_requested" ? "等待审批" : approval?.type === "approval_expired" ? "审批已过期" : approval?.data?.status === "approved" ? "已批准" : "未批准"),
+        execution: step(execution, execution?.type === "mission_assignment_committed" ? "任务已提交" : "执行结果已记录"),
+      },
+      lastEventId: related.at(-1)?.id ?? -1,
+    };
+  }).sort((a, b) => b.lastEventId - a.lastEventId);
+}
+
+export function coverageDescriptions(frame) {
+  const cells = frame?.searchable_cells;
+  const area = frame?.coverage_metrics?.fixed_searchable_area_km2;
+  const denominator = `${Number.isFinite(cells) ? `${cells} 个可搜索栅格` : "可搜索栅格"}${Number.isFinite(area) ? `，${area} km²` : ""}`;
+  const window = frame?.mission_metrics?.coverage_window_min || frame?.coverage_metrics?.primary_window_min || 30;
+  return {
+    coverage_pct: `历史累计至少扫描一次的栅格占比；分母：${denominator}。`,
+    recent_coverage_pct: `最近 ${window} 分钟内被扫描的栅格占比；分母：${denominator}。`,
+    effective_coverage_pct: `有效观测覆盖率；分母：${denominator}。`,
+    revisit_timeliness_pct: `最近 ${window} 分钟重新扫描的已扫描栅格占比；分母为历史已扫描栅格。`,
+  };
+}
+
 export function mergeTelemetryFrame(previous, incoming) {
   if (previous?.episode_id !== incoming.episode_id) return incoming;
   if (incoming.frame_id < previous.frame_id) return previous;

@@ -38,7 +38,7 @@ export function MapSummary({ frame, selectedUavId, onSelectUav }) {
     <div className="map-situation">
       <strong><Radar size={16} />任务海域 <span>{frame?.task_area?.width_km || 4} × {frame?.task_area?.height_km || 4} km</span></strong>
       <div className="map-counters"><span>搜索 <b>{regions.length}</b></span><span><Route size={13} />跟踪转场 <b>{transit}</b></span><span><Crosshair size={13} />有效跟踪 <b>{tracking}</b></span><span><LogOut size={13} />驶离 <b>{exiting}</b></span></div>
-      <span className="map-coverage">覆盖 <b>{Number(frame?.coverage_pct || 0).toFixed(1)}%</b></span>
+      <span className="map-coverage">累计覆盖 <b>{Number(frame?.coverage_pct || 0).toFixed(1)}%</b></span>
     </div>
     <div className="map-responsibilities" aria-label="搜索区域责任艇">
       {regions.map((region) => <button key={region.id} type="button" className={selectedUavId === region.assigned_uav_id ? "owner-key active" : "owner-key"}
@@ -83,6 +83,8 @@ function frameGridResolution(frame) {
 const CanvasMap = forwardRef(function CanvasMap({
   frame,
   candidate,
+  mapMode = "situation",
+  selectedPlanId,
   selectedUavId,
   onSelectUav,
   showGrid = false,
@@ -229,6 +231,7 @@ const CanvasMap = forwardRef(function CanvasMap({
         gridCols,
         gridRows,
         showGrid,
+        mapMode,
         showScenario,
         trailMode,
         selectedContactId,
@@ -238,7 +241,7 @@ const CanvasMap = forwardRef(function CanvasMap({
         frameCount: phase,
         assets: mapAssets,
       });
-      drawMissionOverlay(context, displayFrame, candidate, layoutRef.current);
+      drawMissionOverlay(context, displayFrame, mapMode === "planning" ? candidate : null, layoutRef.current);
       context.restore();
       phase += 1;
       const elapsed = performance.now() - frameReceivedRef.current;
@@ -251,7 +254,7 @@ const CanvasMap = forwardRef(function CanvasMap({
     return () => {
       if (animationFrame) window.cancelAnimationFrame(animationFrame);
     };
-  }, [candidate, frame, hoverVersion, mapAssets, selectedContactId, selectedScenarioVesselId, selectedUavId, showGrid, showScenario, sizeVersion, trailMode]);
+  }, [candidate, frame, hoverVersion, mapAssets, mapMode, selectedContactId, selectedScenarioVesselId, selectedUavId, showGrid, showScenario, sizeVersion, trailMode]);
 
   useImperativeHandle(ref, () => ({
     async recordReplay(frames, { fps = 20, onProgress } = {}) {
@@ -513,7 +516,7 @@ const CanvasMap = forwardRef(function CanvasMap({
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         style={{ cursor: placementMode || selectionMode ? "crosshair" : hovered ? "crosshair" : "default", touchAction: "none" }}
-        aria-label="Operational map"
+        aria-label="任务海域地图"
       />
       {selectionBox && (
         <div
@@ -529,11 +532,11 @@ const CanvasMap = forwardRef(function CanvasMap({
           <span>Live telemetry or replay frames will appear here.</span>
         </div>
       )}
-      {candidate && candidate.episode_id === frame?.episode_id && <div className="map-candidate-label">候选预览 · {candidate.kind || candidate.algorithm} · {candidate.members?.join(", ")}</div>}
+      {mapMode === "planning" && selectedPlanId && <div className="map-candidate-label">选中计划 · {selectedPlanId}{candidate?.episode_id === frame?.episode_id && candidate?.routes ? " · 虚线为候选航线" : " · 当前无候选航线记录"}</div>}
       <div className="map-scale" aria-hidden="true"><i style={{ width: layoutRef.current.cellSize * 5 }} />{Number(frame?.task_area?.cell_size_km || 0) * 5} KM</div>
       </div>
       <div className="map-information-bar">
-        <InformationLegend />
+        {mapMode === "situation" ? <InformationLegend /> : <span className="planning-legend">实线：执行航线 · 虚线：候选航线 · 标记：艇及接触</span>}
         <output id="map-cell-information" aria-label="栅格信息" className="cell-information">
           <span>栅格 <b>{cellInfo ? `${cellInfo.col} / ${cellInfo.row}` : "--"}</b></span>
           <span>扫描 <b>{cellInfo ? `${(cellInfo.I * 100).toFixed(1)}%` : "--"}</b></span>

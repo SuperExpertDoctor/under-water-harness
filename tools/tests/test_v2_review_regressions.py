@@ -20,14 +20,15 @@ def runtime(tmp_path):
     runtime.close()
 
 
-def test_reserved_replacement_entry_is_not_selected_twice(runtime):
+def test_nearby_exits_cannot_reassign_another_boundary_entry(runtime):
+    for boat, y in zip(runtime.uuvs[:2], (2100, 2160)):
+        boat["pose"] = [.5, y, math.pi]
     next_poses = {boat["id"]: boat["pose"] for boat in runtime.uuvs}
-    next_poses.update({"UUV-1": [-.5, 2100, math.pi], "UUV-2": [-.5, 2160, math.pi]})
+    next_poses.update({"UUV-1": [-.5, 2100, math.pi], "UUV-2": [400, 2160, math.pi]})
     first = replacement_pose(runtime, runtime.uuvs[0], next_poses)
-    assert first is not None
-    second = replacement_pose(runtime, runtime.uuvs[1], {**next_poses, "UUV-1": first})
-    assert second is not None
-    assert math.dist(first[:2], second[:2]) >= 150
+    assert first == [0, 2100, 0]
+    second = replacement_pose(runtime, runtime.uuvs[1], {**next_poses, "UUV-1": first, "UUV-2": [-.5, 2160, math.pi]})
+    assert second is None
 
 
 def test_simultaneous_boundary_crossings_commit_separate_entries(runtime):
@@ -36,7 +37,7 @@ def test_simultaneous_boundary_crossings_commit_separate_entries(runtime):
     runtime.standing_policy = {"enabled": True, "energy_rotation": True,
         "local_repair": True, "lost_reacquire": True, "plan_id": "standing-exit"}
     runtime.scan_times = [[0.0]*40 for _ in range(40)]
-    for boat, y in zip(runtime.uuvs[:2], (2100, 2160)):
+    for boat, y in zip(runtime.uuvs[:2], (2100, 2500)):
         boat["pose"] = [.1, y, math.pi]
         runtime.active[boat["id"]] = {"plan_id": "standing-exit", "kind": "exit",
             "phase": "exiting", "generation": 1, "index": 0, "slot": 0,
@@ -53,6 +54,8 @@ def test_simultaneous_boundary_crossings_commit_separate_entries(runtime):
         for other in runtime.uuvs[index+1:]:
             assert math.dist(boat["pose"][:2], other["pose"][:2]) >= runtime.config.separation
     assert math.dist(runtime.uuvs[0]["pose"][:2], runtime.uuvs[1]["pose"][:2]) >= 150
+    for boat, expected in zip(runtime.uuvs[:2], ([0, 2100], [0, 2500])):
+        assert boat["pose"][:2] == pytest.approx(expected)
 
 
 @pytest.fixture

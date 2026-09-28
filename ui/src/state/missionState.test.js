@@ -53,6 +53,57 @@ test("high frequency tool progress is grouped without merging approval decisions
   assert.equal(events[0].repeat_count, undefined);
 });
 
+test("decision traces use explicit run and plan links without guessing a trigger", () => {
+  const events = [
+    { id: 1, episode_id: "e1", type: "target_found", data: { contact_id: "c1" } },
+    { id: 2, episode_id: "e1", type: "agent_queued", data: { run_id: "r1", source: "target_found" } },
+    { id: 3, episode_id: "e1", type: "tool_completed", data: { run_id: "r1", plan_id: "p1" } },
+    { id: 4, episode_id: "e1", type: "approval_requested", data: { plan_id: "p1", members: ["UUV-1"] } },
+    { id: 5, episode_id: "e1", type: "approval_decided", data: { plan_id: "p1", status: "approved" } },
+    { id: 6, episode_id: "e1", type: "mission_assignment_committed", data: { plan_id: "p1", members: ["UUV-1"] } },
+    { id: 7, episode_id: "e2", type: "approval_decided", data: { plan_id: "p1", status: "rejected" } },
+  ];
+  const [trace] = missionState.buildDecisionTraces(events, [{ plan_id: "p1", members: ["UUV-1"], status: "active" }], "e1");
+  assert.equal(trace.runId, "r1");
+  assert.equal(trace.steps.trigger.event.id, 2);
+  assert.equal(trace.steps.trigger.label, "目标发现触发运行");
+  assert.equal(trace.steps.plan.event.id, 3);
+  assert.equal(trace.steps.approval.event.id, 5);
+  assert.equal(trace.steps.execution.event.id, 6);
+  assert.equal(trace.contactId, null);
+  assert.deepEqual(trace.members, ["UUV-1"]);
+});
+
+test("decision traces expose missing evidence and historical truncation", () => {
+  const [trace] = missionState.buildDecisionTraces([
+    { id: 8, episode_id: "e1", type: "approval_requested", data: { plan_id: "p2" } },
+  ], [{ plan_id: "p2", status: "pending_approval" }], "e1");
+  assert.equal(trace.steps.trigger.event, null);
+  assert.equal(trace.steps.trigger.label, "未记录/无法关联");
+  assert.equal(trace.steps.plan.event, null);
+  assert.equal(trace.steps.approval.event.id, 8);
+  assert.equal(trace.steps.execution.event, null);
+  assert.deepEqual(missionState.buildDecisionTraces([], [], "e1"), []);
+});
+
+test("manual planning links the recorded candidate by result id", () => {
+  const [trace] = missionState.buildDecisionTraces([
+    { id: 1, episode_id: "e1", type: "tool_result", data: { result_id: "result-1", status: "succeeded" } },
+    { id: 2, episode_id: "e1", type: "approval_requested", data: { plan_id: "p1" } },
+  ], [{ plan_id: "p1", result_id: "result-1", status: "pending_approval" }], "e1");
+  assert.equal(trace.steps.plan.event.id, 1);
+  assert.equal(trace.steps.trigger.event, null);
+});
+
+test("coverage descriptions distinguish historical coverage and window freshness", () => {
+  const frame = { searchable_cells: 100, mission_metrics: { coverage_pct: 100, recent_coverage_pct: 32, coverage_window_min: 30 }, coverage_metrics: { fixed_searchable_area_km2: 1 } };
+  const descriptions = missionState.coverageDescriptions(frame);
+  assert.match(descriptions.coverage_pct, /历史/);
+  assert.match(descriptions.recent_coverage_pct, /30 分钟/);
+  assert.match(descriptions.recent_coverage_pct, /100/);
+  assert.match(descriptions.recent_coverage_pct, /1 km²/);
+});
+
 test("reconnect deduplicates events and ignores older cursors", () => {
   const current = { episode_id: "a", cursor: 4, messages: [{ id: "m" }], events: [{ id: 4 }] };
   const next = mergeMissionState(current, { episode_id: "a", cursor: 5, events: [{ id: 4 }, { id: 5 }] });

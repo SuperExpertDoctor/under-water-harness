@@ -28,7 +28,7 @@ test("mobile region and entity labels share nonoverlapping space outside the tas
   drawSearchRegions(ctx, frame.search_regions, 5, 170, 20);
   const placed = drawLabels(ctx, frame, 5, 170, 20, { x: 0, y: 0, width: 370, height: 220 }, null, "CONTACT-1", null, []);
   assert.ok(placed.some((label) => label.id === "contact:CONTACT-1" && !label.hidden));
-  const header = { x: 175, y: 25, width: 158, height: 15 };
+  const header = { x: 175, y: 48, width: 158, height: 15 };
   for (const [index, label] of ctx.drawn.entries()) {
     assert.ok(!overlaps(label, header), `${label.value} obscures task-area header`);
     for (const other of ctx.drawn.slice(index + 1)) {

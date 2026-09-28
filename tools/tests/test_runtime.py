@@ -4,6 +4,10 @@ import math
 import pytest
 
 from uuv_game.runtime import MissionRuntime, MissionError
+from uuv_game.lifecycle import exit_route, replacement_pose, prepare_exits
+from uuv_game.algorithms.control import TIMES
+from uuv_game.algorithms.motion import integrate
+from uuv_game.algorithms.planning import path_safe
 
 
 @pytest.fixture
@@ -20,6 +24,75 @@ def test_initial_observations_do_not_reveal_truth(runtime):
     assert "targets" not in state
     assert "scenario_vessels" not in state
     assert len(runtime.frame()["uavs"]) == 8
+
+
+def test_all_initial_boats_start_at_random_boundary_points(runtime, tmp_path):
+    width, height = runtime.config.width, runtime.config.height
+    for boat in runtime.uuvs:
+        x, y, heading = boat["pose"]
+        assert min(x, y, width - x, height - y) == pytest.approx(0)
+        assert heading == pytest.approx(0 if x == 0 else math.pi if x == width else math.pi / 2 if y == 0 else -math.pi / 2)
+    assert len({tuple(boat["pose"][:2]) for boat in runtime.uuvs}) == 8
+    other = MissionRuntime(tmp_path / "seeded.sqlite")
+    try:
+        assert [boat["pose"] for boat in runtime.uuvs] == [boat["pose"] for boat in other.uuvs]
+    finally:
+        other.close()
+
+
+def test_turnover_exits_to_nearest_boundary_and_reenters_at_that_point(runtime, monkeypatch):
+    boat = runtime.uuvs[0]
+    boat["pose"] = [800, 1000, math.pi]
+    runtime.obstacles = []
+    route = exit_route(runtime, boat)
+    assert route is not None
+    assert route["points"][-1][:2] == pytest.approx([-30, 1000])
+    runtime.standing_policy["energy_rotation"] = True
+    runtime.standing_policy["plan_id"] = "authorized-rotation"
+    runtime.active[boat["id"]] = {"kind": "search", "generation": 1}
+    monkeypatch.setattr("uuv_game.lifecycle.repair_search", lambda *_args, **_kwargs: True)
+    boat["remaining_range_m"] = 1201
+    assert prepare_exits(runtime)
+    assert runtime.active[boat["id"]]["kind"] == "search"
+    boat["remaining_range_m"] = 1200
+    assert prepare_exits(runtime)
+    assert runtime.active[boat["id"]]["exit_point"] == [0, 1000]
+    positions = {other["id"]: [1800 + index * 200, 2000, 0] for index, other in enumerate(runtime.uuvs)}
+    positions[boat["id"]] = route["points"][-1]
+    replacement = replacement_pose(runtime, boat, positions)
+    assert replacement is not None
+    assert replacement == pytest.approx([0, 1000, 0])
+
+
+def test_exit_crossing_replaces_boat_on_same_boundary_in_one_tick(runtime, monkeypatch):
+    boat = runtime.uuvs[0]
+    boat["pose"] = [1, 2000, math.pi]
+    boat["remaining_range_m"] = 1000
+    runtime.standing_policy.update(energy_rotation=True, local_repair=True, plan_id="authorized-rotation")
+    runtime.active[boat["id"]] = {"kind": "exit", "phase": "exiting", "plan_id": "authorized-rotation",
+        "generation": 1, "exit_point": [0, 2000], "points": [[1, 2000, math.pi], [-30, 2000, math.pi]],
+        "index": 0, "execution_domain": [-100, -100, 4100, 4100]}
+    monkeypatch.setattr("uuv_game.lifecycle.repair_search", lambda *_args, **_kwargs: True)
+    points = [integrate(boat["pose"], 4, 0, t) for t in TIMES]
+    assert path_safe(points, runtime.obstacles, [-100, -100, 4100, 4100], margin=10), points
+    runtime.start()
+    runtime.tick()
+    assert boat["generation"] == 1
+    runtime.tick()
+    assert runtime.status == "running", [event["type"] for event in runtime.events[-5:]]
+    assert boat["generation"] == 2
+    assert boat["pose"] == [0, 2000, 0]
+    assert runtime.metrics["rotation_count"] == 1
+    assert [event["data"]["entry_point"] for event in runtime.events if event["type"] == "uuv_replenished"] == [[0, 2000]]
+
+
+def test_replacement_uses_actual_crossing_not_original_exit_projection(runtime):
+    boat = runtime.uuvs[0]
+    boat["pose"] = [2, 1995, math.pi]
+    runtime.active[boat["id"]] = {"kind": "exit", "exit_point": [0, 1995]}
+    next_poses = {other["id"]: other["pose"] for other in runtime.uuvs}
+    next_poses[boat["id"]] = [-2, 2005, math.pi]
+    assert replacement_pose(runtime, boat, next_poses) == [0, 2000, 0]
 
 
 def test_simulation_advances_without_model_or_approval(runtime):

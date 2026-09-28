@@ -5,7 +5,7 @@ import math
 
 from .algorithms.tracking import tracking_plan
 from .config import algorithm_settings
-from .lifecycle import exit_route
+from .lifecycle import exit_route, nearest_boundary
 from .mission_planning import search_bundle
 
 _HANDOVER = algorithm_settings("handover")
@@ -136,12 +136,15 @@ def finish_handover(runtime):
             if action["relief_streak_s"] < _HANDOVER["acquisition_streak_s"]:
                 continue
             departing = boats[departing_id]
+            boundary = nearest_boundary(departing["pose"], runtime.config.width, runtime.config.height)
+            if departing["remaining_range_m"] > 1.5*math.dist(departing["pose"][:2], boundary[:2]):
+                continue
             route = exit_route(runtime, departing)
             if route is None:
                 continue
             with runtime.transaction():
                 runtime.active[departing_id] = {"plan_id": runtime.standing_policy["plan_id"], "kind": "exit", "phase": "exiting",
-                    "points": route["points"], "index": 0, "slot": 0, "execution_domain": [
+                    "exit_point": boundary[:2], "points": route["points"], "index": 0, "slot": 0, "execution_domain": [
                         -_LIFECYCLE["exit_bounds_padding_m"], -_LIFECYCLE["exit_bounds_padding_m"],
                         runtime.config.width+_LIFECYCLE["exit_bounds_padding_m"],
                         runtime.config.height+_LIFECYCLE["exit_bounds_padding_m"]], "generation": departing["generation"]}
@@ -156,6 +159,6 @@ def finish_handover(runtime):
                     "geometry_quality": geometry, "sustained_seconds": action["relief_streak_s"],
                     "authorization_plan_id": runtime.standing_policy["plan_id"]})
                 runtime.event("energy_exit_started", {"uuv_id": departing_id, "generation": departing["generation"],
-                    "remaining_range_m": departing["remaining_range_m"], "reason": "tracking_handover"})
+                    "remaining_range_m": departing["remaining_range_m"], "exit_point": boundary[:2], "reason": "tracking_handover"})
             return True
     return False

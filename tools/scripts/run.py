@@ -9,6 +9,7 @@ import socket
 import subprocess
 import sys
 import time
+from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[2]
 RUNTIME = ROOT / "tools/.runtime"
@@ -40,6 +41,34 @@ def worker_environments(env):
             {key: value for key, value in env.items() if key != "UUV_WORKER_TOKEN"})
 
 
+def validate_service_payload(health, state):
+    if not isinstance(health, dict) or health.get("status") != "ok" or health.get("service") != "uuv-runtime":
+        raise ValueError("health response is not the UUV API")
+    episode = state.get("episode_id") if isinstance(state, dict) else None
+    if not isinstance(episode, str) or not episode or episode == "local-demo":
+        raise ValueError("episode missing or local demo frame returned")
+    return episode
+
+
+def probe_frontend(ui_url):
+    def read(path):
+        with urlopen(f"{ui_url}{path}", timeout=2) as response:
+            if "json" not in response.headers.get("content-type", ""):
+                raise ValueError(f"{path} did not return JSON")
+            return json.load(response)
+    return validate_service_payload(read("/api/health"), read("/api/state"))
+
+
+def service_status(prior, alive):
+    if not alive:
+        return {**prior, "status": "not_running"}
+    try:
+        episode = probe_frontend(prior["ui_url"])
+        return {**prior, "status": "running", "episode_id": episode, "error": None}
+    except (KeyError, OSError, ValueError, TimeoutError, json.JSONDecodeError) as failure:
+        return {**prior, "status": "degraded", "error": f"frontend {prior.get('ui_url')}/api/health or /api/state -> backend {prior.get('backend_url')}: {failure}"}
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--foreground", action="store_true")
@@ -62,7 +91,7 @@ def main():
             print(json.dumps({"status": "not_running"}))
         return
     if args.status or (alive and not args.foreground):
-        print(json.dumps({**prior, "status": "running" if alive else "not_running"}))
+        print(json.dumps(service_status(prior, alive)))
         return
     if not args.foreground:
         command = [sys.executable, str(Path(__file__).resolve()), "--foreground", "--port", str(args.port), "--ui-port", str(args.ui_port)]
@@ -123,10 +152,24 @@ def main():
         log = (RUNTIME/f"{name}.log").open("a")
         logs.append(log)
         children.append(subprocess.Popen(command, cwd=cwd, env=child_env, stdout=log, stderr=log))
-    services = {"supervisor_pid": os.getpid(), "backend_url": env["UUV_API_URL"], "ui_url": f"http://127.0.0.1:{ui_port}", "pids": {spec[0]: child.pid for spec, child in zip(commands, children)}}
+    services = {"supervisor_pid": os.getpid(), "backend_url": env["UUV_API_URL"], "ui_url": f"http://127.0.0.1:{ui_port}", "status": "starting", "pids": {spec[0]: child.pid for spec, child in zip(commands, children)}}
     (RUNTIME/"services.json").write_text(json.dumps(services, indent=2))
-    print(json.dumps(services), flush=True)
     try:
+        deadline = time.monotonic() + 30
+        while not stopping:
+            try:
+                services["episode_id"] = probe_frontend(services["ui_url"])
+                services["status"] = "running"
+                (RUNTIME/"services.json").write_text(json.dumps(services, indent=2))
+                print(json.dumps(services), flush=True)
+                break
+            except (OSError, ValueError, TimeoutError, json.JSONDecodeError) as failure:
+                if time.monotonic() >= deadline or any(child.poll() is not None for child in children[:2]):
+                    services.update(status="failed", error=f"frontend {services['ui_url']}/api/health or /api/state -> backend {services['backend_url']}: {failure}")
+                    (RUNTIME/"services.json").write_text(json.dumps(services, indent=2))
+                    print(json.dumps(services), flush=True)
+                    return
+                time.sleep(.5)
         while not stopping:
             for index, child in enumerate(children):
                 if child.poll() is not None:

@@ -90,11 +90,12 @@ def test_low_energy_fault_exits_and_replaces_without_losing_ownership(tmp_path):
         candidate = runtime.calculate("plan_search", {"standing_policy": True})
         assert candidate["status"] == "succeeded", candidate
         runtime.submit(candidate["result_id"], "energy-fault-start", runtime.episode)
+        runtime.targets = []
         runtime.start()
         # Deliberate energy fault, not natural-endurance acceptance evidence.
-        runtime.uuvs[0]["remaining_range_m"] = 2000
+        runtime.uuvs[0]["remaining_range_m"] = 3000
         saw_exit = False
-        for _ in range(2000):
+        for _ in range(4000):
             before = {u["id"]: {"generation": u["generation"], "pose": u["pose"][:], "remaining_range_m": u["remaining_range_m"]} for u in runtime.uuvs}
             runtime.tick()
             assert runtime.status == "running", json.dumps(runtime.events[-5:])
@@ -106,5 +107,9 @@ def test_low_energy_fault_exits_and_replaces_without_losing_ownership(tmp_path):
         assert runtime.uuvs[0]["generation"] == 2
         assert runtime.metrics["rotation_count"] == 1
         assert len(runtime.uuvs) == len(runtime.regions) == 8
+        entry = next(event["data"] for event in runtime.events if event["type"] == "uuv_replenished")
+        assert entry["exit_point"] == entry["entry_point"] == runtime.uuvs[0]["pose"][:2]
+        x, y = entry["entry_point"]
+        assert min(x, y, runtime.config.width-x, runtime.config.height-y) == pytest.approx(0)
     finally:
         runtime.close()

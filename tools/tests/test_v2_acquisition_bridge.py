@@ -176,6 +176,8 @@ def test_arrived_support_gets_bounded_active_acquisition_window(tmp_path):
 def test_first_observer_holds_contact_only_with_startup_grant(tmp_path, grant):
     runtime = MissionRuntime(tmp_path/"discovery.sqlite")
     try:
+        for index, boat in enumerate(runtime.uuvs):
+            boat["pose"] = [400 if index < 4 else 3000, 400 + (index % 4) * 1000, 0]
         runtime.set_mode("request")
         initial = runtime.calculate("plan_search", {"standing_policy": True})
         pending = runtime.submit(initial["result_id"], "initial", runtime.episode)
@@ -208,7 +210,7 @@ def test_first_observer_holds_contact_only_with_startup_grant(tmp_path, grant):
             assert not sensor_roles(runtime.active["UUV-1"])["side_scan"]
             assert all(runtime.scan_times[col][row] == before[col][row] for col, row in first_footprint), "Holding contact is not area scanning"
             proposal = runtime.calculate("plan_tracking", {"contact_id": contact["contact_id"]})
-            assert proposal["status"] == "succeeded", proposal
+            assert proposal["status"] == "succeeded", proposal["diagnostics"]
             assert "UUV-1" in proposal["members"], "The safe discoverer should be preferred for the permanent pair"
             approval = runtime.submit(proposal["result_id"], "team", runtime.episode)
             assert approval["status"] == "pending_approval"
@@ -223,6 +225,8 @@ def test_first_observer_holds_contact_only_with_startup_grant(tmp_path, grant):
 def test_provisional_contact_lease_expires_into_authorized_gap_repair(tmp_path):
     runtime = MissionRuntime(tmp_path/"hold-expiry.sqlite")
     try:
+        for index, boat in enumerate(runtime.uuvs):
+            boat["pose"] = [400 if index < 4 else 3000, 400 + (index % 4) * 1000, 0]
         runtime.submit(runtime.calculate("plan_search", {"standing_policy": True})["result_id"], "start", runtime.episode)
         runtime.start()
         runtime.targets[0]["pose"] = [600, 400, 0]
@@ -247,6 +251,8 @@ def test_provisional_contact_lease_expires_into_authorized_gap_repair(tmp_path):
 def test_infeasible_provisional_control_restores_authorized_search(tmp_path, monkeypatch):
     runtime = MissionRuntime(tmp_path/"hold-unsafe.sqlite")
     try:
+        for index, boat in enumerate(runtime.uuvs):
+            boat["pose"] = [400 if index < 4 else 3000, 400 + (index % 4) * 1000, 0]
         runtime.submit(runtime.calculate("plan_search", {"standing_policy": True})["result_id"], "start", runtime.episode)
         runtime.start()
         runtime.targets[0]["pose"] = [600, 400, 0]

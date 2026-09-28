@@ -23,10 +23,12 @@ def test_own_telemetry_contains_energy_generation_and_sensor_mode(runtime):
 
 
 def test_observation_queries_and_duplicate_cycles_do_not_resample(runtime):
+    runtime.uuvs[0]["pose"] = [400, 400, 0]
     runtime.targets[0]["pose"] = [600, 400, 0]
     runtime.active["UUV-1"] = {"kind": "search"}
     runtime._observe()
     before = copy.deepcopy(runtime.observations)
+    assert before
     runtime._observe()
     runtime.mission_state()
     assert runtime.observations == before
@@ -34,6 +36,7 @@ def test_observation_queries_and_duplicate_cycles_do_not_resample(runtime):
 
 
 def test_passive_only_does_not_update_active_coverage(runtime):
+    runtime.uuvs[0]["pose"] = [400, 400, 0]
     runtime.targets[0]["pose"] = [600, 400, 0]
     runtime.active["UUV-1"] = {"kind": "search"}
     runtime._observe()

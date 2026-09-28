@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Activity, ArrowDown, BarChart3, Bot, Clipboard, GripHorizontal, Map, Satellite, SlidersHorizontal, X } from "lucide-react";
-import { coalesceMissionEvents, filterMissionEvents } from "../state/missionState";
+import AgentPanel from "./AgentPanel";
+import { buildDecisionTraces, coalesceMissionEvents, coverageDescriptions, filterMissionEvents } from "../state/missionState";
 
 const TABS = [
+  { label: "决策过程", icon: Activity },
   { label: "时间线", icon: Activity },
   { label: "Agent 运行", icon: Bot },
   { label: "任务指标", icon: BarChart3 },
   { label: "区域", icon: Map },
+  { label: "任务操作", icon: Clipboard },
   { label: "参数", icon: SlidersHorizontal },
   { label: "AIS", icon: Satellite },
 ];
@@ -73,15 +76,16 @@ const EVENT_NAMES = {
   allocation_blocked: "分区不可行",
 };
 
-export default function BottomDrawer({ frame, events = [], llmCycle, visible, onToggle, mission, onSelectEvent }) {
+export default function BottomDrawer({ frame, events = [], llmCycle, visible, onToggle, mission, onSelectEvent, onSelectDecision, readOnly, selection }) {
   const [activeTab, setActiveTab] = useState(0);
+  const [focusedEventId, setFocusedEventId] = useState(null);
   const [height, setHeight] = useState(220);
   const [config, setConfig] = useState(null);
   const [configError, setConfigError] = useState("");
   const drag = useRef(null);
 
   useEffect(() => {
-  if (activeTab !== 4 || config || configError) return;
+  if (activeTab !== 6 || config || configError) return;
     fetch("/api/config")
       .then((response) => {
         if (!response.ok) throw new Error();
@@ -111,31 +115,55 @@ export default function BottomDrawer({ frame, events = [], llmCycle, visible, on
       <button className="drawer-grip" onPointerDown={(event) => { drag.current = { y: event.clientY, height }; }} onKeyDown={(event) => { if (["ArrowUp", "ArrowDown"].includes(event.key)) { event.preventDefault(); setHeight((current) => Math.max(180, Math.min(window.innerHeight * .58, current + (event.key === "ArrowUp" ? 24 : -24)))); } }} aria-label="调整面板高度" title="拖动调整高度"><GripHorizontal size={20} /></button>
       <div className="drawer-tabs" role="tablist">
         {TABS.map(({ label, icon: Icon }, index) => (
-          <button key={label} role="tab" aria-selected={index === activeTab} className={index === activeTab ? "active" : ""} onClick={() => setActiveTab(index)}>
+          <button key={label} role="tab" aria-label={label} title={label} aria-selected={index === activeTab} className={index === activeTab ? "active" : ""} onClick={() => setActiveTab(index)}>
             <Icon size={15} />{label}
           </button>
         ))}
+        <select className="drawer-more mobile-only" aria-label="更多任务视图" value={activeTab >= 4 ? activeTab : ""} onChange={(event) => setActiveTab(Number(event.target.value))}>
+          <option value="" disabled>更多视图</option>
+          {TABS.slice(4).map(({ label }, index) => <option value={index + 4} key={label}>{label}</option>)}
+        </select>
         <button className="drawer-close" onClick={onToggle} aria-label="关闭任务详情" title="关闭"><X size={16} /></button>
       </div>
       <div className="drawer-content">
-        {activeTab === 0 && <TimelineTab events={events} frame={frame} onSelectEvent={onSelectEvent} />}
-        {activeTab === 1 && <AgentTab events={events} mission={mission} llm={llmCycle} onSelectEvent={onSelectEvent} />}
-        {activeTab === 2 && <MetricsTab frame={frame} />}
-        {activeTab === 3 && <RegionTab frame={frame} />}
-        {activeTab === 4 && <ParamsTab config={config} error={configError} />}
-        {activeTab === 5 && <AisTab frame={frame} />}
+        {activeTab === 0 && <DecisionTab frame={frame} events={events} plans={readOnly ? frame?.plans : mission?.state.plans} onSelectEvent={(event) => { onSelectEvent?.(event); setFocusedEventId(event.id); setActiveTab(1); }} onSelectDecision={onSelectDecision} />}
+        {activeTab === 1 && <TimelineTab key={focusedEventId} events={events} frame={frame} focusedEventId={focusedEventId} onSelectEvent={onSelectEvent} />}
+        {activeTab === 2 && <AgentTab events={events} mission={mission} llm={llmCycle} onSelectEvent={onSelectEvent} />}
+        {activeTab === 3 && <MetricsTab frame={frame} onShowRegions={() => setActiveTab(4)} />}
+        {activeTab === 4 && <RegionTab frame={frame} onSelectEvent={onSelectEvent} />}
+        {activeTab === 5 && <div className="task-operations"><AgentPanel tab="approvals" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /><AgentPanel tab="tasks" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /></div>}
+        {activeTab === 6 && <ParamsTab config={config} error={configError} />}
+        {activeTab === 7 && <AisTab frame={frame} />}
       </div>
     </section>
   );
 }
 
-function TimelineTab({ events, frame, onSelectEvent }) {
+function DecisionTab({ frame, events, plans, onSelectEvent, onSelectDecision }) {
+  const traces = buildDecisionTraces(events, plans, frame?.episode_id);
+  if (!traces.length) return <EmptyState text={frame?.episode_id === "local-demo" ? "本地演示帧没有真实决策记录" : "暂无可关联的计划。历史记录可能已截断，可在时间线查看原始事件。"} />;
+  return <div className="decision-list" aria-label="计划决策过程">{traces.map((trace) => <section className="decision-item" key={trace.planId}>
+    <button className="decision-title" type="button" onClick={() => onSelectDecision?.(trace)} title={`定位计划 ${trace.planId}`}>
+      <span><strong>{trace.planId}</strong><small>{trace.members.join(" · ") || "未记录执行单元"}{trace.contactId ? ` · ${trace.contactId}` : ""}</small></span>
+      <span className="decision-status">{trace.status === "pending_approval" ? "待审批" : trace.status === "active" ? "执行中" : trace.status === "rejected" ? "已拒绝" : trace.status}</span>
+    </button>
+    <div className="decision-steps">{[["触发观测", trace.steps.trigger], ["候选规划", trace.steps.plan], ["评估与审批", trace.steps.approval], ["执行与效果", trace.steps.execution]].map(([label, step]) => <div className={`decision-step ${step.event ? "recorded" : "missing"}`} key={label}>
+      <span className="decision-stage">{label}</span><span className="decision-evidence">{step.label}</span>
+      {step.event && <button type="button" className="decision-source" onClick={() => onSelectEvent?.(step.event)} title="定位地图并查看原始事件">查看证据 #{step.event.id}</button>}
+    </div>)}</div>
+  </section>)}</div>;
+}
+
+function TimelineTab({ events, frame, focusedEventId, onSelectEvent }) {
   const [filters, setFilters] = useState({ uuv: "", contact: "", task: "", level: "" });
   const [following, setFollowing] = useState(true);
   const [unseen, setUnseen] = useState(0);
   const scroll = useRef(null);
   const lastId = useRef(events.at(-1)?.id);
   const visible = coalesceMissionEvents(filterMissionEvents(events, filters)).slice(-180);
+  useEffect(() => {
+    if (focusedEventId != null) [...(scroll.current?.querySelectorAll("[data-event-id]") || [])].find((element) => element.dataset.eventId === String(focusedEventId))?.scrollIntoView({ block: "center" });
+  }, [focusedEventId]);
   useEffect(() => {
     const changed = lastId.current !== events.at(-1)?.id;
     lastId.current = events.at(-1)?.id;
@@ -155,7 +183,7 @@ function TimelineTab({ events, frame, onSelectEvent }) {
       <div className="timeline-list" ref={scroll} onScroll={(event) => { const node = event.currentTarget; setFollowing(node.scrollHeight - node.scrollTop - node.clientHeight < 30); }}>
       {!visible.length && <EmptyState text="没有符合筛选的事件" />}
       {visible.map((event, index) => (
-        <details className="timeline-detail" key={event.id || `${event.time}-${event.type}-${index}`}>
+        <details className="timeline-detail" key={event.id || `${event.time}-${event.type}-${index}`} data-event-id={event.id} open={event.id === focusedEventId || undefined}>
         <summary className={`timeline-item event-${event.type}`} onClick={() => onSelectEvent?.(event)}>
           <time>{Number(event.sim_time_s ?? event.time_s ?? (event.time || 0) * 60).toFixed(1)} s</time>
           <i />
@@ -176,10 +204,12 @@ function AgentTab({ events, mission, llm, onSelectEvent }) {
   </div>;
 }
 
-export function MetricsTab({ frame }) {
+export function MetricsTab({ frame, onShowRegions }) {
   const metrics = frame?.mission_metrics || {};
-  const names = { search_boats: "搜索艇", search_regions: "搜索区", effective_tracking_seconds: "有效协同跟踪 / s", lost_seconds: "丢失时长 / s", handoff_count: "已完成接替", handoff_attempts: "已发起接替", rotation_count: "轮换次数", coverage_pct: "覆盖率 / %", effective_coverage_pct: "有效覆盖率 / %", recent_coverage_pct: "近30分钟覆盖率 / %", revisit_timeliness_pct: "30分钟重访及时率 / %", unscanned_cells: "未扫描积压 / 格", handoff_success_rate: "接替成功率 / %" };
-  return <div className="mission-metrics"><dl>{Object.entries(metrics).map(([key, value]) => <div key={key}><dt>{names[key] || key}</dt><dd>{value == null ? "无数据" : typeof value === "number" ? Number(value.toFixed(2)) : String(value)}</dd></div>)}</dl>{!Object.keys(metrics).length && <EmptyState text="暂无任务指标" />}
+  const window = metrics.coverage_window_min || frame?.coverage_metrics?.primary_window_min || 30;
+  const names = { search_boats: "搜索艇", search_regions: "搜索区", effective_tracking_seconds: "有效协同跟踪 / s", lost_seconds: "丢失时长 / s", handoff_count: "已完成接替", handoff_attempts: "已发起接替", rotation_count: "轮换次数", coverage_pct: "累计覆盖 / %", effective_coverage_pct: "有效覆盖 / %", recent_coverage_pct: `近 ${window} 分钟覆盖 / %`, revisit_timeliness_pct: `${window} 分钟重访及时率 / %`, unscanned_cells: "未扫描积压 / 格", handoff_success_rate: "接替成功率 / %", coverage_window_min: "覆盖窗口 / 分钟" };
+  const descriptions = coverageDescriptions(frame);
+  return <div className="mission-metrics"><dl>{Object.entries(metrics).map(([key, value]) => <div key={key}><dt>{names[key] || key}</dt><dd>{value == null ? "无数据" : typeof value === "number" ? Number(value.toFixed(2)) : String(value)}</dd>{descriptions[key] && <details className="metric-definition"><summary>计算口径</summary><p>{descriptions[key]}</p><button type="button" onClick={onShowRegions}>查看区域</button></details>}</div>)}</dl>{!Object.keys(metrics).length && <EmptyState text="暂无任务指标" />}
     {frame?.standing_policy && <details className="workspace-details"><summary>常驻授权策略 · {frame.standing_policy.enabled ? "已授权" : "未启用"}</summary><pre>{JSON.stringify(frame.standing_policy, null, 2)}</pre></details>}
   </div>;
 }
@@ -191,7 +221,7 @@ function regionInformationMean(matrix, cells) {
   return `${(100 * values.reduce((sum, value) => sum + Math.max(0, Math.min(1, value)), 0) / values.length).toFixed(1)}%`;
 }
 
-export function RegionTab({ frame }) {
+export function RegionTab({ frame, onSelectEvent }) {
   const rows = [
     ...(frame?.search_regions || []).map((region) => ({ ...region, displayType: "搜索" })),
     ...(frame?.track_regions || []).map((region) => ({ ...region, displayType: "跟踪" })),
@@ -203,7 +233,7 @@ export function RegionTab({ frame }) {
         <thead><tr><th>ID</th><th>类型</th><th>边界</th><th>优先级</th><th>平均新鲜度</th><th>平均线索</th><th>完成</th><th>执行单元</th></tr></thead>
         <tbody>{rows.map((region) => (
           <tr key={region.id}>
-            <td><b>{region.id}</b></td><td>{region.displayType}</td><td className="mono">[{region.bbox?.join(", ")}]</td>
+            <td><button className="region-focus" type="button" onClick={() => onSelectEvent?.({ data: { uav_id: region.assigned_uav_id } })} title={`定位 ${region.id} 执行单元`}>{region.id}</button></td><td>{region.displayType}</td><td className="mono">[{region.bbox?.join(", ")}]</td>
             <td><span className={`priority ${region.priority || "high"}`}>{region.priority || "持续"}</span></td>
             <td>{regionInformationMean(frame.info_matrix, region.cells)}</td><td>{regionInformationMean(frame.target_info_matrix, region.cells)}</td>
             <td>{region.displayType === "搜索" ? `${Math.round(region.completion_pct || 0)}%` : "-"}</td><td>{region.assigned_uav_id || "待分配"}</td>

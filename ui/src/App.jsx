@@ -22,6 +22,8 @@ export default function App() {
   const [showGrid, setShowGrid] = useState(false);
   const [showScenario, setShowScenario] = useState(false);
   const [trailMode, setTrailMode] = useState("tail");
+  const [mapMode, setMapMode] = useState("situation");
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedBBox, setSelectedBBox] = useState(null);
   const [selectedContactId, setSelectedContactId] = useState(null);
@@ -85,6 +87,8 @@ export default function App() {
     setLastLlmCycle(null);
     setSelectedUavId(null);
     setSelectedMessageId(null);
+    setSelectedPlanId(null);
+    setMapMode("situation");
     setScene(null);
   }, [mode, frame?.episode_id]);
 
@@ -268,6 +272,10 @@ export default function App() {
           {mode === "live" ? displayedConnectionLabel : replayConnectionLabel}
         </span>
         <div className="top-actions">
+          <div className="map-mode-switch" role="group" aria-label="地图图层">
+            <button type="button" className={mapMode === "situation" ? "active" : ""} aria-pressed={mapMode === "situation"} onClick={() => setMapMode("situation")}>态势</button>
+            <button type="button" className={mapMode === "planning" ? "active" : ""} aria-pressed={mapMode === "planning"} onClick={() => setMapMode("planning")}>规划</button>
+          </div>
           <div className="trail-mode-switch" role="group" aria-label="UUV轨迹显示模式">
             <button
               className={trailMode === "full" ? "active" : ""}
@@ -336,6 +344,8 @@ export default function App() {
         ref={mapExporterRef}
         frame={displayFrame}
         candidate={mode === "live" ? mission.candidate : null}
+        mapMode={mapMode}
+        selectedPlanId={selectedPlanId}
         selectedUavId={selectedUavId}
         onSelectUav={setSelectedUavId}
         showGrid={showGrid}
@@ -391,13 +401,22 @@ export default function App() {
         visible={drawerVisible}
         onToggle={() => setDrawerVisible((value) => !value)}
         mission={mission}
+        readOnly={readOnly}
+        selection={selectedBBox}
+        onSelectDecision={(trace) => {
+          setSelectedPlanId(trace.planId);
+          setSelectedUavId(trace.members[0] || null);
+          setSelectedContactId(trace.contactId);
+          setMapMode("planning");
+          if (mode === "live") mission.preview(trace.planId);
+        }}
         onSelectEvent={(event) => {
           const data = event.data || {};
           const uuv = data.uav_id || data.uuv_id || data.observer_id || data.members?.[0];
           if (uuv) setSelectedUavId(uuv);
           if (data.contact_id) setSelectedContactId(data.contact_id);
           if (data.message_id) { setSelectedMessageId(data.message_id); setSidebarOpen(true); }
-          if (data.plan_id && mode === "live") mission.preview(data.plan_id);
+          if (data.plan_id) { setSelectedPlanId(data.plan_id); setMapMode("planning"); if (mode === "live") mission.preview(data.plan_id); }
         }}
       />
       <PlaybackBar

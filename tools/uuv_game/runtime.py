@@ -19,7 +19,7 @@ from .algorithms.tracking import acquisition_control, tracking_control, follow_p
 from .algorithms.partition import partition_regions
 from .algorithms.control import choose_controls
 from .mission_planning import search_bundle, explicit_regions
-from .lifecycle import prepare_exits, replacement_pose, apply_replacements, repair_search
+from .lifecycle import prepare_exits, replacement_pose, apply_replacements, repair_search, navigation_pose
 from .handover import prepare_handover, finish_handover
 from .sensing import observe, sensor_mode, sensor_roles
 from .information import information_fields
@@ -34,6 +34,7 @@ _LIFECYCLE = algorithm_settings("lifecycle")
 _PARTITION = algorithm_settings("partition")
 _SCENE = algorithm_settings("scene")
 _CBS = algorithm_settings("cbs")
+_CONTROL = algorithm_settings("control")
 _ASSIGNMENT = algorithm_settings("assignment")
 _MISSION = algorithm_settings("mission_planning")
 
@@ -131,9 +132,22 @@ class MissionRuntime:
         self.policy_version = 0
         self.mode = "assisted"
         self.status = "ready"
-        self.uuvs = [{"id": f"UUV-{i+1}", "pose": [_SCENE["fleet_spawn_x_m"][i//_SCENE["fleet_spawn_column_size"]],
-            _SCENE["fleet_spawn_y_start_m"]+(i%_SCENE["fleet_spawn_column_size"])*_SCENE["fleet_spawn_y_spacing_m"], 0.0], "trail": [], "curvature": 0.0,
-            "generation": 1, "remaining_range_m": self.config.range_capacity, "capabilities": ["active", "passive"]} for i in range(self.config.fleet_size)]
+        sides = [side for _ in range((self.config.fleet_size+3)//4) for side in ("left", "right", "bottom", "top")]
+        self.rng.shuffle(sides)
+        self.uuvs = []
+        for i, side in enumerate(sides[:self.config.fleet_size]):
+            span = self.config.height if side in ("left", "right") else self.config.width
+            clearance = min(_SCENE["fleet_entry_corner_clearance_m"], span/4)
+            for _ in range(200):
+                value = self.rng.uniform(clearance, span-clearance)
+                pose = {"left": [0, value, 0], "right": [self.config.width, value, math.pi],
+                    "bottom": [value, 0, math.pi/2], "top": [value, self.config.height, -math.pi/2]}[side]
+                if all(math.dist(pose[:2], u["pose"][:2]) >= _SCENE["fleet_entry_min_separation_m"] for u in self.uuvs):
+                    break
+            else:
+                raise RuntimeError("No separated fleet entry point on the task boundary")
+            self.uuvs.append({"id": f"UUV-{i+1}", "pose": pose, "trail": [], "curvature": 0.0,
+                "generation": 1, "remaining_range_m": self.config.range_capacity, "capabilities": ["active", "passive"]})
         self.targets = [copy.deepcopy(_SCENE["target"])]
         self.adversary = enemy.initial_state()
         self.obstacles = copy.deepcopy(_SCENE["obstacles"])
@@ -314,6 +328,7 @@ class MissionRuntime:
                 for boat in members:
                     region = next((r for r in self.regions if r["owner"] == boat["id"]), None)
                     boat["search_workload"] = sum(self.scan_times[c][r] < 0 for c, r in region["cells"])/max(1, len(region["cells"])) if region else 0
+            members = [navigation_pose(self, boat) for boat in members]
             obstacles = copy.deepcopy(self.obstacles)
             ownership_obstacles = copy.deepcopy(obstacles)
             selected_ids = {u["id"] for u in members}
@@ -381,7 +396,7 @@ class MissionRuntime:
             members = [u for u in members if u["id"] in chosen]
             result.update(kind="track", contact_id=contact_id, bbox=[0, 0, self.config.width, self.config.height])
             if result["status"] == "succeeded" and self.standing_policy["enabled"]:
-                remaining = [u for u in all_boats if u["id"] not in chosen and old_actions.get(u["id"], {}).get("kind") in ("search", "reacquire")]
+                remaining = [navigation_pose(self, u) for u in all_boats if u["id"] not in chosen and old_actions.get(u["id"], {}).get("kind") in ("search", "reacquire")]
                 repair = search_bundle(remaining, scan_times, obstacles, regions,
                     allow_partial=self.standing_policy["energy_rotation"], now=snapshot_time,
                     window_s=self.config.coverage_window_min*60)
@@ -781,8 +796,8 @@ class MissionRuntime:
             self.queue_agent(f"Contact {contact_id} has no fresh observation. Coverage search resumed; plan new tracking only after a measured reacquisition.", "target_lost")
         if self.frame_id % _RUNTIME["safety_review_frames"] == 0:
             prepare_handover(self)
-            if not prepare_exits(self):
-                return
+        if not prepare_exits(self):
+            return
         next_poses = {}
         controls = {}
         for u in self.uuvs:
@@ -848,7 +863,11 @@ class MissionRuntime:
             else:
                 self.pause("safety_no_authorized_continuation")
                 return
-            controls[u["id"]] = {"preferred": preferred, "execution_domain": action.get("execution_domain", [0, 0, self.config.width, self.config.height])}
+            domain = action.get("execution_domain", [0, 0, self.config.width, self.config.height])
+            if action["kind"] != "exit" and min(pose[0], pose[1], self.config.width-pose[0], self.config.height-pose[1]) < _CONTROL["obstacle_margin_m"]:
+                pad = _CONTROL["obstacle_margin_m"]
+                domain = [-pad, -pad, self.config.width+pad, self.config.height+pad]
+            controls[u["id"]] = {"preferred": preferred, "execution_domain": domain}
         control_diagnostics = {}
         selected = choose_controls(self.uuvs, controls, self.contacts, self.obstacles, separation=self.config.separation, diagnostics=control_diagnostics)
         if selected is None:

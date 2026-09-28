@@ -14,6 +14,9 @@ from uuv_game.runtime import MissionRuntime
 def runtime(tmp_path):
     runtime = MissionRuntime(tmp_path / "handover.sqlite")
     runtime.obstacles = []
+    # Isolate handover geometry from the randomized deployment perimeter.
+    for index, boat in enumerate(runtime.uuvs):
+        boat["pose"] = [400 if index < 4 else 3000, 400 + (index % 4) * 1000, 0]
     runtime.set_mode("full")
     fleet = runtime.calculate("plan_search", {"standing_policy": True})
     assert fleet["status"] == "succeeded", fleet
@@ -103,9 +106,15 @@ def test_handoff_completes_only_after_sustained_replacement_observations(runtime
         assert not module.finish_handover(runtime)
         assert runtime.active["UUV-1"]["kind"] == "track"
         assert not module.finish_handover(runtime), "re-reading the same samples must not extend the streak"
+    runtime.uuvs[0]["pose"] = [800, 1000, math.pi]
+    runtime.uuvs[0]["remaining_range_m"] = 1201
     samples(runtime, incoming, 4)
+    assert not module.finish_handover(runtime), "handover must wait for the nearest-boundary range threshold"
+    runtime.uuvs[0]["remaining_range_m"] = 1200
+    samples(runtime, incoming, 5)
     assert module.finish_handover(runtime)
     assert runtime.active["UUV-1"]["kind"] == "exit"
+    assert runtime.active["UUV-1"]["exit_point"] == [0, 1000]
     assert path_safe(runtime.active["UUV-1"]["points"], [], [-100, -100, 4100, 4100])
     assert runtime.metrics["handoff_count"] == 1
     assert len([a for a in runtime.active.values() if a["kind"] == "track"]) == 2

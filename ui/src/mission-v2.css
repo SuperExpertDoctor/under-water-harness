@@ -137,6 +137,33 @@
 .status-panel dd { margin: 3px 0 0; overflow-wrap: anywhere; }
 .mission-v2 .drawer-tabs { flex-shrink: 0; }
 .mission-v2 .drawer-tabs > button:not(.drawer-close) { font-size: 12px; white-space: nowrap; }
+.map-mode-switch { display: inline-flex; align-items: stretch; border: 1px solid var(--line-strong); border-radius: 4px; overflow: hidden; flex-shrink: 0; }
+.map-mode-switch button { min-height: 32px; padding: 0 9px; border: 0; background: var(--panel); color: var(--text-soft); cursor: pointer; font-size: 12px; }
+.map-mode-switch button.active { background: var(--panel-hover); color: var(--teal); font-weight: 700; }
+.map-mode-switch button:focus-visible, .decision-list button:focus-visible, .metric-definition button:focus-visible, .region-focus:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+.planning-legend { color: var(--text-soft); font-size: 12px; }
+.decision-list { display: flex; gap: 10px; overflow-x: auto; height: 100%; padding-bottom: 5px; }
+.decision-item { flex: 0 0 min(510px, 92vw); border: 1px solid var(--line); border-radius: 5px; overflow: auto; background: var(--panel); }
+.decision-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 10px 13px; text-align: left; background: var(--panel-raised); cursor: pointer; color: var(--text); }
+.decision-title > span:first-child { min-width: 0; }
+.decision-title strong, .decision-title small { display: block; overflow-wrap: anywhere; }
+.decision-title strong { font: 600 12px Consolas, monospace; }
+.decision-title small { margin-top: 4px; color: var(--text-muted); font-size: 11px; }
+.decision-status { flex: 0 0 auto; color: var(--teal); font-size: 11px; font-weight: 700; }
+.decision-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.decision-step { display: flex; flex-direction: column; min-width: 0; gap: 5px; padding: 10px; border-right: 1px solid var(--line); border-top: 1px solid var(--line); }
+.decision-step:last-child { border-right: 0; }
+.decision-stage { color: var(--text); font-size: 11px; font-weight: 700; }
+.decision-evidence { color: var(--text-soft); font-size: 11px; overflow-wrap: anywhere; }
+.decision-step.missing .decision-evidence { color: var(--text-muted); }
+.decision-source { align-self: flex-start; margin-top: auto; padding: 4px 0; border: 0; background: transparent; color: var(--teal); font-size: 11px; cursor: pointer; }
+.decision-source:hover { text-decoration: underline; }
+.metric-definition { margin-top: 7px; font-size: 11px; color: var(--text-soft); }
+.metric-definition summary { cursor: pointer; }
+.metric-definition p { line-height: 1.5; }
+.metric-definition button, .region-focus { border: 0; padding: 4px; background: transparent; color: var(--teal); cursor: pointer; }
+.task-operations { display: grid; grid-template-columns: minmax(230px, 1fr) minmax(270px, 2fr); gap: 16px; }
+.task-operations > .agent-panel { min-width: 0; }
 .timeline-view { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .event-filters { display: flex; flex-shrink: 0; flex-wrap: wrap; gap: 6px; padding-bottom: 8px; }
 .event-filters select { max-width: 180px; min-width: 90px; height: 28px; border: 1px solid var(--line); border-radius: 4px; background: var(--panel); padding: 0 5px; font-size: 11px; }
@@ -165,7 +192,15 @@
   .mission-v2 .sidebar.open { transform: translateX(0); box-shadow: 8px 0 20px #0f172a20; }
   .mission-v2 .drawer-tabs { overflow-x: auto; }
   .mission-v2 .drawer-tabs > button:not(.drawer-close) { flex-shrink: 0; min-height: 38px; padding: 0 8px; }
+  .mission-v2 .drawer-tabs > button:nth-child(n+5):not(.drawer-close) { display: none; }
+  .mission-v2 .drawer-more { display: block; flex: 0 0 110px; max-width: 110px; min-height: 38px; border: 0; border-left: 1px solid var(--line); background: var(--panel); color: var(--text); font-size: 11px; }
   .mission-v2 .drawer-tabs .drawer-close { position: sticky; right: 0; background: var(--panel); }
+  .decision-list { gap: 8px; }
+  .decision-item { flex-basis: min(480px, 95vw); }
+  .decision-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .decision-step:nth-child(2) { border-right: 0; }
+  .task-operations { display: block; }
+  .map-mode-switch button { min-height: 38px; }
   .event-filters { gap: 4px; }
   .event-filters select { max-width: 95px; min-width: 70px; }
   .mission-v2 .timeline-item { grid-template-columns: 53px 6px minmax(80px, .7fr) minmax(0, 1fr); font-size: 10px; }
@@ -177,7 +212,8 @@
   .conversation-panel .quote-action, .conversation-panel .follow-latest, .conversation-panel .annotation-link, .conversation-panel .approval-inline-actions button { min-height: 44px; }
 }
 @media (max-width: 620px) and (min-height: 501px) {
-  .mission-v2 .bottom-drawer { height: 140px !important; }
+  .mission-v2 { min-height: 820px; height: auto; grid-template-rows: var(--topbar-height) minmax(365px, 1fr) auto 0; overflow-y: auto; }
+  .mission-v2 .bottom-drawer { height: min(39vh, 280px) !important; }
 }
 @media (max-width: 900px) and (max-height: 500px) {
   #root { overflow-y: auto; }

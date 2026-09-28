@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Bot, CircleX, Crosshair, MousePointer2, Radio, RadioTower, Radar, Ship, Trash2, Waypoints } from "lucide-react";
-import AgentPanel from "./AgentPanel";
 import {
   controlOwnerDisplayLabel,
   taskTypeDisplayLabel,
@@ -121,11 +120,6 @@ export default function RightSidebar({
           </section>
 
           <CoveragePanel frame={frame} connectionStatus={connectionStatus} readOnly={readOnly} />
-
-          {mission && <section className="sidebar-section mission-controls" aria-label="任务操作">
-            <details className="workspace-details"><summary>审批 <span className="approval-count">{mission.state.plans?.filter((plan) => plan.status === "pending_approval").length || 0}</span></summary><AgentPanel tab="approvals" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /></details>
-            <details className="workspace-details"><summary>任务与算法</summary><AgentPanel tab="tasks" mission={mission} frame={frame} readOnly={readOnly} selection={selection} /></details>
-          </section>}
 
           {editingAllowed && <details className="sidebar-section vessel-editor" open={sceneVisible} onToggle={(event) => { if (event.currentTarget.open !== sceneVisible) onToggleScene?.(event.currentTarget.open); }} aria-label="初始化船舶编辑">
             <summary>场景编辑 · 调试真值</summary>

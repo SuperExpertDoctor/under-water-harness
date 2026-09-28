@@ -35,11 +35,13 @@ function connectionMessage(connectionStatus) {
 }
 
 export default function CoveragePanel({ frame, connectionStatus = "connected", readOnly = false }) {
-  const [windowMin, setWindowMin] = useState(60);
+  const [selectedWindow, setSelectedWindow] = useState(null);
 
-  useEffect(() => setWindowMin(60), [frame?.episode_id]);
+  useEffect(() => setSelectedWindow(null), [frame?.episode_id]);
 
   const metrics = frame?.coverage_metrics;
+  const windowMin = selectedWindow ?? metrics?.primary_window_min ?? 60;
+  const windows = [...new Set([...WINDOW_OPTIONS, ...(metrics?.windows || []).map((window) => window.minutes)])].sort((a, b) => a - b);
   const supported = metrics?.schema_version === COVERAGE_SCHEMA;
   const windowData = supported && Array.isArray(metrics.windows)
     ? metrics.windows.find((item) => item?.minutes === windowMin)
@@ -93,14 +95,14 @@ export default function CoveragePanel({ frame, connectionStatus = "connected", r
       </div>
 
       <div className="coverage-window-switcher" role="group" aria-label="覆盖时间窗口">
-        {WINDOW_OPTIONS.map((option) => (
+        {windows.map((option) => (
           <button
             type="button"
             key={option}
             className={windowMin === option ? "active" : ""}
             aria-label={`最近 ${option} 分钟`}
             aria-pressed={windowMin === option}
-            onClick={() => setWindowMin(option)}
+            onClick={() => setSelectedWindow(option)}
           >
             {option}
           </button>

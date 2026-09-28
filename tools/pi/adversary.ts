@@ -80,7 +80,7 @@ async function main(): Promise<void> {
   const token = process.env.UUV_ADVERSARY_TOKEN;
   if (!key || !token) throw new Error("Adversary worker credentials missing");
   process.umask(0o077);
-  const directory = resolve(import.meta.dirname, "../.runtime/pi-adversary");
+  const directory = resolve(process.env.UUV_ADVERSARY_RUNTIME_DIR || resolve(import.meta.dirname, "../.runtime/pi-adversary"));
   await mkdir(directory, { recursive: true, mode: 0o700 });
   await chmod(directory, 0o700);
   await pruneAdversarySessions(directory);

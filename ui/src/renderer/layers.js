@@ -820,12 +820,43 @@ export function drawUavTrails(ctx, uavs, cellSize, ox, oy, selectedId, trailMode
 export function drawUavScanRanges(ctx, uavs, cellSize, ox, oy, baseCenters, selectedId) {
   for (const uav of uavs || []) {
     if (["idle", "failed"].includes(uav.status)) continue;
-    if (uav.sensor_mode && uav.sensor_mode !== "active") continue;
+    if (uav.sensor_mode && uav.sensor_mode !== "active" && !uav.sensor_roles?.forward_active) continue;
     const radius = Math.max(0, uav.sensor_radius_cells ?? UUV_SCAN_RADIUS_CELLS) * cellSize;
     const center = resolveUavDisplayCenter(uav, cellSize, ox, oy, baseCenters);
     if (!center) continue;
     const selected = uav.id === selectedId;
     ctx.save();
+    if (uav.sensor_roles) {
+      const heading = Number.isFinite(uav.heading_rad) ? uav.heading_rad : -(uav.heading_deg || 0) * Math.PI / 180;
+      const sector = (angle, halfAngle, inner, fill, stroke) => {
+        const first = angle - halfAngle;
+        const last = angle + halfAngle;
+        ctx.beginPath();
+        ctx.moveTo(center.x + inner * Math.cos(first), center.y + inner * Math.sin(first));
+        ctx.lineTo(center.x + radius * Math.cos(first), center.y + radius * Math.sin(first));
+        ctx.arc(center.x, center.y, radius, first, last);
+        ctx.lineTo(center.x + inner * Math.cos(last), center.y + inner * Math.sin(last));
+        if (inner > 0) ctx.arc(center.x, center.y, inner, last, first, true);
+        ctx.closePath();
+        ctx.fillStyle = fill;
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = selected ? 1.5 : 1;
+        ctx.fill();
+        ctx.stroke();
+      };
+      if (uav.sensor_roles.side_scan) {
+        const inner = Math.max(0, uav.side_scan_inner_radius_cells ?? .5) * cellSize;
+        const half = (uav.side_scan_half_angle_deg ?? 38) * Math.PI / 180;
+        for (const side of [-1, 1]) sector(heading + side * Math.PI / 2, half, inner,
+          selected ? "rgba(14, 165, 233, .14)" : "rgba(14, 165, 233, .07)", "rgba(56, 189, 248, .55)");
+      }
+      if (uav.sensor_roles.forward_active) {
+        sector(heading, (uav.forward_active_half_angle_deg ?? 55) * Math.PI / 180, 0,
+          selected ? "rgba(225, 151, 55, .12)" : "rgba(225, 151, 55, .05)", "rgba(230, 163, 72, .45)");
+      }
+      ctx.restore();
+      continue;
+    }
     ctx.beginPath();
     ctx.arc(center.x, center.y, radius, 0, Math.PI * 2);
     ctx.fillStyle = selected ? "rgba(14, 165, 233, .16)" : "rgba(14, 165, 233, .09)";

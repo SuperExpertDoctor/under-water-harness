@@ -3,8 +3,12 @@
 import heapq
 import math
 
+from ..config import Config, algorithm_settings
 from ..vendor.dubins import candidates
 from .motion import finite, integrate, positive, valid_pose
+
+
+_PLANNING = algorithm_settings("planning")
 
 
 def environment(obstacles, bounds):
@@ -51,7 +55,7 @@ def _safe(points, circles, bounds, margin):
     return True
 
 
-def path_safe(points, obstacles, bounds, margin=8.0) -> bool:
+def path_safe(points, obstacles, bounds, margin=_PLANNING["safety_margin_m"]) -> bool:
     """Conservative swept-circle check for dense piecewise constant-curvature paths.
 
     This is a geometry check, not a certificate for arbitrary undersampled curves
@@ -81,37 +85,65 @@ def _sample(start, modes, lengths, radius, step):
 def _connect(start, goal, radius, step, circles, bounds):
     for modes, lengths in candidates(start, goal, radius):
         points = _sample(start, modes, lengths, radius, step)
-        if _safe(points, circles, bounds, 8.0):
+        if _safe(points, circles, bounds, _PLANNING["safety_margin_m"]):
             return points, sum(lengths), "".join(modes)
     return None
 
 
-def plan_path(start, goal, radius=60.0, obstacles=None, bounds=(0, 0, 4000, 4000), step=5.0, budget=3000) -> dict:
+def _respects_time(points, start_length, constraints, speed):
+    if not constraints:
+        return True
+    travelled = start_length
+    previous = points[0]
+    for point in points:
+        travelled += math.dist(previous[:2], point[:2])
+        at = travelled / speed
+        if any(t0 <= at <= t1 and math.dist(point[:2], (x, y)) < radius
+               for x, y, t0, t1, radius in constraints):
+            return False
+        previous = point
+    return True
+
+
+def plan_path(start, goal, radius=_PLANNING["radius_m"], obstacles=None, bounds=(0, 0, Config().width, Config().height),
+              step=_PLANNING["step_m"], budget=_PLANNING["budget"], temporal_constraints=(),
+              speed=_PLANNING["speed_mps"], start_time_s=0.0) -> dict:
     start, goal = valid_pose(start), valid_pose(goal)
-    radius, step = positive(radius, "radius"), positive(step, "step")
-    if isinstance(budget, bool) or not isinstance(budget, int) or not 1 <= budget <= 20000:
-        raise ValueError("budget must be an integer from 1 to 20000")
+    radius, step, speed = positive(radius, "radius"), positive(step, "step"), positive(speed, "speed")
+    start_time_s = finite(start_time_s, "start time")
+    if start_time_s < 0:
+        raise ValueError("start time must not be negative")
+    if isinstance(budget, bool) or not isinstance(budget, int) or not 1 <= budget <= _PLANNING["maximum_expansion_budget"]:
+        raise ValueError(f"budget must be an integer from 1 to {_PLANNING['maximum_expansion_budget']}")
     circles, bounds = environment(obstacles, bounds)
-    if radius < 1 or radius > 100000 or step < 0.1 or max(bounds[2] - bounds[0], bounds[3] - bounds[1]) > 100000:
+    constraints = []
+    for constraint in temporal_constraints:
+        if len(constraint) != 5:
+            raise ValueError("temporal constraint requires x, y, t0, t1, radius")
+        x, y, t0, t1, clearance = [finite(value, "temporal constraint") for value in constraint]
+        if t0 > t1 or clearance <= 0:
+            raise ValueError("invalid temporal constraint interval or radius")
+        constraints.append((x, y, t0, t1, clearance))
+    if radius < _PLANNING["minimum_radius_m"] or radius > _PLANNING["maximum_map_span_m"] or step < _PLANNING["minimum_step_m"] or max(bounds[2] - bounds[0], bounds[3] - bounds[1]) > _PLANNING["maximum_map_span_m"]:
         raise ValueError("planning scale exceeds bounded implementation limits")
-    step = min(step, 5.0, radius / 12)
+    step = min(step, _PLANNING["step_m"], radius / (_PLANNING["heading_bins"] / 2))
     sample_bound = (math.hypot(bounds[2] - bounds[0], bounds[3] - bounds[1]) + 6 * math.pi * radius) / step
-    if sample_bound > 50000:
-        raise ValueError("planning parameters exceed the 50000-sample connector bound")
-    result = {"status": "infeasible", "points": [], "length_m": 0.0, "algorithm": "dubins-six+forward-lattice-v1", "diagnostics": {"expanded": 0, "solution_quality": "none"}}
-    if not _safe([start], circles, bounds, 8) or not _safe([goal], circles, bounds, 8):
+    if sample_bound > _PLANNING["connector_sample_limit"]:
+        raise ValueError(f"planning parameters exceed the {_PLANNING['connector_sample_limit']}-sample connector bound")
+    result = {"status": "infeasible", "points": [], "length_m": 0.0, "algorithm": "forward-hybrid-a-star-dubins-v1", "diagnostics": {"expanded": 0, "solution_quality": "none"}}
+    if not _safe([start], circles, bounds, _PLANNING["safety_margin_m"]) or not _safe([goal], circles, bounds, _PLANNING["safety_margin_m"]):
         result["diagnostics"]["reason"] = "start or goal intersects the safety envelope"
         return result
     connection = _connect(start, goal, radius, step, circles, bounds)
-    if connection is not None:
+    if connection is not None and _respects_time(connection[0], speed*start_time_s, constraints, speed):
         points, length, family = connection
         result.update(status="succeeded", points=points, length_m=length)
         result["diagnostics"].update(family=family, solution_quality="feasible")
         return result
     # Each node is a continuous pose. Quantization only prunes duplicate states;
     # edges are exact forward arcs, never grid diagonals or in-place rotations.
-    travel = radius * math.pi / 4
-    cell = radius / 3
+    travel = radius * math.pi / _PLANNING["lattice_turn_divisor"]
+    cell = radius / _PLANNING["lattice_cell_divisor"]
     nodes = [(start, -1, [], 0.0)]
     queue = [(math.dist(start[:2], goal[:2]), 0)]
     visited = {}
@@ -119,14 +151,15 @@ def plan_path(start, goal, radius=60.0, obstacles=None, bounds=(0, 0, 4000, 4000
     while queue and expanded < budget:
         _, index = heapq.heappop(queue)
         pose, parent, edge, cost = nodes[index]
-        key = (round(pose[0] / cell), round(pose[1] / cell), round((pose[2] % (2 * math.pi)) / (math.pi / 12)) % 24)
+        key = (round(pose[0] / cell), round(pose[1] / cell), round((pose[2] % (2 * math.pi)) / (2 * math.pi / _PLANNING["heading_bins"])) % _PLANNING["heading_bins"],
+               round(cost / (speed * _PLANNING["constraint_time_bin_s"])) if constraints else 0)
         if visited.get(key, math.inf) <= cost:
             continue
         visited[key] = cost
         expanded += 1
-        if expanded > 1 and (expanded % 6 == 0 or math.dist(pose[:2], goal[:2]) < radius * 3):
+        if expanded > 1 and (expanded % _PLANNING["connector_attempt_interval"] == 0 or math.dist(pose[:2], goal[:2]) < radius * _PLANNING["connector_near_radius_factor"]):
             connection = _connect(pose, goal, radius, step, circles, bounds)
-            if connection is not None:
+            if connection is not None and _respects_time(connection[0], cost+speed*start_time_s, constraints, speed):
                 tail, length, family = connection
                 edges = [tail[1:]]
                 cursor = index
@@ -139,14 +172,15 @@ def plan_path(start, goal, radius=60.0, obstacles=None, bounds=(0, 0, 4000, 4000
                 result.update(status="succeeded", points=points, length_m=cost + length)
                 result["diagnostics"].update(expanded=expanded, family=family, solution_quality="feasible")
                 return result
-        for curvature in (-1 / radius, -0.5 / radius, 0, 0.5 / radius, 1 / radius):
+        for curvature_fraction in _PLANNING["curvature_fractions"]:
+            curvature = curvature_fraction / radius
             count = math.ceil(travel / step)
             edge = [pose] + [integrate(pose, 1, curvature, travel * k / count) for k in range(1, count + 1)]
-            if not _safe(edge, circles, bounds, 8):
+            if not _safe(edge, circles, bounds, _PLANNING["safety_margin_m"]) or not _respects_time(edge, cost+speed*start_time_s, constraints, speed):
                 continue
             endpoint = edge[-1]
             nodes.append((endpoint, index, edge, cost + travel))
-            heapq.heappush(queue, (cost + travel + 1.15 * math.dist(endpoint[:2], goal[:2]), len(nodes) - 1))
+            heapq.heappush(queue, (cost + travel + math.dist(endpoint[:2], goal[:2]), len(nodes) - 1))
     result["status"] = "timed_out" if queue else "infeasible"
     result["diagnostics"].update(expanded=expanded, reason="expansion budget exhausted" if queue else "discretized forward search exhausted")
     return result

@@ -1,5 +1,6 @@
 """Focused sensor fixtures; genuine-motion acceptance is tested separately."""
 
+import math
 import random
 from types import SimpleNamespace
 
@@ -15,7 +16,7 @@ from uuv_game.sensing import observe, sensor_mode
 @pytest.mark.parametrize("phase", ["acquiring", "reacquiring"])
 def test_active_bridge_requires_measured_geometry_then_fresh_passive_streak(size, phase):
     boats = [{"id": f"UUV-{i+1}", "pose": pose, "generation": 0, "capabilities": ["active", "passive"]}
-        for i, pose in enumerate(([1800, 2000, 0], [2000, 1800, 0], [2200, 2000, 0])[:size])]
+        for i, pose in enumerate(([1800, 2000, 0], [2000, 1800, math.pi/2], [2200, 2000, math.pi])[:size])]
     events = []
     runtime = SimpleNamespace(sim_time=1, last_observation_time=-1, contacts={},
         targets=[{"id": "target", "pose": [2000, 2000, 0]}], contact_mapping={}, uuvs=boats,
@@ -35,7 +36,7 @@ def test_active_bridge_requires_measured_geometry_then_fresh_passive_streak(size
     observe(runtime)
     assert all(sensor_mode(action) == "passive" for action in runtime.active.values())
     assert all(sample["mode"] == "active" for sample in runtime.observations if sample["time_s"] == 2)
-    assert runtime.scan_times[18][19] == 2, "Coverage uses the modes that produced this cycle's observations"
+    assert all(time < 0 for column in runtime.scan_times for time in column), "Forward acquisition is not side-scan coverage"
     assert runtime.contacts["CONTACT-1"]["tracking_streak"] == 0
     assert runtime.metrics["effective_tracking_seconds"] == 0
     for now in (3, 4):

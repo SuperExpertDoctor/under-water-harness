@@ -2,11 +2,13 @@
 
 import math
 
+from ..config import algorithm_settings
 from .motion import finite, integrate, positive, valid_pose
 from .planning import path_safe
 
+_CONTROL = algorithm_settings("control")
 
-TIMES = (0, 3, 6, 9, 12, 18)
+TIMES = tuple(_CONTROL["prediction_times_s"])
 
 
 def _midpoint(left, right):
@@ -29,7 +31,7 @@ def _separated(left, right, clearance):
         fraction = 0 if square == 0 else max(0, min(1, -(rx*dx+ry*dy)/square))
         padding = sum(math.dist(p[:2], q[:2])*math.tan(abs(math.remainder(q[2]-p[2], 2*math.pi))/4)/2 for p, q in ((a, b), (c, d)))
         if math.hypot(rx+fraction*dx, ry+fraction*dy) < clearance+padding:
-            if depth >= 5:
+            if depth >= _CONTROL["separation_subdivision_limit"]:
                 return False
             middle_left, middle_right = _midpoint(a, b), _midpoint(c, d)
             if math.dist(middle_left[:2], middle_right[:2]) < clearance:
@@ -38,7 +40,8 @@ def _separated(left, right, clearance):
     return True
 
 
-def choose_controls(boats, requests, contacts, obstacles, separation=40, speed=4, diagnostics=None):
+def choose_controls(boats, requests, contacts, obstacles, separation=_CONTROL["separation_m"],
+                    speed=_CONTROL["speed_mps"], diagnostics=None):
     """Return id -> curvature, or None when the bounded joint search fails.
 
     Only requested boats move; unrequested own poses remain fixed. The fast
@@ -54,7 +57,8 @@ def choose_controls(boats, requests, contacts, obstacles, separation=40, speed=4
     if len(poses) != len(boats) or not set(requests) <= poses.keys():
         raise ValueError("control requests require unique known boat identifiers")
     previous = {boat["id"]: finite(boat.get("curvature", 0), "previous curvature") for boat in boats}
-    preferred = {identifier: max(-1/60, min(1/60, finite(request["preferred"], "preferred curvature"))) for identifier, request in requests.items()}
+    turn_limit = 1/_CONTROL["turn_radius_m"]
+    preferred = {identifier: max(-turn_limit, min(turn_limit, finite(request["preferred"], "preferred curvature"))) for identifier, request in requests.items()}
     fixed = {identifier: [pose[:]]*len(TIMES) for identifier, pose in poses.items() if identifier not in requests}
     estimates = contacts.values() if isinstance(contacts, dict) else contacts
     targets = []
@@ -63,18 +67,18 @@ def choose_controls(boats, requests, contacts, obstacles, separation=40, speed=4
             continue
         x, y, vx, vy = [finite(contact[key], key) for key in ("x", "y", "vx", "vy")]
         uncertainty = max(0, finite(contact.get("uncertainty_m", 0), "uncertainty"))
-        targets.append(([[x+vx*t, y+vy*t, 0] for t in TIMES], separation+min(60, uncertainty),
-                        max(20, min(80, uncertainty/2))))
+        targets.append(([[x+vx*t, y+vy*t, 0] for t in TIMES], separation+min(_CONTROL["contact_uncertainty_clearance_m"], uncertainty),
+                        max(_CONTROL["contact_uncertainty_buffer_min_m"], min(_CONTROL["contact_uncertainty_buffer_max_m"], uncertainty/2))))
     nearby = {identifier: {other for other in poses if other != identifier and math.dist(poses[identifier][:2], poses[other][:2]) <= 2*speed*TIMES[-1]+separation+4}
               for identifier in poses}
 
     def rollout(identifier, curvature):
         points = [integrate(poses[identifier], speed, curvature, t) for t in TIMES]
-        if not path_safe(points, obstacles, requests[identifier]["execution_domain"], margin=10):
+        if not path_safe(points, obstacles, requests[identifier]["execution_domain"], margin=_CONTROL["obstacle_margin_m"]):
             return None
         if any(not _separated(points, target, clearance) for target, clearance, _ in targets):
             return None
-        if any(other in nearby[identifier] and not _separated(points, path, separation+4) for other, path in fixed.items()):
+        if any(other in nearby[identifier] and not _separated(points, path, separation+_CONTROL["proximity_padding_m"]) for other, path in fixed.items()):
             return None
         return points
 
@@ -87,18 +91,21 @@ def choose_controls(boats, requests, contacts, obstacles, separation=40, speed=4
     best = {identifier: rollout(identifier, curvature) for identifier, curvature in preferred.items()}
     identifiers = sorted(best)
     if all(points is not None and contact_risk(points) == 0 for points in best.values()) and all(
-        second not in nearby[first] or _separated(best[first], best[second], separation+4)
+        second not in nearby[first] or _separated(best[first], best[second], separation+_CONTROL["proximity_padding_m"])
         for i, first in enumerate(identifiers) for second in identifiers[i+1:]
     ):
         return preferred
     options = {}
     for identifier in identifiers:
-        choices = sorted(set([preferred[identifier], max(-1/60, min(1/60, previous[identifier]))]+[n/360 for n in range(-6, 7)]))
+        choices = sorted(set([preferred[identifier], max(-turn_limit, min(turn_limit, previous[identifier]))]+
+            [n/_CONTROL["curvature_denominator"] for n in range(-_CONTROL["curvature_steps"], _CONTROL["curvature_steps"]+1)]))
         values = []
         for curvature in choices:
             points = best[identifier] if curvature == preferred[identifier] else rollout(identifier, curvature)
             if points is not None:
-                cost = abs(curvature-preferred[identifier])*60+abs(curvature-previous[identifier])*6+3*contact_risk(points)
+                cost = (abs(curvature-preferred[identifier])*_CONTROL["control_deviation_weight"]+
+                        abs(curvature-previous[identifier])*_CONTROL["control_smoothness_weight"]+
+                        _CONTROL["contact_risk_weight"]*contact_risk(points))
                 values.append((cost, curvature, points))
         if not values:
             diagnostics["candidate_counts"][identifier] = 0
@@ -123,12 +130,12 @@ def choose_controls(boats, requests, contacts, obstacles, separation=40, speed=4
             expanded = []
             for cost, commands, predictions in beam:
                 for extra, curvature, points in options[identifier]:
-                    if any(other in nearby[identifier] and not _separated(points, path, separation+4) for other, path in predictions.items()):
+                    if any(other in nearby[identifier] and not _separated(points, path, separation+_CONTROL["proximity_padding_m"]) for other, path in predictions.items()):
                         continue
                     expanded.append((cost+extra, {**commands, identifier: curvature}, {**predictions, identifier: points}))
             if not expanded:
                 diagnostics.update(reason="joint_beam_exhausted", blocked_boat=identifier, component=sorted(component))
                 return None
-            beam = sorted(expanded, key=lambda value: (value[0], tuple(sorted(value[1].items()))))[:32]
+            beam = sorted(expanded, key=lambda value: (value[0], tuple(sorted(value[1].items()))))[:_CONTROL["beam_width"]]
         selected.update(beam[0][1])
     return selected

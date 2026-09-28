@@ -34,9 +34,14 @@ def test_eight_search_detect_track_lost_reacquire(tmp_path):
         before = runtime.sim_time
         for _ in range(3000):
             runtime.tick()
-            assert runtime.status == "running"
+            assert runtime.status == "running", (
+                f"time={runtime.sim_time} events={[(event['type'], event['data'].get('diagnostics')) for event in runtime.events[-3:]]} "
+                f"boats={[(u['id'], u['pose']) for u in runtime.uuvs if runtime.active.get(u['id'], {}).get('kind') == 'track']}")
         assert runtime.sim_time == before+600
-        assert contact["state"] == "tracking"
+        assert contact["state"] == "tracking", (
+            f"estimate={contact['x']:.0f},{contact['y']:.0f} true={runtime.targets[0]['pose'][:2]} "
+            f"modes={[(boat['id'], runtime.active[boat['id']]['phase'], round(math.dist(boat['pose'][:2], runtime.targets[0]['pose'][:2])), round(math.remainder(math.atan2(runtime.targets[0]['pose'][1]-boat['pose'][1], runtime.targets[0]['pose'][0]-boat['pose'][0])-boat['pose'][2], math.tau), 2)) for boat in runtime.uuvs if runtime.active.get(boat['id'], {}).get('kind') == 'track']} "
+            f"quality={contact.get('geometry_quality')} observers={contact['observers']}")
         assert len(runtime.active) == 8
         assert sum(action["kind"] == "search" for action in runtime.active.values()) == 6
         runtime.sensor_enabled = False

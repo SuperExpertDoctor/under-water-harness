@@ -4,18 +4,23 @@ import math
 
 import numpy as np
 
+from .config import algorithm_settings
+
+_OBS = algorithm_settings("observations")
+
 
 def measure(observer, target, mode, rng):
     dx, dy = target[0]-observer[0], target[1]-observer[1]
-    sigma = math.radians(2)
+    sigma = math.radians(_OBS["bearing_sigma_deg"])
     result = {"mode": mode, "bearing_rad": math.remainder(math.atan2(dy, dx)+rng.gauss(0, sigma), 2*math.pi),
               "bearing_sigma": sigma}
     if mode == "active":
-        result.update(range_m=max(1, math.hypot(dx, dy)+rng.gauss(0, 4)), range_sigma=4.0)
+        range_sigma = _OBS["active_range_sigma_m"]
+        result.update(range_m=max(1, math.hypot(dx, dy)+rng.gauss(0, range_sigma)), range_sigma=range_sigma)
     return result
 
 
-def initialize(x, y, now, sigma=15):
+def initialize(x, y, now, sigma=_OBS["initial_contact_sigma_m"]):
     return {"x": float(x), "y": float(y), "vx": 0.0, "vy": 0.0,
             "covariance": np.diag([sigma*sigma, sigma*sigma, 9, 9]).tolist(),
             "estimate_time": now, "uncertainty_m": float(2*sigma)}
@@ -51,7 +56,7 @@ def predict(contact, now):
     transition = np.eye(4)
     transition[0, 2] = transition[1, 3] = dt
     gain = np.array([[dt*dt/2, 0], [0, dt*dt/2], [dt, 0], [0, dt]])
-    covariance = transition @ np.array(contact["covariance"]) @ transition.T + gain @ gain.T * .025**2
+    covariance = transition @ np.array(contact["covariance"]) @ transition.T + gain @ gain.T * _OBS["process_acceleration_mps2"]**2
     _store(contact, transition @ state, covariance)
     contact["estimate_time"] = now
 
@@ -71,7 +76,7 @@ def correct(contact, observation):
         residual = np.append(residual, observation["range_m"]-distance)
         noise = np.diag([observation["bearing_sigma"]**2, observation["range_sigma"]**2])
     innovation = jacobian @ covariance @ jacobian.T + noise
-    if float(residual @ np.linalg.solve(innovation, residual)) > 36:
+    if float(residual @ np.linalg.solve(innovation, residual)) > _OBS["outlier_mahalanobis_squared"]:
         return False
     gain = np.linalg.solve(innovation, jacobian @ covariance).T
     identity = np.eye(4)-gain @ jacobian

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowDown, CornerDownRight, MessageSquareQuote, Send, Square, X } from "lucide-react";
+import { ArrowDown, Check, CornerDownRight, Eye, MessageSquareQuote, Send, ShieldAlert, Square, X } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { annotationPayload } from "../state/missionState";
@@ -26,6 +26,7 @@ export default function ConversationPanel({ mission, frame, readOnly, selectedMe
     tools.set(data.tool_call_id, { ...tools.get(data.tool_call_id), ...data, status: event.type === "tool_execution_end" ? (data.is_error ? "失败" : "完成") : "执行中", result: data.text });
   }
   const jobs = readOnly ? [] : (mission.state.jobs || []).filter((job) => ["running", "queued"].includes(job.status));
+  const pending = readOnly ? [] : (mission.state.plans || []).filter((plan) => plan.status === "pending_approval");
   const disabled = readOnly || !mission.ready || Boolean(mission.busy);
 
   useEffect(() => {
@@ -66,6 +67,18 @@ export default function ConversationPanel({ mission, frame, readOnly, selectedMe
     {!following && <button className="follow-latest" onClick={() => setFollowing(true)}><ArrowDown size={14} />最新消息</button>}
     {!readOnly && mission.state.agent?.error && <p className="panel-error" role="alert">{mission.state.agent.error}</p>}
     {jobs.map((job) => <div className="generation-row" key={job.run_id}><span>{job.status === "queued" ? "等待生成" : "正在生成"}<small>{job.run_id}</small></span><button className="icon-btn" title="停止生成" aria-label="停止生成" disabled={disabled} onClick={() => mission.act("停止生成", `/api/pi-agent/task-assignment/${encodeURIComponent(job.run_id)}/cancel`)}><Square size={14} /></button></div>)}
+    {pending.length > 0 && <div className="conversation-approvals" role="region" aria-label="待批准计划" aria-live="polite">
+      <div className="conversation-approval-heading"><ShieldAlert size={16} /><strong>待批准计划</strong><span>{pending.length}</span></div>
+      {pending.map((plan) => <div className="conversation-approval" key={plan.plan_id}>
+        <div className="approval-description"><strong>{plan.kind === "search" ? "区域搜索" : plan.kind === "track" ? "协同跟踪" : "任务计划"}</strong><span>{plan.members?.join(" · ") || "无成员"}</span></div>
+        <div className="approval-facts"><code>{plan.plan_id}</code><span>风险 {Number.isFinite(plan.risk) ? `${Math.round(plan.risk * 100)}%` : "--"}</span><span>剩余 {Math.max(0, Math.ceil(plan.expires_at_s - (frame?.sim_time_min || 0) * 60))} s</span></div>
+        <div className="approval-inline-actions">
+          <button type="button" className="icon-btn" title="预览计划" aria-label={`预览 ${plan.plan_id}`} onClick={() => mission.preview(plan.plan_id)}><Eye size={16} /></button>
+          <button type="button" disabled={disabled} onClick={() => mission.act("拒绝计划", `/api/approvals/${encodeURIComponent(plan.plan_id)}/decision`, { decision: "reject" })}><X size={15} />拒绝</button>
+          <button type="button" className="approve-command" disabled={disabled} onClick={() => mission.act("批准计划", `/api/approvals/${encodeURIComponent(plan.plan_id)}/decision`, { decision: "approve" })}><Check size={15} />批准</button>
+        </div>
+      </div>)}
+    </div>}
     <form className="chat-composer" onSubmit={async (event) => {
       event.preventDefault();
       if (!text.trim() || disabled) return;

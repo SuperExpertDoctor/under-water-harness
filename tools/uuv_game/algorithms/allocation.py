@@ -5,8 +5,10 @@ import math
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
+from ..config import algorithm_settings
 from .motion import finite, valid_pose
 
+_ASSIGNMENT = algorithm_settings("assignment")
 
 def allocate_tasks(uuvs: list[dict], tasks: list[dict]) -> dict:
     if not isinstance(uuvs, list) or not isinstance(tasks, list):
@@ -15,7 +17,7 @@ def allocate_tasks(uuvs: list[dict], tasks: list[dict]) -> dict:
         raise ValueError("vehicles require id and pose")
     if any(not isinstance(task, dict) or not {"id", "center", "size", "priority"} <= task.keys() for task in tasks):
         raise ValueError("tasks require id, center, size and priority")
-    if len(uuvs) > 8 or len(tasks) > 8:
+    if len(uuvs) > _ASSIGNMENT["maximum_uuvs"] or len(tasks) > _ASSIGNMENT["maximum_uuvs"]:
         raise ValueError("at most eight vehicles and eight tasks are supported")
     ids = [uuv["id"] for uuv in uuvs]
     task_ids = [task["id"] for task in tasks]
@@ -27,10 +29,10 @@ def allocate_tasks(uuvs: list[dict], tasks: list[dict]) -> dict:
     slots = []
     for task in tasks:
         size = task["size"]
-        if isinstance(size, bool) or not isinstance(size, int) or not 1 <= size <= 3:
+        if isinstance(size, bool) or not isinstance(size, int) or not 1 <= size <= _ASSIGNMENT["maximum_team_size"]:
             raise ValueError("team size must be an integer from one to three")
         priority = finite(task["priority"], "priority")
-        if not 1 <= priority <= 10:
+        if not _ASSIGNMENT["priority_min"] <= priority <= _ASSIGNMENT["priority_max"]:
             raise ValueError("priority must be between one and ten")
         center = task["center"]
         if not isinstance(center, (list, tuple)) or len(center) != 2:

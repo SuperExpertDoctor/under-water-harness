@@ -4,8 +4,12 @@ import copy
 import math
 
 from .algorithms.tracking import tracking_plan
+from .config import algorithm_settings
 from .lifecycle import exit_route
 from .mission_planning import search_bundle
+
+_HANDOVER = algorithm_settings("handover")
+_LIFECYCLE = algorithm_settings("lifecycle")
 
 
 def _authorized(runtime):
@@ -14,7 +18,7 @@ def _authorized(runtime):
 
 def _reserve(runtime, boat, margin):
     x, y = boat["pose"][:2]
-    return min(x, y, 4000-x, 4000-y)+runtime.config.exit_reserve+margin
+    return min(x, y, runtime.config.width-x, runtime.config.height-y)+runtime.config.exit_reserve+margin
 
 
 def prepare_handover(runtime):
@@ -28,7 +32,7 @@ def prepare_handover(runtime):
     with runtime.lock:
         for departing in runtime.uuvs:
             action = runtime.active.get(departing["id"], {})
-            if action.get("kind") != "track" or action.get("relief_member") or departing["remaining_range_m"] > _reserve(runtime, departing, 4000):
+            if action.get("kind") != "track" or action.get("relief_member") or departing["remaining_range_m"] > _reserve(runtime, departing, _HANDOVER["early_relief_range_margin_m"]):
                 continue
             contact_id = action.get("contact_id")
             contact = runtime.contacts.get(contact_id)
@@ -42,17 +46,17 @@ def prepare_handover(runtime):
                    runtime.active[boat["id"]].get("plan_id") != plan["plan_id"] for boat in team):
                 continue
             candidates = [boat for boat in runtime.uuvs if runtime.active.get(boat["id"], {}).get("kind") in ("search", "reacquire")
-                and "passive" in boat.get("capabilities", []) and boat["remaining_range_m"] > _reserve(runtime, boat, 1500)]
+                and "passive" in boat.get("capabilities", []) and boat["remaining_range_m"] > _reserve(runtime, boat, _HANDOVER["candidate_range_margin_m"])]
             candidates.sort(key=lambda boat: (-boat["remaining_range_m"], math.dist(boat["pose"][:2], [contact["x"], contact["y"]]), boat["id"]))
-            for incoming in candidates[:3]:
+            for incoming in candidates[:_HANDOVER["candidate_limit"]]:
                 transit = tracking_plan([survivor, incoming], contact, runtime.obstacles, require_active_acquisition=False)
                 if transit["status"] != "succeeded":
                     continue
-                arrival_cost = transit["slots"][incoming["id"]]["length_m"]+3*runtime.config.speed
+                arrival_cost = transit["slots"][incoming["id"]]["length_m"]+_HANDOVER["arrival_time_margin_s"]*runtime.config.speed
                 exit_candidates = [departing, survivor, {**incoming, "pose": transit["slots"][incoming["id"]]["pose"]}]
                 exit_routes = [exit_route(runtime, boat) for boat in exit_candidates]
                 if any(route is None or boat["remaining_range_m"] <= arrival_cost+route["length_m"]+runtime.config.exit_reserve+margin
-                       for boat, route, margin in zip(exit_candidates, exit_routes, (0, 1500, 1500))):
+                       for boat, route, margin in zip(exit_candidates, exit_routes, (0, _HANDOVER["member_exit_margin_m"], _HANDOVER["member_exit_margin_m"]))):
                     continue
                 searching = [boat for boat in runtime.uuvs if boat["id"] != incoming["id"] and
                     runtime.active.get(boat["id"], {}).get("kind") in ("search", "reacquire")]
@@ -66,13 +70,13 @@ def prepare_handover(runtime):
                         member = region["owner"]
                         if previous.get(member) != region["cells"]:
                             runtime.active[member].update(points=repair["routes"][member], index=0,
-                                execution_domain=[0, 0, 4000, 4000], cycle_start_index=repair.get("cycle_start_indices", {}).get(member, 0))
+                                execution_domain=[0, 0, runtime.config.width, runtime.config.height], cycle_start_index=repair.get("cycle_start_indices", {}).get(member, 0))
                     prior_plan = runtime.plans.get(runtime.active[incoming["id"]].get("plan_id"))
                     if prior_plan:
                         prior_plan["active_members"] = [member for member in prior_plan.get("active_members", prior_plan["members"]) if member != incoming["id"]]
                     runtime.active[incoming["id"]] = {"plan_id": plan["plan_id"], "kind": "track", "phase": "transit",
                         "contact_id": contact_id, "points": transit["routes"][incoming["id"]], "index": 0, "slot": 2,
-                        "execution_domain": [0, 0, 4000, 4000], "generation": incoming["generation"]}
+                        "execution_domain": [0, 0, runtime.config.width, runtime.config.height], "generation": incoming["generation"]}
                     action.update(relief_member=incoming["id"], relief_generation=incoming["generation"],
                         relief_survivor=survivor["id"], relief_survivor_generation=survivor["generation"],
                         relief_started_s=runtime.sim_time, relief_streak_s=0, relief_last_sample_s=None)
@@ -103,12 +107,12 @@ def finish_handover(runtime):
             contact = runtime.contacts.get(action.get("contact_id"))
             pair = [(action["relief_member"], action["relief_generation"]),
                     (action["relief_survivor"], action["relief_survivor_generation"])]
-            valid = contact and contact["state"] not in ("tentative", "lost") and contact["uncertainty_m"] <= 120
+            valid = contact and contact["state"] not in ("tentative", "lost") and contact["uncertainty_m"] <= _HANDOVER["maximum_contact_uncertainty_m"]
             valid = valid and boats[departing_id]["generation"] == action.get("generation")
             for member, generation in pair:
                 active = runtime.active.get(member, {})
                 valid = valid and member in boats and boats[member]["generation"] == generation and active.get("generation") == generation
-                valid = valid and boats[member]["remaining_range_m"] > _reserve(runtime, boats[member], 500)
+                valid = valid and boats[member]["remaining_range_m"] > _reserve(runtime, boats[member], _HANDOVER["member_live_margin_m"])
                 valid = valid and active.get("kind") == "track" and active.get("contact_id") == action["contact_id"]
                 valid = valid and active.get("phase") in ("acquiring", "tracking")
             observations = []
@@ -116,20 +120,20 @@ def finish_handover(runtime):
                 for member, generation in pair:
                     sample = next((sample for sample in reversed(runtime.observations) if sample.get("observer_id") == member and
                         sample.get("generation") == generation and sample.get("contact_id") == action["contact_id"] and
-                        sample.get("mode") == "passive" and 0 <= runtime.sim_time-sample["time_s"] <= 1.01), None)
+                        sample.get("mode") == "passive" and 0 <= runtime.sim_time-sample["time_s"] <= _HANDOVER["maximum_observation_age_s"]), None)
                     if sample:
                         observations.append(sample)
             geometry = abs(math.sin(observations[0]["bearing_rad"]-observations[1]["bearing_rad"])) if len(observations) == 2 else 0
-            if not valid or geometry <= .3:
+            if not valid or geometry <= _HANDOVER["minimum_geometry_quality"]:
                 action.update(relief_streak_s=0, relief_last_sample_s=None)
                 continue
             observed_at = min(sample["time_s"] for sample in observations)
             previous = action.get("relief_last_sample_s")
             if previous is not None and observed_at <= previous:
                 continue
-            action["relief_streak_s"] = action.get("relief_streak_s", 0)+(observed_at-previous) if previous is not None and observed_at-previous <= 1.5 else 0
+            action["relief_streak_s"] = action.get("relief_streak_s", 0)+(observed_at-previous) if previous is not None and observed_at-previous <= _HANDOVER["maximum_observation_gap_s"] else 0
             action["relief_last_sample_s"] = observed_at
-            if action["relief_streak_s"] < 3:
+            if action["relief_streak_s"] < _HANDOVER["acquisition_streak_s"]:
                 continue
             departing = boats[departing_id]
             route = exit_route(runtime, departing)
@@ -137,7 +141,10 @@ def finish_handover(runtime):
                 continue
             with runtime.transaction():
                 runtime.active[departing_id] = {"plan_id": runtime.standing_policy["plan_id"], "kind": "exit", "phase": "exiting",
-                    "points": route["points"], "index": 0, "slot": 0, "execution_domain": [-100, -100, 4100, 4100], "generation": departing["generation"]}
+                    "points": route["points"], "index": 0, "slot": 0, "execution_domain": [
+                        -_LIFECYCLE["exit_bounds_padding_m"], -_LIFECYCLE["exit_bounds_padding_m"],
+                        runtime.config.width+_LIFECYCLE["exit_bounds_padding_m"],
+                        runtime.config.height+_LIFECYCLE["exit_bounds_padding_m"]], "generation": departing["generation"]}
                 plan = runtime.plans.get(action["plan_id"])
                 if plan:
                     plan["active_members"] = [member for member, _ in pair]

@@ -13,7 +13,7 @@ const workerToken = process.env.UUV_WORKER_TOKEN;
 const key = process.env.LONGCAT_API_KEY;
 if (!workerToken || !key) throw new Error("Set UUV_WORKER_TOKEN and LONGCAT_API_KEY before starting PI worker");
 const secrets = [workerToken, key];
-const runtimeDir = resolve(root, "tools/.runtime/pi");
+const runtimeDir = resolve(process.env.UUV_PI_RUNTIME_DIR || resolve(root, "tools/.runtime/pi"));
 await mkdir(runtimeDir, { recursive: true, mode: 0o700 });
 const modelRuntime = await ModelRuntime.create({ authPath: resolve(runtimeDir, "auth.json"), modelsPath: resolve(runtimeDir, "models.json"), allowModelNetwork: false });
 modelRuntime.registerProvider("longcat", longcatConfig());

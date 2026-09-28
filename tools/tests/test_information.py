@@ -46,11 +46,11 @@ def test_real_active_scan_refreshes_and_paused_reads_are_immutable(game):
     game.active["UUV-1"] = {"kind": "search"}
     game.sim_time = 1
     game._observe()
-    assert game.frame()["info_matrix"][4][35] == 1
+    assert game.frame()["info_matrix"][4][33] == 1
     game.sim_time = 181
-    assert game.frame()["info_matrix"][4][35] == pytest.approx(.5)
+    assert game.frame()["info_matrix"][4][33] == pytest.approx(.5)
     game._observe()
-    assert game.frame()["info_matrix"][4][35] == 1
+    assert game.frame()["info_matrix"][4][33] == 1
     game.status = "paused"
     before = copy.deepcopy((game.scan_times, game.contacts, game.rng.getstate()))
     frame = game.frame()

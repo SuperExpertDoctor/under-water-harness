@@ -9,13 +9,15 @@ import random
 
 from .algorithms.motion import integrate
 from .algorithms.planning import path_safe
+from .config import algorithm_settings
 from .observations import measure
 from .sensing import visible
 
+_ADVERSARY = algorithm_settings("adversary")
 
 def initial_state():
     return {"detections": [], "history": [], "mapping": {}, "parameters": None,
-            "job": None, "last_started_s": -30.0, "last_started_wall": 0.0,
+            "job": None, "last_started_s": -_ADVERSARY["observation_history_s"], "last_started_wall": 0.0,
             "last_heartbeat": 0.0, "status": "offline", "cycle": 0}
 
 
@@ -33,7 +35,7 @@ def sample(state, own_pose, opponents, obstacles, sensor_range, now, seed):
                          observer_pose=list(own_pose))
         detections.append(detection)
     state["detections"] = detections
-    state["history"] = [item for item in state["history"] if now-item["time_s"] <= 30][-152:] + copy.deepcopy(detections)
+    state["history"] = [item for item in state["history"] if now-item["time_s"] <= _ADVERSARY["observation_history_s"]][-_ADVERSARY["maximum_history_entries"]:] + copy.deepcopy(detections)
 
 
 def control(own_pose, detections, parameters, obstacles, config, now):
@@ -43,22 +45,23 @@ def control(own_pose, detections, parameters, obstacles, config, now):
     forward arc exists, stopping is permitted; inference is never on this path.
     """
     active = parameters if parameters and parameters["expires_at_s"] > now else {}
-    speed = max(0, min(config.enemy_max_speed, active.get("speed_mps", 2.5)))
+    speed = max(0, min(config.enemy_max_speed, active.get("speed_mps", _ADVERSARY["fallback_speed_mps"])))
     bias = max(-1, min(1, active.get("turn_bias", 0)))
     x, y, heading = own_pose
     nearest = min(detections, key=lambda item: item["range_m"], default=None)
-    if nearest and (nearest["range_m"] < 80 or active):
+    if nearest and (nearest["range_m"] < _ADVERSARY["close_evasion_range_m"] or active):
         desired = nearest["bearing_rad"] + math.pi
     else:
-        desired = heading + .003
-    if min(x, y, config.width-x, config.height-y) < 400:
+        desired = heading + _ADVERSARY["fallback_turn_bias_rad"]
+    if min(x, y, config.width-x, config.height-y) < _ADVERSARY["boundary_inset_m"]:
         desired = math.atan2(config.height/2-y, config.width/2-x)
     error = math.remainder(desired-heading, 2*math.pi)
     maximum = 1/config.enemy_turn_radius
-    preferred = max(-maximum, min(maximum, error/100 + bias*maximum*.35))
-    candidates = sorted({preferred, -maximum, maximum, 0.0, -maximum/2, maximum/2}, key=lambda k: abs(k-preferred))
+    preferred = max(-maximum, min(maximum, error/_ADVERSARY["turn_response_m"] + bias*maximum*_ADVERSARY["turn_bias_gain"]))
+    candidates = sorted({preferred, *(fraction*maximum for fraction in _ADVERSARY["curvature_candidates"])},
+                        key=lambda k: abs(k-preferred))
     for curvature in candidates:
-        points = [integrate(own_pose, speed, curvature, t) for t in (0, config.dt, 1, 3, 6, 12)]
-        if path_safe(points, obstacles, [0, 0, config.width, config.height], margin=20):
+        points = [integrate(own_pose, speed, curvature, t if t else config.dt) for t in _ADVERSARY["control_horizon_s"]]
+        if path_safe([own_pose, *points], obstacles, [0, 0, config.width, config.height], margin=_ADVERSARY["safety_margin_m"]):
             return integrate(own_pose, speed, curvature, config.dt), speed, curvature
     return list(own_pose), 0.0, 0.0

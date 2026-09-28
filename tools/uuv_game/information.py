@@ -5,8 +5,10 @@ import math
 
 import numpy as np
 
+from .config import algorithm_settings
 from .observations import predict
 
+_INFORMATION = algorithm_settings("information")
 
 def information_fields(scan_times, contacts, searchable, now, config):
     scans = np.asarray(scan_times, dtype=float)
@@ -18,7 +20,7 @@ def information_fields(scan_times, contacts, searchable, now, config):
     freshness[valid] = np.exp(-math.log(2)*np.maximum(0, now-scans[valid])/config.scan_half_life_s)
     evidence = np.zeros(scans.shape)
     columns, rows = np.indices(scans.shape)
-    x, y = (columns+.5)*100, 4000-(rows+.5)*100
+    x, y = (columns+.5)*config.cell, config.height-(rows+.5)*config.cell
     for contact in contacts.values():
         samples = [sample for sample in contact.get("samples", [])
                    if sample.get("source") == "sensor" and math.isfinite(sample.get("time_s", -1))
@@ -40,16 +42,17 @@ def information_fields(scan_times, contacts, searchable, now, config):
             eigenvalues, orientation = np.linalg.eigh(covariance)
             # The display neighborhood has a 150 m floor; growing uncertainty
             # spreads the same evidence and reduces its peak by covariance area.
-            eigenvalues = np.maximum(eigenvalues, 150.0**2)
+            floor = _INFORMATION["target_floor_radius_m"]
+            eigenvalues = np.maximum(eigenvalues, floor**2)
             covariance = (orientation*eigenvalues) @ orientation.T
             delta = np.stack((x-belief["x"], y-belief["y"]), axis=-1)
             distance = np.einsum("...i,ij,...j->...", delta, np.linalg.inv(covariance), delta)
-            confidence = contact.get("confidence", .45 if contact.get("state") == "tentative" else .85)
+            confidence = contact.get("confidence", _INFORMATION["tentative_confidence"] if contact.get("state") == "tentative" else _INFORMATION["confirmed_confidence"])
             if not isinstance(confidence, (int, float)) or not math.isfinite(confidence):
                 continue
             amplitude = min(1, max(0, confidence))*math.exp(-math.log(2)*max(0, now-last_seen)/config.target_half_life_s)
-            amplitude *= 150.0**2/math.sqrt(float(np.prod(eigenvalues)))
-            field = np.where(distance <= 9, amplitude*np.exp(-.5*distance), 0)
+            amplitude *= floor**2/math.sqrt(float(np.prod(eigenvalues)))
+            field = np.where(distance <= _INFORMATION["local_evidence_sigma_squared"], amplitude*np.exp(-.5*distance), 0)
             evidence = np.maximum(evidence, field)
         else:
             for sample in samples:
@@ -61,10 +64,10 @@ def information_fields(scan_times, contacts, searchable, now, config):
                 angle = np.arctan2(dy, dx)-sample["bearing_rad"]
                 angle = (angle+math.pi) % (2*math.pi)-math.pi
                 # Include a cell's angular footprint without inventing a range.
-                sigma = max(sample["bearing_sigma"], math.radians(2))
-                width = sigma+np.arctan2(50, np.maximum(1, distance))
-                amplitude = .3*math.exp(-math.log(2)*(now-sample["time_s"])/config.target_half_life_s)
-                field = np.where((distance > 0) & (distance <= config.sensor_range) & (np.abs(angle) <= 3*width),
+                sigma = max(sample["bearing_sigma"], math.radians(_INFORMATION["bearing_sigma_floor_deg"]))
+                width = sigma+np.arctan2(config.cell/2, np.maximum(1, distance))
+                amplitude = _INFORMATION["bearing_evidence_gain"]*math.exp(-math.log(2)*(now-sample["time_s"])/config.target_half_life_s)
+                field = np.where((distance > 0) & (distance <= config.sensor_range) & (np.abs(angle) <= _INFORMATION["local_evidence_sigma_limit"]*width),
                                  amplitude*np.exp(-.5*(angle/width)**2), 0)
                 evidence = np.maximum(evidence, field)
     evidence[~mask] = 0

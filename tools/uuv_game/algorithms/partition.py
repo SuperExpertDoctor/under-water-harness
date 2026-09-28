@@ -5,8 +5,14 @@ import math
 import numpy as np
 from scipy.optimize import linear_sum_assignment
 
+from ..config import algorithm_settings
 from .motion import finite, valid_pose
 from .planning import environment, plan_path
+
+_PARTITION = algorithm_settings("partition")
+_CELL = _PARTITION["cell_m"]
+_GRID = _PARTITION["grid_cells"]
+_WORLD = _CELL * _GRID
 
 
 def _neighbors(cell):
@@ -31,7 +37,7 @@ def _components(cells):
     return components
 
 
-def _split(cells, weights, fraction=0.5):
+def _split(cells, weights, fraction=_PARTITION["balanced_split_fraction"]):
     """Prefer straight balanced cuts, requiring both children remain connected."""
     total = sum(weights[c] for c in cells)
     candidates = []
@@ -41,7 +47,7 @@ def _split(cells, weights, fraction=0.5):
             left = {c for c in cells if c[axis] < cut}
             right = cells-left
             imbalance = abs(sum(weights[c] for c in left)/total-fraction)
-            candidates.append((imbalance + 0.025/width, axis, cut, left, right))
+            candidates.append((imbalance + _PARTITION["balance_cut_penalty"]/width, axis, cut, left, right))
     for _, _, _, left, right in sorted(candidates, key=lambda value: value[:3]):
         if len(_components(left)) == len(_components(right)) == 1:
             return left, right
@@ -52,31 +58,34 @@ def _assignment_cost(boat, cells, weights, obstacles):
     capabilities = boat.get("capabilities", ["active", "passive"])
     if not any(capability in capabilities for capability in ("active", "search", "scan")):
         return math.inf
-    cx = sum(c[0]*100+50 for c in cells)/len(cells)
-    cy = sum(3950-c[1]*100 for c in cells)/len(cells)
-    entry = min(cells, key=lambda c: (math.dist([cx, cy], [c[0]*100+50, 3950-c[1]*100]), c))
-    search_cost = sum(weights[c] for c in cells)*10000/560
-    energy_horizon = min(search_cost, 600) if boat.get("allow_partial_patrol") is True else search_cost
+    cx = sum((c[0]+.5)*_CELL for c in cells)/len(cells)
+    cy = sum(_WORLD-(c[1]+.5)*_CELL for c in cells)/len(cells)
+    entry = min(cells, key=lambda c: (math.dist([cx, cy], [(c[0]+.5)*_CELL, _WORLD-(c[1]+.5)*_CELL]), c))
+    search_cost = sum(weights[c] for c in cells)*_CELL**2/_PARTITION["effective_swath_m"]
+    energy_horizon = min(search_cost, _PARTITION["energy_horizon_m"]) if boat.get("allow_partial_patrol") is True else search_cost
     entries = [entry]
     if boat.get("allow_partial_patrol") is True:
-        entries += sorted(cells, key=lambda c: (math.dist(boat["pose"][:2], [c[0]*100+50, 3950-c[1]*100]), c))[:3]
+        entries += sorted(cells, key=lambda c: (math.dist(boat["pose"][:2], [(c[0]+.5)*_CELL, _WORLD-(c[1]+.5)*_CELL]), c))[:_PARTITION["partial_entry_candidates"]]
     for col, row in entries:
-        x, y = col*100+50, 3950-row*100
+        x, y = (col+.5)*_CELL, _WORLD-(row+.5)*_CELL
         goal = [x, y, math.atan2(y-boat["pose"][1], x-boat["pose"][0])]
-        path = plan_path(boat["pose"], goal, obstacles=obstacles, budget=1)
-        exit_cost = min(x, y, 4000-x, 4000-y)+600
+        path = plan_path(boat["pose"], goal, obstacles=obstacles, budget=_PARTITION["assignment_entry_budget"])
+        exit_cost = min(x, y, _WORLD-x, _WORLD-y)+_PARTITION["exit_reserve_m"]
         if path["status"] == "succeeded" and path["length_m"]+energy_horizon+exit_cost <= boat.get("remaining_range_m", math.inf):
             return path["length_m"]+search_cost
     return math.inf
 
 
-def partition_regions(uuvs, scan_times, obstacles, previous=None):
+def partition_regions(uuvs, scan_times, obstacles, previous=None, *, now=None, window_s=None):
     """Allocate 40x40 UI cells; never mutate the global scan-time ledger.
 
     A cell is searchable only if its whole square clears every obstacle. Work
     estimates retain a revisit cost for scanned cells, so corridors stay owned.
     """
-    circles, _ = environment(obstacles, (0, 0, 4000, 4000))
+    circles, _ = environment(obstacles, (0, 0, _WORLD, _WORLD))
+    window_s = _PARTITION["revisit_window_s"] if window_s is None else finite(window_s, "revisit window")
+    if window_s <= 0:
+        raise ValueError("revisit window must be positive")
     if not isinstance(uuvs, list) or len(uuvs) > 8:
         raise ValueError("partition requires at most eight vehicles")
     identifiers = [u.get("id") for u in uuvs]
@@ -84,22 +93,22 @@ def partition_regions(uuvs, scan_times, obstacles, previous=None):
         raise ValueError("vehicle identifiers must be unique nonempty strings")
     for boat in uuvs:
         valid_pose(boat["pose"])
-    if len(scan_times) != 40 or any(len(column) != 40 for column in scan_times):
+    if len(scan_times) != _GRID or any(len(column) != _GRID for column in scan_times):
         raise ValueError("scan_times must be a 40 by 40 column-major ledger")
     free, weights = set(), {}
-    latest = max(0.0, max(finite(t, "scan time") for col in scan_times for t in col))
-    for col in range(40):
-        for row in range(40):
-            if any(math.hypot(max(col*100, min(x, (col+1)*100))-x,
-                              max(3900-row*100, min(y, 4000-row*100))-y) <= radius+8
+    latest = max(0.0, max(finite(t, "scan time") for col in scan_times for t in col)) if now is None else finite(now, "current time")
+    for col in range(_GRID):
+        for row in range(_GRID):
+            if any(math.hypot(max(col*_CELL, min(x, (col+1)*_CELL))-x,
+                              max(_WORLD-(row+1)*_CELL, min(y, _WORLD-row*_CELL))-y) <= radius+_PARTITION["obstacle_margin_m"]
                    for x, y, radius in circles):
                 continue
             cell = (col, row)
             free.add(cell)
             timestamp = scan_times[col][row]
-            weights[cell] = 1.0 if timestamp < 0 else 0.2+0.8*min(1.0, (latest-timestamp)/1800)
+            weights[cell] = 1.0 if timestamp < 0 else _PARTITION["visited_workload_floor"]+_PARTITION["visited_workload_scale"]*min(1.0, max(0, latest-timestamp)/window_s)
     result = {"status": "infeasible", "regions": [], "diagnostics": {
-        "free_cells": len(free), "masked_cells": 1600-len(free), "unowned_cells": len(free),
+        "free_cells": len(free), "masked_cells": _GRID**2-len(free), "unowned_cells": len(free),
         "method": "connected-workload-bisection", "coverage_guarantee": False}}
     if not uuvs:
         result["status"] = "succeeded"
@@ -128,7 +137,7 @@ def partition_regions(uuvs, scan_times, obstacles, previous=None):
                     split = _split(groups[owner], weights)
                     if split:
                         boat = next(u for u in uuvs if u["id"] == added)
-                        ordered = sorted(split, key=lambda cells: min(math.dist(boat["pose"][:2], [c[0]*100+50, 3950-c[1]*100]) for c in cells))
+                        ordered = sorted(split, key=lambda cells: min(math.dist(boat["pose"][:2], [(c[0]+.5)*_CELL, _WORLD-(c[1]+.5)*_CELL]) for c in cells))
                         groups[added], groups[owner] = ordered
                         break
                 else:
@@ -163,16 +172,16 @@ def partition_regions(uuvs, scan_times, obstacles, previous=None):
     for owner in sorted(groups):
         cells = groups[owner]
         old = next((r for r in old_regions if r["owner"] == owner), None)
-        pending = sorted(c for c in cells if scan_times[c[0]][c[1]] < 0)
-        scan_cells = pending or sorted(cells, key=lambda c: (scan_times[c[0]][c[1]], c))[:max(1, len(cells)//4)]
+        pending = sorted(c for c in cells if scan_times[c[0]][c[1]] < 0 or latest-scan_times[c[0]][c[1]] > window_s)
+        scan_cells = pending or sorted(cells, key=lambda c: (scan_times[c[0]][c[1]], c))[:max(1, math.ceil(len(cells)*_PARTITION["fallback_revisit_fraction"]))]
         result["regions"].append({"id": old["id"] if old else f"region-{owner}", "owner": owner,
             "cells": [list(c) for c in sorted(cells)],
             "scan_cells": [list(c) for c in scan_cells],
-            "bbox_m": [min(c[0] for c in cells)*100, (39-max(c[1] for c in cells))*100,
-                       (max(c[0] for c in cells)+1)*100, (40-min(c[1] for c in cells))*100],
+            "bbox_m": [min(c[0] for c in cells)*_CELL, (_GRID-1-max(c[1] for c in cells))*_CELL,
+                       (max(c[0] for c in cells)+1)*_CELL, (_GRID-min(c[1] for c in cells))*_CELL],
             "workload": sum(weights[c] for c in cells), "unscanned_cells": sum(scan_times[c[0]][c[1]] < 0 for c in cells)})
     result["status"] = "succeeded"
     result["diagnostics"].update(unowned_cells=0, local_repair=local)
     if any(boat.get("allow_partial_patrol") is True for boat in uuvs):
-        result["diagnostics"].update(requires_energy_rotation=True, assignment_energy_horizon_m=600)
+        result["diagnostics"].update(requires_energy_rotation=True, assignment_energy_horizon_m=_PARTITION["energy_horizon_m"])
     return result

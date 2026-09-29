@@ -1,5 +1,5 @@
 .env
-.runtime/
+.runtime
 __pycache__/
 .pytest_cache/
 *.pyc

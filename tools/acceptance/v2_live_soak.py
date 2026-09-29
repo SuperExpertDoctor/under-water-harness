@@ -21,7 +21,7 @@ def resources(services):
             values = dict(line.split(":", 1) for line in status.read_text().splitlines())
             memory[name] = int(values.get("VmRSS", "0 kB").split()[0])
     return {"rss_kib": memory, "database_bytes": sum(path.stat().st_size
-        for path in (ROOT/"tools/.runtime").glob("mission.sqlite*") if path.is_file())}
+        for path in (ROOT/"outputs/runtime").glob("mission.sqlite*") if path.is_file())}
 
 
 def check_running(state):
@@ -40,7 +40,7 @@ def main():
     parser.add_argument("--output", type=Path, default=Path("outputs/v2-longcat-soak.json"))
     args = parser.parse_args()
     require(0 < args.seconds <= 7200, "Duration must be between zero and two hours")
-    services = json.loads((ROOT/"tools/.runtime/services.json").read_text())
+    services = json.loads((ROOT/"outputs/runtime/services.json").read_text())
     api = services["backend_url"]
     require(urlparse(api).hostname in ("127.0.0.1", "localhost", "::1"), "Only local services are supported")
     report = {"schema": "uuv-v2-live-soak/v2", "status": "failed", "model_connected": True, "started_at": datetime.now(timezone.utc).isoformat(),

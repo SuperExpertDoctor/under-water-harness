@@ -169,6 +169,6 @@ Live scripts alter the dedicated demo episode and use the real paid model.
 `--reset` explicitly destroys the current episode's active execution; use it
 only for a dedicated acceptance run. Online continuation requires a paused,
 already-approved fleet, explicitly selects Full autonomy, and pauses on exit.
-Service URLs are discovered from `tools/.runtime/services.json`; browser flags
+Service URLs are discovered from `outputs/runtime/services.json`; browser flags
 must match the currently running ports. Do not run competing operator harnesses
 against one live episode simultaneously.

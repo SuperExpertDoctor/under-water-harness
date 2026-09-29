@@ -12,7 +12,7 @@ import time
 from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNTIME = ROOT / "tools/.runtime"
+RUNTIME = ROOT / "outputs/runtime"
 LAUNCHER_PATHS = (ROOT / "tools/launcher.py", ROOT / "tools/scripts/run.py")
 
 
@@ -104,7 +104,7 @@ def main():
             command.append("--no-model")
         with (RUNTIME / "services.log").open("a") as log:
             child = subprocess.Popen(command, cwd=ROOT, stdout=log, stderr=log, start_new_session=True)
-        print(json.dumps({"supervisor_pid": child.pid, "status": "starting", "details": "tools/.runtime/services.json"}))
+        print(json.dumps({"supervisor_pid": child.pid, "status": "starting", "details": "outputs/runtime/services.json"}))
         return
     env = dict(os.environ)
     credentials = RUNTIME / "credentials.env"
@@ -149,7 +149,7 @@ def main():
     ]
     if not args.no_model:
         if not env.get("LONGCAT_API_KEY"):
-            raise RuntimeError("LONGCAT_API_KEY missing; configure tools/.runtime/credentials.env or use --no-model")
+            raise RuntimeError("LONGCAT_API_KEY missing; configure outputs/runtime/credentials.env or use --no-model")
         friendly_env, enemy_env = worker_environments(env)
         commands.append(("pi", ["node", "--import", "./packages/coding-agent/src/experimental/source-resolver.ts", "tools/pi/worker.ts"], ROOT, friendly_env))
         commands.append(("pi-adversary", ["node", "--import", "./packages/coding-agent/src/experimental/source-resolver.ts", "tools/pi/adversary.ts"], ROOT, enemy_env))

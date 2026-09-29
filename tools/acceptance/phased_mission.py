@@ -433,7 +433,7 @@ def main():
     args = parser.parse_args()
     api = args.api
     if not api:
-        services = json.loads((ROOT/"tools/.runtime/services.json").read_text())
+        services = json.loads((ROOT/"outputs/runtime/services.json").read_text())
         api = services["backend_url"]
     driver = Driver(api, args.outputs, args.request_s, args.assisted_s, args.full_s, record=not args.no_recording)
     signal.signal(signal.SIGTERM, lambda *_: setattr(driver, "stop_requested", True))

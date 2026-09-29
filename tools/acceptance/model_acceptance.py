@@ -16,7 +16,7 @@ def main():
     mode.add_argument("--fleet", action="store_true")
     args = parser.parse_args()
     if not args.api:
-        args.api = json.loads(Path("tools/.runtime/services.json").read_text())["backend_url"]
+        args.api = json.loads(Path("outputs/runtime/services.json").read_text())["backend_url"]
     with httpx.Client(base_url=args.api, timeout=20) as client:
         client.get("/api/health").raise_for_status()
         state = client.get("/api/state").json()

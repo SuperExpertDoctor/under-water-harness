@@ -12,7 +12,7 @@ from v2_live_acceptance import assignment
 
 
 def main():
-    services = json.loads(Path("tools/.runtime/services.json").read_text())
+    services = json.loads(Path("outputs/runtime/services.json").read_text())
     report = {"status": "failed", "checks": {}, "errors": [], "screenshots": [], "writes": []}
     with httpx.Client(base_url=services["backend_url"], timeout=20) as client, sync_playwright() as pw:
         browser = pw.chromium.launch(headless=True)

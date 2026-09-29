@@ -16,7 +16,7 @@ def tracking_assignments(state):
 
 
 def main():
-    services = json.loads((ROOT/"tools/.runtime/services.json").read_text())
+    services = json.loads((ROOT/"outputs/runtime/services.json").read_text())
     report = {"status": "failed", "started_at": datetime.now(timezone.utc).isoformat(), "events": [],
         "states": [], "operator_actions": [], "runs": {}, "errors": []}
     started = time.monotonic()

@@ -292,13 +292,13 @@ class Acceptance:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--api", help="Defaults to existing tools/.runtime/services.json backend_url")
+    parser.add_argument("--api", help="Defaults to existing outputs/runtime/services.json backend_url")
     parser.add_argument("--reset", action="store_true", help="Explicitly reset the live episode before acceptance")
     parser.add_argument("--deadline", type=float, default=600, help="Global wall-clock budget in seconds")
     parser.add_argument("--output", type=Path, default=Path("outputs/v2-longcat-acceptance.json"))
     args = parser.parse_args()
     require(args.deadline > 0, "Deadline must be positive")
-    api = args.api or json.loads((ROOT/"tools/.runtime/services.json").read_text())["backend_url"]
+    api = args.api or json.loads((ROOT/"outputs/runtime/services.json").read_text())["backend_url"]
     parsed = urlparse(api)
     require(parsed.hostname in ("127.0.0.1", "localhost", "::1") and not parsed.username and not parsed.password,
         "Acceptance requires a local service URL without embedded credentials")

@@ -30,7 +30,7 @@ WORKER_LIVENESS_SECONDS = 30  # Includes the healthy worker's 15-second success 
 
 
 def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=None, ui_url=None, recording_dir=None):
-    db_path = db_path or os.environ.get("UUV_DB", "tools/.runtime/mission.sqlite")
+    db_path = db_path or os.environ.get("UUV_DB", "outputs/runtime/mission.sqlite")
     token = worker_token or os.environ.get("UUV_WORKER_TOKEN", "")
     enemy_token = adversary_token or os.environ.get("UUV_ADVERSARY_TOKEN", "")
     browser_secret = secrets.token_urlsafe(32)

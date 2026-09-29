@@ -19,7 +19,7 @@ tools/.venv/bin/pip install -r tools/requirements.txt
 tools/.venv/bin/python -m playwright install chromium
 ```
 
-通过环境变量提供 `LONGCAT_API_KEY`，或使用本机忽略文件 `tools/.runtime/credentials.env`。文件内容是 `LONGCAT_API_KEY=实际密钥`，目录权限应为 700、文件权限为 600。不要放进 `ui/`、Vite 环境变量、命令行参数或版本库。
+通过环境变量提供 `LONGCAT_API_KEY`，或使用本机忽略文件 `outputs/runtime/credentials.env`。文件内容是 `LONGCAT_API_KEY=实际密钥`，目录权限应为 700、文件权限为 600。不要放进 `ui/`、Vite 环境变量、命令行参数或版本库。
 
 ```sh
 ./run.sh
@@ -27,7 +27,7 @@ tools/.venv/bin/python -m playwright install chromium
 ./run.sh --stop
 ```
 
-`run.sh` 可从其他工作目录调用；优先使用 `tools/.venv/bin/python`，否则使用 `python3`。启动器默认选择后端 8765、前端 5173；端口占用时自动选择其他端口，真实地址记录在 `tools/.runtime/services.json`。`./run.sh --no-model` 可运行仿真算法与界面而不请求模型，界面会显示 PI 离线，不伪造模型回复。`--foreground` 用于终端前台管理。已有后台进程时再次启动只报告状态；停止会中断当前任务。
+`run.sh` 可从其他工作目录调用；优先使用 `tools/.venv/bin/python`，否则使用 `python3`。启动器默认选择后端 8765、前端 5173；端口占用时自动选择其他端口，真实地址记录在 `outputs/runtime/services.json`。`./run.sh --no-model` 可运行仿真算法与界面而不请求模型，界面会显示 PI 离线，不伪造模型回复。`--foreground` 用于终端前台管理。已有后台进程时再次启动只报告状态；停止会中断当前任务。
 
 ## 界面与操作
 

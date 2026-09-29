@@ -1017,8 +1017,12 @@ class MissionRuntime:
                     return
                 replacement = replacement_pose(self, u, {**next_poses, **replacements})
                 if replacement is None or any(math.dist(replacement[:2], p[:2]) < _LIFECYCLE["replacement_separation_m"] for p in target_poses.values()):
-                    self.pause("safety_entry_blocked")
-                    return
+                    # Hold the crossing boat at the boundary for one tick
+                    # instead of freezing the whole sim: other boats and
+                    # targets keep moving, so the entry slot can clear.
+                    self.event("exit_entry_blocked", {"uuv_id": u["id"], "pose": u["pose"]})
+                    next_poses[u["id"]] = u["pose"]
+                    continue
                 replacements[u["id"]] = replacement
         for u in self.uuvs:
             u["remaining_range_m"] = max(0, u["remaining_range_m"]-math.dist(u["pose"][:2], next_poses[u["id"]][:2]))

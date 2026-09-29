@@ -41,19 +41,20 @@ def test_joint_selector_resolves_recorded_head_on_conflict():
         assert math.dist(predicted[0][:2], predicted[1][:2]) >= 44
 
 
-def test_joint_selector_returns_none_for_blocked_pose_and_respects_idle_peer():
+def test_joint_selector_holds_blocked_pose_and_respects_idle_peer():
     boats = [{"id": "a", "pose": [500, 500, 0]}, {"id": "idle", "pose": [520, 500, 0]}]
-    assert choose()(boats, requests(boats[:1]), [], []) is None
-    assert choose()(boats[:1], requests(boats[:1]), [], [{"x": 500, "y": 500, "radius": 20}]) is None
+    assert choose()(boats, requests(boats[:1]), [], []) == {}
+    assert choose()(boats[:1], requests(boats[:1]), [], [{"x": 500, "y": 500, "radius": 20}]) == {}
 
 
 def test_joint_selector_explains_blocked_candidates():
     boats = [{"id": "a", "pose": [500, 500, 0]}]
     diagnostics = {}
-    assert choose()(boats, requests(boats), [], [{"x": 500, "y": 500, "radius": 20}], diagnostics=diagnostics) is None
+    assert choose()(boats, requests(boats), [], [{"x": 500, "y": 500, "radius": 20}], diagnostics=diagnostics) == {}
     assert diagnostics["reason"] == "no_static_safe_candidates"
     assert diagnostics["blocked_boat"] == "a"
     assert diagnostics["candidate_counts"]["a"] == 0
+    assert diagnostics["held_boats"] == ["a"]
 
 
 def test_observation_clearance_buffer_turns_before_hard_envelope():

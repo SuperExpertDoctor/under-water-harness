@@ -127,11 +127,17 @@ def choose_controls(boats, requests, contacts, obstacles, separation=_CONTROL["s
     options = {}
     for identifier in identifiers:
         options[identifier] = build(identifier, use_best=True)
-        if not options[identifier]:
-            diagnostics["candidate_counts"][identifier] = 0
-            diagnostics.update(reason="no_static_safe_candidates", blocked_boat=identifier)
-            return None
         diagnostics["candidate_counts"][identifier] = len(options[identifier])
+        if not options[identifier]:
+            # No candidate is safe this tick (e.g. a contact's clearance disk
+            # covers the whole turn envelope). Pausing the world cannot unblock
+            # it because the geometry stays frozen; hold the boat in place as
+            # a fixed obstacle and retry next tick once contacts maneuver.
+            options.pop(identifier)
+            fixed[identifier] = [poses[identifier] for _ in TIMES]
+            diagnostics.setdefault("held_boats", []).append(identifier)
+            diagnostics.update(reason="no_static_safe_candidates", blocked_boat=identifier)
+    identifiers = sorted(options)
     # Unrelated boats must not consume the beam's alternatives for a close pair.
     # Displacement bounds prove different components cannot interact this horizon.
     pending, selected = set(identifiers), {}

@@ -75,13 +75,34 @@ def repair_search(runtime, exclude=(), add=(), required=True):
     return True
 
 
+def strand(runtime, boat):
+    """Maroon a boat that cannot reach any boundary within its remaining range.
+
+    The hull stays visible loitering on its last position instead of deadlocking
+    the tick; the rest of the fleet keeps working and the coverage gap is left
+    to repair_search/standing plans.
+    """
+    action = runtime.active.get(boat["id"])
+    if action and action["kind"] == "track":
+        runtime.event("tracking_relief_required", {"uuv_id": boat["id"], "contact_id": action.get("contact_id")})
+        runtime.queue_agent("A tracking boat ran out of range before exiting. Plan a replacement team and verify observations; do not report handoff before acquisition.", "energy_exit")
+    runtime.active[boat["id"]] = {"plan_id": runtime.standing_policy["plan_id"], "kind": "stranded", "phase": "stranded",
+        "points": [boat["pose"][:]], "index": 0, "slot": 0,
+        "execution_domain": [0, 0, runtime.config.width, runtime.config.height], "generation": boat["generation"]}
+    runtime.metrics["stranded_count"] = runtime.metrics.get("stranded_count", 0)+1
+    runtime.event("uuv_stranded", {"uuv_id": boat["id"], "generation": boat["generation"], "pose": boat["pose"],
+        "remaining_range_m": boat["remaining_range_m"], "reason": "exit_route_infeasible"})
+    repair_search(runtime, exclude=[boat["id"]], required=False)
+
+
 def prepare_exits(runtime):
     for boat in runtime.uuvs:
         action = runtime.active.get(boat["id"])
-        if not action or action["kind"] == "exit":
+        if not action or action["kind"] in ("exit", "stranded"):
             continue
         x, y = boat["pose"][:2]
-        if boat["remaining_range_m"] > 1.5*min(x, y, runtime.config.width-x, runtime.config.height-y):
+        min_dist = min(x, y, runtime.config.width-x, runtime.config.height-y)
+        if boat["remaining_range_m"] > 1.5*min_dist+_LIFECYCLE["exit_trigger_buffer_m"]:
             continue
         if not runtime.standing_policy["energy_rotation"]:
             runtime.event("energy_authorization_required", {"uuv_id": boat["id"]})
@@ -89,8 +110,13 @@ def prepare_exits(runtime):
             return False
         route = exit_route(runtime, boat)
         if route is None:
-            runtime.pause("safety_exit_infeasible")
-            return False
+            # Straight-line slack underestimates Dubins turn-back length and
+            # obstacle detours; retry while cruising buffer remains, then the
+            # boat is genuinely lost at sea rather than a tick deadlock.
+            if boat["remaining_range_m"] > 1.5*min_dist:
+                continue
+            strand(runtime, boat)
+            continue
         if not repair_search(runtime, exclude=[boat["id"]], required=False):
             runtime.event("coverage_gap_accepted", {"uuv_id": boat["id"], "generation": boat["generation"],
                 "reason": "repair_infeasible_for_remaining_fleet"})

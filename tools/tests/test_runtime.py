@@ -82,10 +82,10 @@ def test_turnover_exits_to_nearest_boundary_and_reenters_at_that_point(runtime, 
     runtime.standing_policy["plan_id"] = "authorized-rotation"
     runtime.active[boat["id"]] = {"kind": "search", "generation": 1}
     monkeypatch.setattr("uuv_game.lifecycle.repair_search", lambda *_args, **_kwargs: True)
-    boat["remaining_range_m"] = 1201
+    boat["remaining_range_m"] = 1701
     assert prepare_exits(runtime)
     assert runtime.active[boat["id"]]["kind"] == "search"
-    boat["remaining_range_m"] = 1200
+    boat["remaining_range_m"] = 1700
     assert prepare_exits(runtime)
     assert runtime.active[boat["id"]]["exit_point"] == [0, 1000]
     positions = {other["id"]: [1800 + index * 200, 2000, 0] for index, other in enumerate(runtime.uuvs)}

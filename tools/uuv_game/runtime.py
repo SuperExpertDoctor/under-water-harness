@@ -323,7 +323,7 @@ class MissionRuntime:
             automatic = name in ("compute_task_allocation", "partition_search_area", "plan_search", "plan_tracking") and "members" not in data
             global_coverage = automatic and (name in ("partition_search_area", "plan_search") or
                 (name == "compute_task_allocation" and "tasks" not in data and not data.get("contact_id")))
-            members = copy.deepcopy([u for u in self.uuvs if self.active.get(u["id"], {}).get("kind") != "exit"]) if automatic else self._members(data,
+            members = copy.deepcopy([u for u in self.uuvs if self.active.get(u["id"], {}).get("kind") not in ("exit", "stranded")]) if automatic else self._members(data,
                 self.config.fleet_size if name in ("plan_search", "partition_search_area", "compute_task_allocation") else _ASSIGNMENT["maximum_team_size"])
             if automatic and name != "plan_tracking":
                 members = [u for u in members if self.active.get(u["id"], {}).get("kind") != "track"]
@@ -953,7 +953,8 @@ class MissionRuntime:
                     else:
                         action["index"] = action.get("cycle_start_index", 0)
                         preferred = follow_path(pose, points[action["index"]:action["index"]+_RUNTIME["lookahead_points"]])
-                        self.event("search_complete", {"uav_id": u["id"], "plan_id": action["plan_id"]})
+                        if action["kind"] in ("search", "reacquire"):
+                            self.event("search_complete", {"uav_id": u["id"], "plan_id": action["plan_id"]})
                         if action.get("requires_replan_after_cycle"):
                             self.queue_agent("Coverage gap or overdue revisit detected; review available search assignments.", "search_gap")
                 else:

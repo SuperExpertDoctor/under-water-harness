@@ -99,7 +99,7 @@ export default function RightSidebar({
   return (
     <aside className={`sidebar ${open ? "open" : ""} ${tab === "chat" ? "conversation-sidebar" : ""}`} aria-label="任务工作区">
       <div className="sidebar-header">
-        <div><span className="eyebrow">MISSION CONTROL</span><strong>{tab === "chat" ? <>PI Agent <small className="sidebar-agent-status">{readOnly ? "只读" : mission?.state.agent?.status || "待命"}</small></> : "任务工作区"}</strong></div>
+        <strong className="sidebar-title">{tab === "chat" ? <>PI Agent <small className="sidebar-agent-status">{readOnly ? "只读" : { idle: "待命", running: "运行中", offline: "离线", degraded: "异常", queued: "排队", unavailable: "不可用" }[mission?.state.agent?.status] || "待命"}</small></> : "任务工作区"}</strong>
         <button className="icon-btn mobile-only" onClick={onClose} aria-label="关闭编队状态" title="关闭"><CircleX size={17} /></button>
       </div>
       <div className="sidebar-tabs" role="tablist" aria-label="任务视图">

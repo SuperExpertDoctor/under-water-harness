@@ -1,10 +1,22 @@
 import { Fragment, useEffect, useRef, useState } from "react";
-import { ArrowDown, ArrowUpRight, CornerDownRight, Eye, MessageSquareQuote, Send, ShieldAlert, Square, X } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Check, CircleX, CornerDownRight, Eye, LoaderCircle, MessageSquareQuote, Send, ShieldAlert, Square, X } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { annotationPayload, groupApprovalsByMessage } from "../state/missionState";
 
 const STATUS = { streaming: "生成中", completed: "完成", failed: "失败", cancelled: "已停止", queued: "已排队", delivered: "已送达" };
+const TOOL_LABELS = {
+  get_observations: "读取观测",
+  get_mission_state: "读取任务状态",
+  get_action_status: "查询行动状态",
+  plan_search: "计算搜索航线",
+  plan_tracking: "计算跟踪方案",
+  plan_path: "规划路径",
+  compute_task_allocation: "计算编队分配",
+  evaluate_plan: "校验计划",
+  submit_mission_plan: "提交舰队计划",
+};
+const APPROVAL_MODES = [["request", "请求批准"], ["assisted", "帮我批准"], ["full", "完全访问权限"]];
 
 export default function ConversationPanel({ mission, frame, readOnly, selectedMessageId }) {
   const [text, setText] = useState("");
@@ -85,27 +97,57 @@ export default function ConversationPanel({ mission, frame, readOnly, selectedMe
       {!messages.length && <p className="panel-empty">暂无对话</p>}
       {messages.map((message) => {
         const toolOutputs = [...(message.tools || []), ...(lastMessageByRun.get(message.run_id) === message.id ? [...(toolsByRun.get(message.run_id)?.values() || [])] : [])];
-        return <Fragment key={message.id}><article className={`agent-message ${message.role} ${selectedMessageId === message.id || highlightedMessageId === message.id ? "linked-message" : ""}`} data-message-id={message.id} tabIndex={-1} onMouseUp={(event) => {
-        const selected = window.getSelection();
-        const body = event.currentTarget.querySelector(".markdown");
-        if (!body || !selected?.rangeCount || !body.contains(selected.anchorNode) || !body.contains(selected.focusNode)) return;
-        setSelection(annotationPayload({ ...message, text: body.textContent }, selected.toString()));
-      }}>
-        <header><strong>{message.role === "user" ? "你" : message.role === "tool" ? "工具" : "PI"}</strong><span>{message.model || ""} {message.status === "streaming" && approvals.byMessage.get(message.id)?.some((plan) => plan.status === "pending_approval") ? "等待审批" : STATUS[message.status] || message.status || ""}</span></header>
-        {(message.annotations || (message.annotation ? [message.annotation] : [])).map((reference, index) => <div className="annotation-reference" key={`${reference.message_id}-${index}`}>
-          <button type="button" className="annotation-link" onClick={() => jumpToMessage(reference.message_id)} title="定位到引用消息"><MessageSquareQuote size={14} />引用消息<ArrowUpRight size={13} /></button>
-          <blockquote>{reference.quote}</blockquote>
-        </div>)}
-        <div className="markdown"><Markdown remarkPlugins={[remarkGfm]} skipHtml components={{ img: () => null, a: ({ children, href }) => <a href={href} target="_blank" rel="noreferrer">{children}</a> }}>{message.text || ""}</Markdown></div>
-        {message.status === "streaming" && !approvals.byMessage.get(message.id)?.some((plan) => plan.status === "pending_approval") && <span className="stream-status" role="status">生成中</span>}
-        {!disabled && selection?.message_id === message.id && <button type="button" className="quote-action" onPointerDown={(event) => event.preventDefault()} onClick={() => { setAnnotation(selection); setSelection(null); composer.current?.focus(); }}><MessageSquareQuote size={14} />批注所选内容</button>}
-      </article>
-      {toolOutputs.length > 0 && <details className="tool-group"><summary>工具调用 <span>{toolOutputs.length}</span></summary>
-        {toolOutputs.map((tool, index) => <details className="tool-output" key={tool.tool_call_id || index}><summary>{tool.tool_name || tool.name || "工具"} · {tool.status || ""}</summary><pre>{typeof tool.result === "string" ? tool.result : JSON.stringify(tool.result ?? tool, null, 2)}</pre></details>)}
-      </details>}
-      {approvals.byMessage.get(message.id)?.map((plan) => <ApprovalRequestItem key={plan.plan_id} plan={plan} mission={mission} frame={frame} disabled={disabled} />)}
-      </Fragment>})}
-      {!currentApproval && jobs.map((job) => <div className="generation-row" key={job.run_id}><span>{job.status === "queued" ? "等待生成" : "正在生成"}<small>{job.run_id}</small></span><button className="icon-btn" title="停止生成" aria-label="停止生成" disabled={disabled} onClick={() => mission.act("停止生成", `/api/pi-agent/task-assignment/${encodeURIComponent(job.run_id)}/cancel`)}><Square size={14} /></button></div>)}
+        const messageApprovals = approvals.byMessage.get(message.id) || [];
+        const hasPendingApproval = messageApprovals.some((plan) => plan.status === "pending_approval");
+        const live = message.status === "streaming";
+        const content = <>
+          {(message.annotations || (message.annotation ? [message.annotation] : [])).map((reference, index) => <div className="annotation-reference" key={`${reference.message_id}-${index}`}>
+            <button type="button" className="annotation-link" onClick={() => jumpToMessage(reference.message_id)} title="定位到引用消息"><MessageSquareQuote size={14} />引用消息<ArrowUpRight size={13} /></button>
+            <blockquote>{reference.quote}</blockquote>
+          </div>)}
+          <div className="markdown"><Markdown remarkPlugins={[remarkGfm]} skipHtml components={{ img: () => null, a: ({ children, href }) => <a href={href} target="_blank" rel="noreferrer">{children}</a> }}>{message.text || ""}</Markdown></div>
+          {live && !hasPendingApproval && <WorkingLine />}
+          {!disabled && selection?.message_id === message.id && <button type="button" className="quote-action" onPointerDown={(event) => event.preventDefault()} onClick={() => { setAnnotation(selection); setSelection(null); composer.current?.focus(); }}><MessageSquareQuote size={14} />批注所选内容</button>}
+        </>;
+        const article = <article className={`agent-message ${message.role} ${selectedMessageId === message.id || highlightedMessageId === message.id ? "linked-message" : ""}`} data-message-id={message.id} tabIndex={-1} onMouseUp={(event) => {
+          const selected = window.getSelection();
+          const body = event.currentTarget.querySelector(".markdown");
+          if (!body || !selected?.rangeCount || !body.contains(selected.anchorNode) || !body.contains(selected.focusNode)) return;
+          setSelection(annotationPayload({ ...message, text: body.textContent }, selected.toString()));
+        }}>
+          {message.role !== "user" && message.role !== "assistant" && <header><strong>工具</strong><span>{STATUS[message.status] || message.status || ""}</span></header>}
+          {content}
+        </article>;
+        if (message.role === "user") return <Fragment key={message.id}>{article}</Fragment>;
+        return <div className="agent-turn" key={message.id}>
+          {article}
+          {(toolOutputs.length > 0 || messageApprovals.length > 0) && <details className="activity-group" open={live || hasPendingApproval ? true : undefined}>
+            <summary>{live ? <WorkingLine compact /> : "活动过程"}<span className="activity-count">{toolOutputs.length}</span></summary>
+            <ol className="activity-list">
+              {toolOutputs.map((tool, index) => {
+                const name = tool.tool_name || tool.name || "";
+                const waitingApproval = hasPendingApproval && name === "submit_mission_plan" && tool.status !== "失败";
+                const state = waitingApproval ? "approval" : tool.status === "执行中" ? "running" : tool.status === "失败" ? "failed" : "done";
+                return <li className={`activity-item ${state}`} key={tool.tool_call_id || index}>
+                  <details className="tool-output">
+                    <summary>
+                      <ActivityIcon state={state} />
+                      <span className="activity-label">{TOOL_LABELS[name] || name || "工具"}</span>
+                      <span className="activity-status">{waitingApproval ? "等待审批" : tool.status || ""}</span>
+                    </summary>
+                    <pre>{typeof tool.result === "string" ? tool.result : JSON.stringify(tool.result ?? tool, null, 2)}</pre>
+                  </details>
+                </li>;
+              })}
+            </ol>
+            {messageApprovals.map((plan) => <ApprovalRequestItem key={plan.plan_id} plan={plan} mission={mission} frame={frame} disabled={disabled} />)}
+          </details>}
+        </div>;
+      })}
+      {!currentApproval && jobs.map((job) => <div className="working-line" key={job.run_id} title={job.run_id}>
+        <LoaderCircle size={14} className="spin" aria-hidden="true" /><span>{job.status === "queued" ? "排队中" : "Working…"}<small>{job.text}</small></span>
+        <button className="icon-btn" title="停止生成" aria-label="停止生成" disabled={disabled} onClick={() => mission.act("停止生成", `/api/pi-agent/task-assignment/${encodeURIComponent(job.run_id)}/cancel`)}><Square size={14} /></button>
+      </div>)}
       {approvals.unlinked.length > 0 && <div className="unlinked-approvals" role="group" aria-label="未关联到对话回合的审批">
         <span className="unlinked-label">未关联到对话回合</span>
         {approvals.unlinked.map((plan) => <ApprovalRequestItem key={plan.plan_id} plan={plan} mission={mission} frame={frame} disabled={disabled} />)}
@@ -120,12 +162,31 @@ export default function ConversationPanel({ mission, frame, readOnly, selectedMe
       if (result) { setText(""); setAnnotation(null); setFollowing(true); }
     }}>
       {annotation && <div className="annotation-draft"><button type="button" className="annotation-link" title="定位到引用消息" onClick={() => jumpToMessage(annotation.message_id)}><MessageSquareQuote size={14} />引用消息<ArrowUpRight size={13} /></button><blockquote>{annotation.quote}</blockquote><button className="icon-btn" type="button" title="移除批注引用" aria-label="移除批注引用" onClick={() => setAnnotation(null)}><X size={14} /></button></div>}
-      <label className="composer-label" htmlFor="mission-message">任务指令或批注</label>
-      <textarea ref={composer} id="mission-message" placeholder={readOnly ? "回放只读" : "发送任务指令或批注"} value={text} onChange={(event) => setText(event.target.value)} maxLength={4000} rows={3} disabled={disabled || Boolean(currentApproval)} />
-      <div className="composer-actions"><span className="composer-model" title={(readOnly ? frame?.agent_status?.model : mission.state.agent?.model) || "PI Agent"}>{(readOnly ? frame?.agent_status?.model : mission.state.agent?.model) || "PI Agent"}</span><label><CornerDownRight size={14} /><select aria-label="消息投递方式" value={delivery} onChange={(event) => setDelivery(event.target.value)} disabled={disabled || Boolean(currentApproval)}><option value="steer">当前回合反馈</option><option value="followUp">下一回合跟进</option></select></label><button className="icon-btn send-message" aria-label="发送消息" title="发送消息" disabled={disabled || Boolean(currentApproval) || !text.trim()}><Send size={16} /></button></div>
+      <div className="composer-box">
+        <textarea ref={composer} id="mission-message" aria-label="任务指令或批注" placeholder={readOnly ? "回放只读" : "发送任务指令或批注…"} value={text} onChange={(event) => setText(event.target.value)} maxLength={4000} rows={3} disabled={disabled || Boolean(currentApproval)} />
+        <div className="composer-actions">
+          <span className="composer-model" title={(readOnly ? frame?.agent_status?.model : mission.state.agent?.model) || "PI Agent"}>{(readOnly ? frame?.agent_status?.model : mission.state.agent?.model) || "PI Agent"}</span>
+          <label className="composer-permission"><select aria-label="审批模式" value={mission.state.autonomy_mode || frame?.autonomy_mode || "request"} disabled={disabled} onChange={(event) => mission.act("切换权限", "/api/permissions/mode", { mode: event.target.value })}>
+            {APPROVAL_MODES.map(([mode, label]) => <option key={mode} value={mode}>{label}</option>)}
+          </select></label>
+          <label className="composer-delivery"><CornerDownRight size={14} /><select aria-label="消息投递方式" value={delivery} onChange={(event) => setDelivery(event.target.value)} disabled={disabled || Boolean(currentApproval)}><option value="steer">当前回合反馈</option><option value="followUp">下一回合跟进</option></select></label>
+          <button className="icon-btn send-message" aria-label="发送消息" title="发送消息" disabled={disabled || Boolean(currentApproval) || !text.trim()}><Send size={16} /></button>
+        </div>
+      </div>
     </form>}
     {mission.error && <p className="panel-error" role="alert">{mission.error}</p>}
   </section>;
+}
+
+function WorkingLine({ compact }) {
+  return <span className={`working-line ${compact ? "compact" : ""}`} role="status"><LoaderCircle size={14} className="spin" aria-hidden="true" />Working…</span>;
+}
+
+function ActivityIcon({ state }) {
+  if (state === "running") return <LoaderCircle size={14} className="spin" aria-hidden="true" />;
+  if (state === "approval") return <ShieldAlert size={14} aria-hidden="true" />;
+  if (state === "failed") return <CircleX size={14} aria-hidden="true" />;
+  return <Check size={14} aria-hidden="true" />;
 }
 
 function ApprovalRequestItem({ plan, mission, frame, disabled }) {

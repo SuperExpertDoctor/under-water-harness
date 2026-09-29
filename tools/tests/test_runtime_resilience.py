@@ -68,11 +68,15 @@ def test_closed_route_repeats_without_unapproved_loiter(runtime):
 
 
 def test_target_truth_is_used_only_for_independent_collision_pause(runtime):
-    runtime.targets[0]["pose"] = list(runtime.uuvs[0]["pose"])
+    original = list(runtime.uuvs[0]["pose"])
+    runtime.targets[0]["pose"] = list(original)
     runtime.start()
     runtime.tick()
-    assert runtime.status == "safety_paused"
-    assert runtime.sim_time == 0
+    # The interlock holds the colliding boat for a tick while the quarry keeps
+    # maneuvering, instead of deadlocking the sim on identical geometry.
+    assert runtime.status == "running"
+    assert runtime.uuvs[0]["pose"] == original
+    assert any(event["type"] == "target_collision_hold" for event in runtime.events)
     assert "targets" not in runtime.mission_state()
 
 

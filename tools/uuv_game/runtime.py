@@ -1005,14 +1005,30 @@ class MissionRuntime:
         collisions = [(u["id"], target["id"]) for u in self.uuvs for target in self.targets
                       if math.dist(next_poses[u["id"]][:2], target_poses[target["id"]][:2]) < self.config.separation]
         if collisions:
-            # The quarry keeps maneuvering while the fleet holds. Applying the
-            # targets' steps lets a resume replay different geometry instead of
-            # deadlocking on the identical collision.
+            # Hold the boats that would collide and let the quarry keep
+            # maneuvering; the tick proceeds so separation opens up over
+            # successive ticks instead of pause-looping on frozen geometry.
             for target in self.targets:
                 target["pose"] = target_poses[target["id"]]
-            self.event("target_collision_hold", {"collisions": collisions})
-            self.pause("safety_target_collision")
-            return
+            held = {c[0] for c in collisions}
+            for u in self.uuvs:
+                if u["id"] in held or any(math.dist(next_poses[u["id"]][:2], t["pose"][:2]) < self.config.separation for t in self.targets):
+                    next_poses[u["id"]] = u["pose"]
+                    held.add(u["id"])
+            # Freezing boats can pull a moving boat's committed pose inside
+            # separation of a now-stationary one; freeze worsening pairs too.
+            stable = False
+            while not stable:
+                stable = True
+                for index, first in enumerate(self.uuvs):
+                    for second in self.uuvs[index+1:]:
+                        next_dist = math.dist(next_poses[first["id"]][:2], next_poses[second["id"]][:2])
+                        if next_dist < self.config.separation and next_dist < math.dist(first["pose"][:2], second["pose"][:2]):
+                            next_poses[first["id"]] = first["pose"]
+                            next_poses[second["id"]] = second["pose"]
+                            held.update((first["id"], second["id"]))
+                            stable = False
+            self.event("target_collision_hold", {"collisions": collisions, "held": sorted(held)})
         replacements = {}
         for u in self.uuvs:
             x, y = next_poses[u["id"]][:2]

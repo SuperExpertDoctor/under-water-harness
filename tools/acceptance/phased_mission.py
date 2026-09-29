@@ -257,7 +257,7 @@ class Driver:
             return
         tracking = [u for u in state["uavs"] if u["operation_mode"] == "track" and u["task_phase"] == "tracking"]
         contact = next(iter(state.get("contacts", [])), None)
-        if not contact or contact["state"] != "tracking" or len(tracking) < 2:
+        if not contact or contact["state"] != "tracking" or not tracking:
             return
         boat = min(tracking, key=lambda u: u["energy_pct"])
         response = self.post("/api/test/fuel-shortage", {"debug": True, "uuv_id": boat["id"]})

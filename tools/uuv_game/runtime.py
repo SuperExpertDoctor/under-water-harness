@@ -38,6 +38,7 @@ _CONTROL = algorithm_settings("control")
 _ASSIGNMENT = algorithm_settings("assignment")
 _MISSION = algorithm_settings("mission_planning")
 _ENEMY = algorithm_settings("adversary")
+_OBS = algorithm_settings("observations")
 
 
 class MissionError(ValueError):
@@ -984,6 +985,8 @@ class MissionRuntime:
             if u["id"] in selected:
                 u["curvature"] = selected[u["id"]]
                 next_poses[u["id"]] = integrate(u["pose"], self.config.speed, selected[u["id"]], self.config.dt)
+            else:
+                next_poses[u["id"]] = u["pose"]
         # A common tick validates all proposed movements before committing any pose.
         # Pairs already inside the separation line (congestion that slipped in
         # via boundary turnover) must keep opening up; only worsening is a pause.
@@ -1000,7 +1003,11 @@ class MissionRuntime:
             pose, speed, curvature = enemy.control(target["pose"], self.adversary["detections"],
                 self.adversary["parameters"], self.obstacles, self.config, self.sim_time)
             target_poses[target["id"]] = pose
-            target.update(speed=speed, curvature=curvature)
+            # Radiated noise gates passive detection: only a moving target is
+            # loud enough to hold a passive track; sprinting is fast but
+            # audible, going quiet is stealthy but nearly static.
+            target.update(speed=speed, curvature=curvature,
+                          passive_signal=speed >= _OBS["passive_signal_min_speed_mps"])
         # Truth is used only by this simulator interlock, never to choose a control.
         collisions = [(u["id"], target["id"]) for u in self.uuvs for target in self.targets
                       if math.dist(next_poses[u["id"]][:2], target_poses[target["id"]][:2]) < self.config.separation]

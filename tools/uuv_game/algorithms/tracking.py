@@ -1,10 +1,18 @@
-"""Bounded geometric pursuit and moving-center distance-band orbit control."""
+"""Bounded geometric pursuit plus receding-horizon cooperative coverage control.
+
+`tracking_control` implements a simplified form of receding-horizon cooperative
+tracking (GA-free): each member scores a short list of constant-curvature
+rollouts by how many future steps keep the target inside someone's passive
+forward sector, evaluated against the target's nominal velocity prediction and
+both max-turn reachable-set boundary hypotheses. Marginal coverage over
+dead-reckoned teammates makes separated observers prefer complementary sectors.
+"""
 
 import math
 from itertools import combinations, product
 
 from .control import _separated
-from .motion import finite, positive, valid_pose
+from .motion import finite, integrate, positive, valid_pose
 from .planning import plan_path
 from .conflicts import resolve_conflicts
 from ..config import Config, algorithm_settings
@@ -168,16 +176,33 @@ def acquisition_control(pose, estimate, radius=Config().radius, speed=Config().s
     ty += vy*_TRACK["acquisition_prediction_s"]
     standoff = _TRACK["reacquisition_standoff_m"] if reacquiring else _TRACK["acquisition_standoff_m"]
     if math.dist([x, y], [tx, ty]) <= standoff:
-        return tracking_control(pose, estimate, radius=radius, speed=speed)
+        # Acquisition/reacquisition runs the narrow forward-active beam, so the
+        # station-keeping rollout must score detection in that sector, not the
+        # wide passive sector used by established tracking.
+        return tracking_control(pose, estimate, radius=radius, speed=speed,
+                                sector_rad=math.radians(Config().forward_active_half_angle_deg))
     error = math.remainder(math.atan2(ty-y, tx-x)-heading, math.tau)
     return max(-1/radius, min(1/radius, _TRACK["acquisition_heading_gain"]*error/radius))
 
 
-def tracking_control(pose, estimate, radius=Config().radius, speed=Config().speed, slot=0, team=None) -> float:
-    """Bounded orbit control; team is an ordered list of 2/3 current own poses.
+def _detects(pose, point, sensor_range, half_angle_rad):
+    """Passive forward sector: range plus a wide azimuth window."""
+    if math.dist(pose[:2], point[:2]) > sensor_range:
+        return False
+    bearing = math.atan2(point[1]-pose[1], point[0]-pose[0])
+    return abs(math.remainder(bearing-pose[2], 2*math.pi)) <= half_angle_rad
 
-    Cooperative slots use a shared orbit and phase feedback. Two bearings seek
-    a quarter-turn separation, not opposing collinear observation positions.
+
+def tracking_control(pose, estimate, radius=Config().radius, speed=Config().speed, slot=0, team=None, sector_rad=None) -> float:
+    """Receding-horizon cooperative coverage control (simplified GA analogue).
+
+    Instead of a fixed orbit law, each member evaluates a small set of constant-
+    curvature rollouts over a prediction horizon. The score counts, at every
+    horizon step and every target hypothesis (nominal velocity plus both
+    reachable-set boundary turns), whether the hypothesis lies inside someone's
+    passive forward sector. Marginal coverage over dead-reckoned teammates makes
+    observers cover complementary exits instead of bunching on one bearing;
+    a standoff floor and a distance pull keep a lone observer on station.
     """
     x, y, heading = valid_pose(pose)
     radius, speed = positive(radius, "radius"), positive(speed, "speed")
@@ -186,31 +211,72 @@ def tracking_control(pose, estimate, radius=Config().radius, speed=Config().spee
     if not isinstance(estimate, dict) or not {"x", "y", "vx", "vy"} <= estimate.keys():
         raise ValueError("tracking estimate requires x, y, vx, vy")
     tx, ty, vx, vy = [finite(estimate[key], key) for key in ("x", "y", "vx", "vy")]
-    dx, dy = x - tx, y - ty
-    distance = math.hypot(dx, dy)
-    angle = math.atan2(dy, dx) if distance > 1e-6 else heading - math.pi / 2
-    desired_distance = max(_TRACK["orbit_base_m"] + _TRACK["orbit_slot_increment_m"] * slot, _TRACK["orbit_min_radius_factor"] * radius)
     if team is not None:
         if not isinstance(team, (list, tuple)) or len(team) not in (2, 3) or slot >= len(team):
             raise ValueError("team requires two or three ordered poses and a matching slot")
-        team_poses = [valid_pose(member) for member in team]
-        offsets = [0, math.pi/2] if len(team) == 2 else [i*2*math.pi/3 for i in range(3)]
-        phases = [math.atan2(member[1]-ty, member[0]-tx)-offset for member, offset in zip(team_poses, offsets)]
-        center_phase = math.atan2(sum(math.sin(phase) for phase in phases), sum(math.cos(phase) for phase in phases))
-        phase_error = math.remainder(center_phase+offsets[slot]-angle, 2*math.pi)
-        # A lagging observer takes the inner orbit to gain angular speed while
-        # each vehicle retains its fixed forward speed and bounded curvature.
-        desired_distance = max(_TRACK["orbit_min_radius_factor"]*radius, _TRACK["orbit_team_base_m"]-max(-_TRACK["orbit_phase_limit_m"],
-            min(_TRACK["orbit_phase_limit_m"], _TRACK["orbit_phase_adjust_m"]*phase_error)))
-    radial_limit = _TRACK["orbit_radial_speed_fraction"] * speed
-    radial = max(-radial_limit, min(radial_limit, (desired_distance - distance) * _TRACK["orbit_radial_gain"]))
-    orbit_weight = max(0.0, min(1.0, 1-(distance-desired_distance-_TRACK["orbit_blend_margin_m"])/_TRACK["orbit_blend_distance_m"]))
-    desired_x = vx + radial * math.cos(angle) - speed * orbit_weight * math.sin(angle)
-    desired_y = vy + radial * math.sin(angle) + speed * orbit_weight * math.cos(angle)
-    desired_heading = math.atan2(desired_y, desired_x)
-    error = math.remainder(desired_heading - heading, 2 * math.pi)
-    curvature = orbit_weight / desired_distance + _TRACK["heading_gain"] * error / radius
-    return max(-1 / radius, min(1 / radius, curvature))
+        teammates = [(index, valid_pose(member)) for index, member in enumerate(team) if index != slot]
+    else:
+        teammates = []
+    sensor_range = _TRACK["sensor_range_m"]
+    half_angle = sector_rad if sector_rad is not None else math.radians(Config().forward_passive_half_angle_deg)
+    target_speed = math.hypot(vx, vy)
+    horizons = _TRACK["rh_horizons_s"]
+    # Fixed-speed members cannot hover, so the formation keeps orbiting: anchor
+    # the *relative* phase (bearing minus slot offset) to the team's circular
+    # mean rather than an absolute bearing. Sector diversity then persists
+    # while the whole formation slowly rotates around the target.
+    offsets = {2: (0.0, math.pi/2), 3: tuple(i*2*math.pi/3 for i in range(3))}
+    mate_offsets = [offsets[len(team)][index] for index, _ in teammates] if team is not None else []
+    own_offset = offsets[len(team)][slot] if team is not None else 0.0
+    fractions = _TRACK["rh_curvature_fractions"]
+    spacing = min((b-a for a, b in zip(sorted(fractions), sorted(fractions)[1:])), default=0.0)
+
+    def coverage_score(fraction):
+        curvature = fraction/radius
+        rollout = [integrate([x, y, heading], speed, curvature, horizon) for horizon in horizons]
+        score = -_TRACK["rh_smoothness_weight"]*abs(fraction)
+        for horizon, own in zip(horizons, rollout):
+            mates = [integrate(member, speed, 0.0, horizon) for _, member in teammates]
+            turn = min(math.pi, target_speed*horizon/_TRACK["rh_evade_turn_radius_m"])
+            base = math.atan2(vy, vx) if target_speed > 1e-6 else 0.0
+            coverage = 0.0
+            for drift in (-turn, 0.0, turn):
+                hypothesis = [tx+target_speed*math.cos(base+drift)*horizon, ty+target_speed*math.sin(base+drift)*horizon]
+                own_hit = _detects(own, hypothesis, sensor_range, half_angle)
+                covered = own_hit or any(_detects(mate, hypothesis, sensor_range, half_angle) for mate in mates)
+                coverage += _TRACK["rh_coverage_weight"]*covered+_TRACK["rh_redundancy_weight"]*own_hit
+            nominal = [tx+vx*horizon, ty+vy*horizon]
+            bearings = [math.atan2(member[1]-nominal[1], member[0]-nominal[0]) for member in [own, *mates]]
+            cosine = sum(math.cos(2*bearing) for bearing in bearings)
+            sine = sum(math.sin(2*bearing) for bearing in bearings)
+            diversity = 1-math.hypot(cosine, sine)/len(bearings) if mates else 0.0
+            distance = math.dist(own[:2], nominal)
+            anchor = 0.0
+            if mates:
+                phases = [bearings[0]-own_offset]+[bearing-offset for bearing, offset in zip(bearings[1:], mate_offsets)]
+                center = math.atan2(sum(math.sin(phase) for phase in phases), sum(math.cos(phase) for phase in phases))
+                anchor = math.cos(phases[0]-center)
+            # Chirality consensus: coverage and phase scores are symmetric in
+            # orbit direction, so without this bias the pair can counter-rotate
+            # and periodically cross the collinear (|sin|=0) geometry. Measure
+            # the rollout's bearing drift, not heading tangency: approaching a
+            # far target barely changes bearing and stays neutral.
+            chirality = math.sin(math.remainder(bearings[0]-math.atan2(y-ty, x-tx), 2*math.pi))
+            score += (coverage+_TRACK["rh_diversity_weight"]*diversity+_TRACK["rh_slot_weight"]*anchor
+                      +_TRACK["rh_orbit_sign_weight"]*chirality
+                      -_TRACK["rh_distance_weight"]*abs(distance-_TRACK["rh_preferred_m"])/sensor_range
+                      -(_TRACK["rh_hard_penalty"] if distance < _TRACK["rh_hard_floor_m"] else 0.0))
+        return score
+
+    # Discrete curvature families cannot hold station, so after picking the
+    # best coarse family refine it twice at quarter spacing; the ~0.03
+    # fraction resolution reaches the shallow curvature a station orbit needs.
+    best_fraction = max(fractions, key=coverage_score)
+    for _ in range(2 if spacing else 0):
+        spacing /= 4
+        candidates = [max(-1.0, min(1.0, best_fraction+delta*spacing)) for delta in (-1, 1)]
+        best_fraction = max([best_fraction, *candidates], key=coverage_score)
+    return max(-1/radius, min(1/radius, best_fraction/radius))
 
 
 def follow_path(pose, points, radius=Config().radius, lookahead=_TRACK["lookahead_m"]) -> float:

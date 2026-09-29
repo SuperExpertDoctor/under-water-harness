@@ -146,7 +146,20 @@
       "acquisition_heading_gain": 1.0,
       "acquisition_standoff_m": 170.0,
       "reacquisition_standoff_m": 120.0,
-      "acquisition_prediction_s": 3.0
+      "acquisition_prediction_s": 3.0,
+      "rh_horizons_s": [3.0, 6.0, 9.0, 12.0, 18.0],
+      "rh_curvature_fractions": [-1.0, -0.5, 0.0, 0.5, 1.0],
+      "rh_evade_turn_radius_m": 80.0,
+      "rh_coverage_weight": 4.0,
+      "rh_redundancy_weight": 0.4,
+      "rh_distance_weight": 1.0,
+      "rh_diversity_weight": 1.0,
+      "rh_slot_weight": 2.0,
+      "rh_orbit_sign_weight": 0.3,
+      "rh_preferred_m": 200.0,
+      "rh_hard_floor_m": 80.0,
+      "rh_hard_penalty": 50.0,
+      "rh_smoothness_weight": 0.05
     },
     "control": {
       "prediction_times_s": [0, 3, 6, 9, 12, 18],
@@ -181,6 +194,7 @@
       "curvature_candidates": [-1.0, -0.5, 0.0, 0.5, 1.0]
     },
     "observations": {
+      "passive_signal_min_speed_mps": 0.5,
       "bearing_sigma_deg": 2.0,
       "active_range_sigma_m": 4.0,
       "process_acceleration_mps2": 0.025,

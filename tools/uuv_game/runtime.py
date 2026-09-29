@@ -985,9 +985,12 @@ class MissionRuntime:
                 u["curvature"] = selected[u["id"]]
                 next_poses[u["id"]] = integrate(u["pose"], self.config.speed, selected[u["id"]], self.config.dt)
         # A common tick validates all proposed movements before committing any pose.
+        # Pairs already inside the separation line (congestion that slipped in
+        # via boundary turnover) must keep opening up; only worsening is a pause.
         for index, first in enumerate(self.uuvs):
             for second in self.uuvs[index+1:]:
-                if math.dist(next_poses[first["id"]][:2], next_poses[second["id"]][:2]) < self.config.separation:
+                next_dist = math.dist(next_poses[first["id"]][:2], next_poses[second["id"]][:2])
+                if next_dist < self.config.separation and next_dist < math.dist(first["pose"][:2], second["pose"][:2]):
                     self.pause("safety_infeasible")
                     return
         target_poses = {}

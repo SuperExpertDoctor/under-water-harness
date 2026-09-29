@@ -978,6 +978,8 @@ class MissionRuntime:
                 return self.tick()
             self.pause("safety_infeasible")
             return
+        if control_diagnostics.get("held_boats"):
+            self.event("boats_held", {"uuv_ids": control_diagnostics["held_boats"]})
         for u in self.uuvs:
             if u["id"] in selected:
                 u["curvature"] = selected[u["id"]]

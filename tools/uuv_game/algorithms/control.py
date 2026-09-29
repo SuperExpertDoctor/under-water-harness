@@ -99,13 +99,13 @@ def choose_controls(boats, requests, contacts, obstacles, separation=_CONTROL["s
         for i, first in enumerate(identifiers) for second in identifiers[i+1:]
     ):
         return preferred
-    options = {}
-    for identifier in identifiers:
+
+    def build(identifier, use_best=False):
         choices = sorted(set([preferred[identifier], max(-turn_limit, min(turn_limit, previous[identifier]))]+
             [n/_CONTROL["curvature_denominator"] for n in range(-_CONTROL["curvature_steps"], _CONTROL["curvature_steps"]+1)]))
         values = []
         for curvature in choices:
-            points = best[identifier] if curvature == preferred[identifier] else rollout(identifier, curvature)
+            points = best[identifier] if use_best and curvature == preferred[identifier] else rollout(identifier, curvature)
             if points is not None:
                 cost = (abs(curvature-preferred[identifier])*_CONTROL["control_deviation_weight"]+
                         abs(curvature-previous[identifier])*_CONTROL["control_smoothness_weight"]+
@@ -122,12 +122,16 @@ def choose_controls(boats, requests, contacts, obstacles, separation=_CONTROL["s
                             abs(curvature-previous[identifier])*_CONTROL["control_smoothness_weight"]+
                             _CONTROL["contact_risk_weight"]*contact_risk(points)+_CONTROL["boundary_recovery_weight"])
                     values.append((cost, curvature, points))
-        if not values:
+        return sorted(values, key=lambda value: value[:2])
+
+    options = {}
+    for identifier in identifiers:
+        options[identifier] = build(identifier, use_best=True)
+        if not options[identifier]:
             diagnostics["candidate_counts"][identifier] = 0
             diagnostics.update(reason="no_static_safe_candidates", blocked_boat=identifier)
             return None
-        options[identifier] = sorted(values, key=lambda value: value[:2])
-        diagnostics["candidate_counts"][identifier] = len(values)
+        diagnostics["candidate_counts"][identifier] = len(options[identifier])
     # Unrelated boats must not consume the beam's alternatives for a close pair.
     # Displacement bounds prove different components cannot interact this horizon.
     pending, selected = set(identifiers), {}
@@ -140,17 +144,45 @@ def choose_controls(boats, requests, contacts, obstacles, separation=_CONTROL["s
             pending.difference_update(neighbors)
             component.update(neighbors)
             frontier.extend(sorted(neighbors))
-        beam = [(0.0, {}, {})]
-        for identifier in sorted(component, key=lambda key: (len(options[key]), key)):
-            expanded = []
-            for cost, commands, predictions in beam:
-                for extra, curvature, points in options[identifier]:
-                    if any(other in nearby[identifier] and not _separated(points, path, separation+_CONTROL["proximity_padding_m"]) for other, path in predictions.items()):
-                        continue
-                    expanded.append((cost+extra, {**commands, identifier: curvature}, {**predictions, identifier: points}))
-            if not expanded:
-                diagnostics.update(reason="joint_beam_exhausted", blocked_boat=identifier, component=sorted(component))
+        def hold(identifier):
+            component.discard(identifier)
+            options.pop(identifier, None)
+            fixed[identifier] = [poses[identifier] for _ in TIMES]
+            diagnostics.setdefault("held_boats", []).append(identifier)
+
+        while component:
+            # Rebuild every member against newly held boats; a member that
+            # loses all candidates is held too, which may cascade.
+            survivors = []
+            for member in sorted(component):
+                rebuilt = build(member)
+                if rebuilt:
+                    survivors.append(member)
+                    options[member] = rebuilt
+                else:
+                    hold(member)
+            if not survivors:
+                break
+            beam, blocked = [(0.0, {}, {})], None
+            for identifier in sorted(component, key=lambda key: (len(options[key]), key)):
+                expanded = []
+                for cost, commands, predictions in beam:
+                    for extra, curvature, points in options[identifier]:
+                        if any(other in nearby[identifier] and not _separated(points, path, separation+_CONTROL["proximity_padding_m"]) for other, path in predictions.items()):
+                            continue
+                        expanded.append((cost+extra, {**commands, identifier: curvature}, {**predictions, identifier: points}))
+                if not expanded:
+                    blocked = identifier
+                    break
+                beam = sorted(expanded, key=lambda value: (value[0], tuple(sorted(value[1].items()))))[:_CONTROL["beam_width"]]
+            if blocked is None:
+                selected.update(beam[0][1])
+                break
+            if len(component) == 1:
+                diagnostics.update(reason="joint_beam_exhausted", blocked_boat=blocked, component=sorted(component))
                 return None
-            beam = sorted(expanded, key=lambda value: (value[0], tuple(sorted(value[1].items()))))[:_CONTROL["beam_width"]]
-        selected.update(beam[0][1])
+            # Congestion: boats funneling through one slot (e.g. a shared exit)
+            # cannot all move this tick. Hold the blocked boat in place as a
+            # fixed obstacle and let the rest file through; it retries next tick.
+            hold(blocked)
     return selected

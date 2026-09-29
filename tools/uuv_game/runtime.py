@@ -806,7 +806,7 @@ class MissionRuntime:
         action = self.active.pop(member)
         self.event("provisional_contact_expired" if reason == "lease_expired" else "provisional_contact_aborted",
             {"uuv_id": member, "contact_id": action["contact_id"], "reason": reason})
-        return repair_search(self, add=[member])
+        return repair_search(self, add=[member], required=False)
 
     def _search_gap(self):
         if not any(u["id"] not in self.active and "active" in u["capabilities"]
@@ -888,10 +888,9 @@ class MissionRuntime:
                 return
             for member in members:
                 self.active.pop(member)
-            if not repair_search(self, add=members):
-                return
-            self.event("stale_contact_search_resumed", {"contact_id": contact_id, "members": members,
-                "last_seen_s": self.contacts[contact_id]["last_seen"]})
+            if repair_search(self, add=members, required=False):
+                self.event("stale_contact_search_resumed", {"contact_id": contact_id, "members": members,
+                    "last_seen_s": self.contacts[contact_id]["last_seen"]})
             self.queue_agent(f"Contact {contact_id} has no fresh observation. Coverage search resumed; plan new tracking only after a measured reacquisition.", "target_lost")
         if self.frame_id % _RUNTIME["safety_review_frames"] == 0:
             prepare_handover(self)

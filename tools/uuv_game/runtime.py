@@ -996,7 +996,15 @@ class MissionRuntime:
             target_poses[target["id"]] = pose
             target.update(speed=speed, curvature=curvature)
         # Truth is used only by this simulator interlock, never to choose a control.
-        if any(math.dist(pose[:2], target_pose[:2]) < self.config.separation for pose in next_poses.values() for target_pose in target_poses.values()):
+        collisions = [(u["id"], target["id"]) for u in self.uuvs for target in self.targets
+                      if math.dist(next_poses[u["id"]][:2], target_poses[target["id"]][:2]) < self.config.separation]
+        if collisions:
+            # The quarry keeps maneuvering while the fleet holds. Applying the
+            # targets' steps lets a resume replay different geometry instead of
+            # deadlocking on the identical collision.
+            for target in self.targets:
+                target["pose"] = target_poses[target["id"]]
+            self.event("target_collision_hold", {"collisions": collisions})
             self.pause("safety_target_collision")
             return
         replacements = {}

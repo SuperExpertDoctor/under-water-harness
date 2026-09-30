@@ -75,6 +75,41 @@ export function pixelToCoord(px, py, cellSize, offsetX, offsetY, cols = DEFAULT_
   return { col, row };
 }
 
+/**
+ * Ctrl+scroll zoom state: base-layout pixels map to screen as
+ * screen = base * a + b (per axis). `zoomViewAt` re-anchors the transform
+ * on the cursor; `zoomedLayout` applies it to every layout quantity so
+ * renderers and hit tests stay consistent.
+ */
+export function zoomViewAt(view, cx, cy, deltaY, { min = 1, max = 8 } = {}) {
+  const next = Math.min(max, Math.max(min, view.a * Math.exp(-deltaY * 0.0016)));
+  if (next === view.a) return view;
+  const r = next / view.a;
+  const bx = (view.bx - cx) * r + cx;
+  const by = (view.by - cy) * r + cy;
+  return next === min ? { a: 1, bx: 0, by: 0 } : { a: next, bx, by };
+}
+
+export function zoomedLayout(layout, view) {
+  if (!layout || !view || view.a === 1) return layout;
+  const { a, bx, by } = view;
+  const rect = (bounds) => bounds && {
+    x: bounds.x * a + bx,
+    y: bounds.y * a + by,
+    width: bounds.width * a,
+    height: bounds.height * a,
+  };
+  return {
+    ...layout,
+    cellSize: layout.cellSize * a,
+    offsetX: layout.offsetX * a + bx,
+    offsetY: layout.offsetY * a + by,
+    mapBounds: rect(layout.mapBounds),
+    taskBounds: rect(layout.taskBounds),
+    legendBounds: rect(layout.legendBounds),
+  };
+}
+
 /** Convert a CSS-pixel drag into a half-open, clamped grid rectangle. */
 export function dragToBBox(start, end, layout, cols = DEFAULT_GRID_CELLS, rows = DEFAULT_GRID_CELLS) {
   if (!start || !end || !layout || Math.abs(start.x - end.x) < 3 || Math.abs(start.y - end.y) < 3) {

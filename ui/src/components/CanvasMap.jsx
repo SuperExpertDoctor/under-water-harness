@@ -1,7 +1,7 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { RadioTower, Radar, Crosshair, Route, LogOut } from "lucide-react";
 
-import { computeLayout, dragToBBox, pixelToCoord } from "../renderer/geometry";
+import { computeLayout, dragToBBox, pixelToCoord, zoomedLayout, zoomViewAt } from "../renderer/geometry";
 import { renderFrame } from "../renderer/layers";
 import { drawMissionOverlay } from "../renderer/missionOverlay";
 import { interpolateUuv } from "../state/missionState";
@@ -114,6 +114,10 @@ const CanvasMap = forwardRef(function CanvasMap({
   const exportingRef = useRef(false);
   const selectionRef = useRef(null);
   const [selection, setSelection] = useState(null);
+  const viewRef = useRef({ a: 1, bx: 0, by: 0 });
+  const [viewVersion, setViewVersion] = useState(0);
+
+  const viewLayout = () => zoomedLayout(layoutRef.current, viewRef.current);
 
   useEffect(() => {
     let disposed = false;
@@ -220,7 +224,7 @@ const CanvasMap = forwardRef(function CanvasMap({
 
       const {
         cellSize, offsetX, offsetY, mapBounds, legendBounds, gridCols, gridRows,
-      } = layoutRef.current;
+      } = viewLayout();
       context.save();
       renderFrame(context, displayFrame, {
         cellSize,
@@ -241,7 +245,7 @@ const CanvasMap = forwardRef(function CanvasMap({
         frameCount: phase,
         assets: mapAssets,
       });
-      drawMissionOverlay(context, displayFrame, mapMode === "planning" ? candidate : null, layoutRef.current);
+      drawMissionOverlay(context, displayFrame, mapMode === "planning" ? candidate : null, viewLayout());
       context.restore();
       phase += 1;
       const elapsed = performance.now() - frameReceivedRef.current;
@@ -254,7 +258,24 @@ const CanvasMap = forwardRef(function CanvasMap({
     return () => {
       if (animationFrame) window.cancelAnimationFrame(animationFrame);
     };
-  }, [candidate, frame, hoverVersion, mapAssets, mapMode, selectedContactId, selectedScenarioVesselId, selectedUavId, showGrid, showScenario, sizeVersion, trailMode]);
+  }, [candidate, frame, hoverVersion, mapAssets, mapMode, selectedContactId, selectedScenarioVesselId, selectedUavId, showGrid, showScenario, sizeVersion, trailMode, viewVersion]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return undefined;
+    const onWheel = (event) => {
+      if (!event.ctrlKey) return;
+      event.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const next = zoomViewAt(viewRef.current,
+        event.clientX - rect.left, event.clientY - rect.top, event.deltaY);
+      if (next === viewRef.current) return;
+      viewRef.current = next;
+      setViewVersion((version) => version + 1);
+    };
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+    return () => canvas.removeEventListener("wheel", onWheel);
+  }, []);
 
   useImperativeHandle(ref, () => ({
     async recordReplay(frames, { fps = 20, onProgress } = {}) {
@@ -310,7 +331,7 @@ const CanvasMap = forwardRef(function CanvasMap({
     const canvas = canvasRef.current;
     if (!canvas || !frame) return;
     const rect = canvas.getBoundingClientRect();
-    const { cellSize, offsetX, offsetY, gridCols, gridRows } = layoutRef.current;
+    const { cellSize, offsetX, offsetY, gridCols, gridRows } = viewLayout();
     const coord = pixelToCoord(
       event.clientX - rect.left,
       event.clientY - rect.top,
@@ -340,7 +361,7 @@ const CanvasMap = forwardRef(function CanvasMap({
   }, []);
 
   const isInsideTask = useCallback((point) => {
-    const bounds = layoutRef.current.taskBounds;
+    const bounds = viewLayout().taskBounds;
     return Boolean(bounds && point
       && point.x >= bounds.x && point.x <= bounds.x + bounds.width
       && point.y >= bounds.y && point.y <= bounds.y + bounds.height);
@@ -396,7 +417,7 @@ const CanvasMap = forwardRef(function CanvasMap({
     if (!current || current.pointerId !== event.pointerId) return;
     const point = pointerPosition(event);
     current.end = point;
-    const bbox = dragToBBox(current.start, point, layoutRef.current, layoutRef.current.gridCols, layoutRef.current.gridRows);
+    const bbox = dragToBBox(current.start, point, viewLayout(), layoutRef.current.gridCols, layoutRef.current.gridRows);
     cancelSelection();
     if (bbox) onSelectionCommit?.(bbox);
   }, [cancelSelection, onSelectionCommit, pointerPosition]);
@@ -415,7 +436,7 @@ const CanvasMap = forwardRef(function CanvasMap({
     const point = pointerPosition(event);
     if (!point) return;
     const { x: mouseX, y: mouseY } = point;
-    const { cellSize, offsetX, offsetY, gridCols, gridRows } = layoutRef.current;
+    const { cellSize, offsetX, offsetY, gridCols, gridRows } = viewLayout();
 
     if (placementMode) {
       const coord = pixelToCoord(mouseX, mouseY, cellSize, offsetX, offsetY, gridCols, gridRows);
@@ -479,7 +500,7 @@ const CanvasMap = forwardRef(function CanvasMap({
     const vesselClass = event.dataTransfer.getData("application/x-vessel-class");
     if (!vesselClass) return;
     const point = pointerPosition(event);
-    const { cellSize, offsetX, offsetY, gridCols, gridRows } = layoutRef.current;
+    const { cellSize, offsetX, offsetY, gridCols, gridRows } = viewLayout();
     const coord = point && pixelToCoord(point.x, point.y, cellSize, offsetX, offsetY, gridCols, gridRows);
     if (!coord) return;
     onDropVessel?.(vesselClass, [coord.col + 0.5, coord.row + 0.5]);
@@ -534,10 +555,10 @@ const CanvasMap = forwardRef(function CanvasMap({
       )}
       {mapMode === "planning" && selectedPlanId && <div className="map-candidate-label">选中计划 · {selectedPlanId}{candidate?.episode_id === frame?.episode_id && candidate?.routes ? " · 虚线为候选航线" : " · 当前无候选航线记录"}</div>}
       {frame?.fleet_entry?.position && <div className={`fleet-entry-marker side-${frame.fleet_entry.side}`} style={{
-        left: layoutRef.current.offsetX + (frame.fleet_entry.position[0] + .5) * layoutRef.current.cellSize,
-        top: layoutRef.current.offsetY + (frame.fleet_entry.position[1] + .5) * layoutRef.current.cellSize,
+        left: viewLayout().offsetX + (frame.fleet_entry.position[0] + .5) * viewLayout().cellSize,
+        top: viewLayout().offsetY + (frame.fleet_entry.position[1] + .5) * viewLayout().cellSize,
       }} title="任务边界共同入口，八艇自左边界中点集中驶入">初始投放 ×{frame.fleet_entry.count}</div>}
-      <div className="map-scale" aria-hidden="true"><i style={{ width: layoutRef.current.cellSize * 5 }} />{Number(frame?.task_area?.cell_size_km || 0) * 5} KM</div>
+      <div className="map-scale" aria-hidden="true"><i style={{ width: viewLayout().cellSize * 5 }} />{Number(frame?.task_area?.cell_size_km || 0) * 5} KM</div>
       </div>
       <div className="map-information-bar">
         {mapMode === "situation" ? <InformationLegend /> : <span className="planning-legend">实线：执行航线 · 虚线：候选航线 · 标记：艇及接触</span>}

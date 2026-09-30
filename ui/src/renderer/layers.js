@@ -851,9 +851,18 @@ export function drawUavScanRanges(ctx, uavs, cellSize, ox, oy, baseCenters, sele
         for (const side of [-1, 1]) sector(heading + side * Math.PI / 2, half, inner,
           selected ? "rgba(14, 165, 233, .14)" : "rgba(14, 165, 233, .07)", "rgba(56, 189, 248, .55)");
       }
-      if (uav.sensor_roles.forward_active) {
-        sector(heading, (uav.forward_active_half_angle_deg ?? 55) * Math.PI / 180, 0,
-          selected ? "rgba(225, 151, 55, .12)" : "rgba(225, 151, 55, .05)", "rgba(230, 163, 72, .45)");
+      // Hull-fixed fans: direction and range never animate. Active forward
+      // pings stay amber; the passive tracking aperture is a wider green fan
+      // so emission state is readable at a glance. Silent boats draw nothing.
+      if (uav.sensor_roles.forward_active && uav.sensor_mode !== "off") {
+        const passive = uav.sensor_mode === "passive";
+        sector(heading,
+          (passive ? uav.forward_passive_half_angle_deg ?? 150 : uav.forward_active_half_angle_deg ?? 55) * Math.PI / 180,
+          0,
+          passive
+            ? (selected ? "rgba(52, 211, 153, .13)" : "rgba(52, 211, 153, .06)")
+            : (selected ? "rgba(225, 151, 55, .12)" : "rgba(225, 151, 55, .05)"),
+          passive ? "rgba(74, 222, 128, .48)" : "rgba(230, 163, 72, .45)");
       }
       ctx.restore();
       continue;

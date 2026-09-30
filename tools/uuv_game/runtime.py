@@ -1161,7 +1161,8 @@ class MissionRuntime:
                 "sensor_radius_cells": self.config.sensor_range/self.config.cell,
                 "side_scan_inner_radius_cells": self.config.side_scan_inner_range/self.config.cell,
                 "side_scan_half_angle_deg": self.config.side_scan_half_angle_deg,
-                "forward_active_half_angle_deg": self.config.forward_active_half_angle_deg})
+                "forward_active_half_angle_deg": self.config.forward_active_half_angle_deg,
+                "forward_passive_half_angle_deg": self.config.forward_passive_half_angle_deg})
         contacts = []
         for c in self.contacts.values():
             contacts.append({**c, "estimated_position": self.cells([c["x"], c["y"]]), "vessel_class": c.get("vessel_class", "underwater"),

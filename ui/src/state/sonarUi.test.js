@@ -127,3 +127,32 @@ test("map renders two rotated side-scan swaths instead of an omnidirectional dis
   assert.ok(arcs.some((arc) => arc.from > 0 && arc.from < Math.PI));
   assert.ok(arcs.some((arc) => arc.from < 0));
 });
+
+test("passive tracking draws a wide fixed fan in a distinct translucent color", async () => {
+  const { drawUavScanRanges } = await server.ssrLoadModule("/src/renderer/layers.js");
+  const fills = [];
+  const arcs = [];
+  const context = { save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, closePath() {}, stroke() {}, setLineDash() {},
+    fill() { fills.push(context.fillStyle); },
+    arc(_x, _y, radius, from, to) { arcs.push({ radius, from, to }); } };
+  drawUavScanRanges(context, [{ id: "T1", status: "tracking", position: [2, 3], heading_rad: 0,
+    sensor_mode: "passive", sensor_roles: { side_scan: false, forward_active: true, forward_passive: true },
+    sensor_radius_cells: 3.5, forward_active_half_angle_deg: 55, forward_passive_half_angle_deg: 150 }], 10, 0, 0, []);
+  assert.equal(fills.length, 1);
+  assert.match(fills[0], /52, 211, 153/);
+  assert.doesNotMatch(fills[0], /225, 151, 55/);
+  assert.equal(arcs.length, 1);
+  assert.ok(Math.abs(arcs[0].to - arcs[0].from - Math.PI * 300 / 180) < 1e-9);
+});
+
+test("boats with sensors off draw no forward fan", async () => {
+  const { drawUavScanRanges } = await server.ssrLoadModule("/src/renderer/layers.js");
+  const fills = [];
+  const context = { save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, closePath() {}, stroke() {}, setLineDash() {},
+    fill() { fills.push(context.fillStyle); },
+    arc() {} };
+  drawUavScanRanges(context, [{ id: "X1", status: "transit", position: [2, 3], heading_rad: 0,
+    sensor_mode: "off", sensor_roles: { side_scan: false, forward_active: true, forward_passive: false },
+    sensor_radius_cells: 3.5 }], 10, 0, 0, []);
+  assert.equal(fills.length, 0);
+});

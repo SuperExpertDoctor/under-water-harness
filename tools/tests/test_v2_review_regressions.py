@@ -21,6 +21,8 @@ def runtime(tmp_path):
 
 
 def test_nearby_exits_cannot_reassign_another_boundary_entry(runtime):
+    for index, other in enumerate(runtime.uuvs[2:]):
+        other["pose"] = [1800+index*200, 1000, 0]
     for boat, y in zip(runtime.uuvs[:2], (2100, 2160)):
         boat["pose"] = [.5, y, math.pi]
     next_poses = {boat["id"]: boat["pose"] for boat in runtime.uuvs}
@@ -37,6 +39,8 @@ def test_simultaneous_boundary_crossings_commit_separate_entries(runtime):
     runtime.standing_policy = {"enabled": True, "energy_rotation": True,
         "local_repair": True, "lost_reacquire": True, "plan_id": "standing-exit"}
     runtime.scan_times = [[0.0]*40 for _ in range(40)]
+    for index, other in enumerate(runtime.uuvs[2:]):
+        other["pose"] = [1800+index*200, 1000, 0]
     for boat, y in zip(runtime.uuvs[:2], (2100, 2500)):
         boat["pose"] = [.1, y, math.pi]
         runtime.active[boat["id"]] = {"plan_id": "standing-exit", "kind": "exit",

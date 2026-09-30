@@ -140,21 +140,17 @@ class MissionRuntime:
         self.mode = "assisted"
         self.session_grants = []
         self.status = "ready"
-        side = self.rng.choice(("bottom", "right", "left", "top"))
-        span = self.config.height if side in ("left", "right") else self.config.width
-        gap = _SCENE["fleet_entry_min_separation_m"]
-        half_spread = (self.config.fleet_size-1)*gap/2
-        clearance = min(_SCENE["fleet_entry_corner_clearance_m"], span/4)
-        center = self.rng.uniform(clearance+half_spread, span-clearance-half_spread)
-        entry_point = {"left": [0, center], "right": [self.config.width, center],
-            "bottom": [center, 0], "top": [center, self.config.height]}[side]
-        self.fleet_entry = {"position": entry_point, "count": self.config.fleet_size, "side": side}
+        # All boats enter through one point at the middle of the left boundary.
+        # They cannot literally share a coordinate: the joint controller
+        # requires pairwise clearance of separation+padding, so they pack at
+        # the tightest legal spacing along the boundary.
+        side = "left"
+        center = self.config.height/2
+        self.fleet_entry = {"position": [0, center], "count": self.config.fleet_size, "side": side}
         self.uuvs = []
         for i in range(self.config.fleet_size):
-            value = center+(i-(self.config.fleet_size-1)/2)*gap
-            pose = {"left": [0, value, 0], "right": [self.config.width, value, math.pi],
-                "bottom": [value, 0, math.pi/2], "top": [value, self.config.height, -math.pi/2]}[side]
-            self.uuvs.append({"id": f"UUV-{i+1}", "pose": pose, "trail": [], "curvature": 0.0,
+            y = center+(i-(self.config.fleet_size-1)/2)*_SCENE["fleet_entry_min_separation_m"]
+            self.uuvs.append({"id": f"UUV-{i+1}", "pose": [0, y, 0], "trail": [], "curvature": 0.0,
                 "generation": 1, "remaining_range_m": self.config.range_capacity, "capabilities": ["active", "passive"]})
         self.targets = [copy.deepcopy(_SCENE["target"])]
         self.adversary = enemy.initial_state()
@@ -184,6 +180,7 @@ class MissionRuntime:
         self.regions = []
         self.region_revision = 0
         self.standing_policy = {"enabled": False, "energy_rotation": False, "local_repair": False, "lost_reacquire": False, "contact_hold": False}
+        self.repair_pending = set()
         self.metrics = {"effective_tracking_seconds": 0.0, "lost_seconds": 0.0, "handoff_count": 0, "handoff_attempts": 0, "rotation_count": 0}
 
     @synchronized
@@ -896,6 +893,12 @@ class MissionRuntime:
                 self.event("stale_contact_search_resumed", {"contact_id": contact_id, "members": members,
                     "last_seen_s": self.contacts[contact_id]["last_seen"]})
             self.queue_agent(f"Contact {contact_id} has no fresh observation. Coverage search resumed; plan new tracking only after a measured reacquisition.", "target_lost")
+        # Boats dropped by an infeasible repair (coverage_gap_accepted) would
+        # otherwise idle forever; retry the repartition as positions evolve.
+        pending = [member for member in self.repair_pending if member not in self.active]
+        if pending and self.standing_policy["local_repair"]:
+            repair_search(self, add=pending, required=False)
+        self.repair_pending.difference_update(self.active)
         if self.frame_id % _RUNTIME["safety_review_frames"] == 0:
             prepare_handover(self)
         if not prepare_exits(self):

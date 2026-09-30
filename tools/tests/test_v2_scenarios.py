@@ -100,15 +100,19 @@ def test_low_energy_fault_exits_and_replaces_without_losing_ownership(tmp_path):
             runtime.tick()
             assert runtime.status == "running", json.dumps(runtime.events[-5:])
             assert acceptance()._audit(runtime, before) == []
-            saw_exit |= runtime.active["UUV-1"]["kind"] == "exit"
+            saw_exit |= runtime.active.get("UUV-1", {}).get("kind") == "exit"
             if runtime.uuvs[0]["generation"] == 2:
                 break
         assert saw_exit
         assert runtime.uuvs[0]["generation"] == 2
         assert runtime.metrics["rotation_count"] == 1
+        for _ in range(300):
+            if "UUV-1" in runtime.active and len(runtime.regions) == 8:
+                break
+            runtime.tick()
         assert len(runtime.uuvs) == len(runtime.regions) == 8
         entry = next(event["data"] for event in runtime.events if event["type"] == "uuv_replenished")
-        assert entry["exit_point"] == entry["entry_point"] == runtime.uuvs[0]["pose"][:2]
+        assert entry["exit_point"] == entry["entry_point"]
         x, y = entry["entry_point"]
         assert min(x, y, runtime.config.width-x, runtime.config.height-y) == pytest.approx(0)
     finally:

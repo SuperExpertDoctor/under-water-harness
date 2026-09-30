@@ -27,7 +27,6 @@
   },
   "algorithms": {
     "scene": {
-      "fleet_entry_corner_clearance_m": 200.0,
       "fleet_entry_min_separation_m": 150.0,
       "target": {"id": "TARGET-1", "pose": [900.0, 700.0, 0.5], "speed": 2.5},
       "obstacles": [{"x": 2500.0, "y": 2300.0, "radius": 140.0}],

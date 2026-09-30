@@ -4,6 +4,7 @@ import math
 import pytest
 
 from uuv_game.runtime import MissionRuntime, MissionError
+from uuv_game.config import algorithm_settings
 from uuv_game.lifecycle import exit_route, replacement_pose, prepare_exits
 from uuv_game.algorithms.control import TIMES
 from uuv_game.algorithms.motion import integrate
@@ -27,17 +28,17 @@ def test_initial_observations_do_not_reveal_truth(runtime):
     assert len(runtime.frame()["uavs"]) == 8
 
 
-def test_all_initial_boats_start_at_random_boundary_points(runtime, tmp_path):
+def test_all_initial_boats_enter_through_left_boundary_center(runtime, tmp_path):
     width, height = runtime.config.width, runtime.config.height
+    step = algorithm_settings("scene")["fleet_entry_min_separation_m"]
     entry = runtime.fleet_entry
     assert entry["count"] == 8
-    assert max(math.dist(boat["pose"][:2], entry["position"]) for boat in runtime.uuvs) <= 600
-    assert len({"left" if u["pose"][0] == 0 else "right" if u["pose"][0] == width else "bottom" if u["pose"][1] == 0 else "top" for u in runtime.uuvs}) == 1
-    for boat in runtime.uuvs:
-        x, y, heading = boat["pose"]
-        assert min(x, y, width - x, height - y) == pytest.approx(0)
-        assert heading == pytest.approx(0 if x == 0 else math.pi if x == width else math.pi / 2 if y == 0 else -math.pi / 2)
-    assert len({tuple(boat["pose"][:2]) for boat in runtime.uuvs}) == 8
+    assert entry["side"] == "left"
+    assert entry["position"] == [0, height/2]
+    assert [boat["pose"] for boat in runtime.uuvs] == [
+        [0, height/2+(i-3.5)*step, 0] for i in range(8)]
+    assert min(math.dist(a["pose"][:2], b["pose"][:2])
+               for i, a in enumerate(runtime.uuvs) for b in runtime.uuvs[i+1:]) >= runtime.config.separation
     other = MissionRuntime(tmp_path / "seeded.sqlite")
     try:
         assert [boat["pose"] for boat in runtime.uuvs] == [boat["pose"] for boat in other.uuvs]
@@ -99,6 +100,8 @@ def test_exit_crossing_replaces_boat_on_same_boundary_in_one_tick(runtime, monke
     boat = runtime.uuvs[0]
     boat["pose"] = [1, 2000, math.pi]
     boat["remaining_range_m"] = 1000
+    for index, other in enumerate(runtime.uuvs[1:]):
+        other["pose"] = [1800+index*200, 1000, 0]
     runtime.standing_policy.update(energy_rotation=True, local_repair=True, plan_id="authorized-rotation")
     runtime.active[boat["id"]] = {"kind": "exit", "phase": "exiting", "plan_id": "authorized-rotation",
         "generation": 1, "exit_point": [0, 2000], "points": [[1, 2000, math.pi], [-30, 2000, math.pi]],
@@ -120,6 +123,8 @@ def test_exit_crossing_replaces_boat_on_same_boundary_in_one_tick(runtime, monke
 def test_replacement_uses_actual_crossing_not_original_exit_projection(runtime):
     boat = runtime.uuvs[0]
     boat["pose"] = [2, 1995, math.pi]
+    for index, other in enumerate(runtime.uuvs[1:]):
+        other["pose"] = [1800+index*200, 1000, 0]
     runtime.active[boat["id"]] = {"kind": "exit", "exit_point": [0, 1995]}
     next_poses = {other["id"]: other["pose"] for other in runtime.uuvs}
     next_poses[boat["id"]] = [-2, 2005, math.pi]

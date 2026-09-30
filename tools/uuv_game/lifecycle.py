@@ -170,6 +170,7 @@ def apply_replacements(runtime, replacements):
                     remaining_range_m=runtime.config.range_capacity)
         runtime.active.pop(boat["id"], None)
     if not repair_search(runtime, add=replacements, required=False):
+        runtime.repair_pending.update(replacements)
         runtime.event("coverage_gap_accepted", {"uuv_ids": list(replacements),
             "reason": "repair_infeasible_for_remaining_fleet"})
     for member in replacements:

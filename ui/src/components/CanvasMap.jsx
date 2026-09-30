@@ -536,7 +536,7 @@ const CanvasMap = forwardRef(function CanvasMap({
       {frame?.fleet_entry?.position && <div className={`fleet-entry-marker side-${frame.fleet_entry.side}`} style={{
         left: layoutRef.current.offsetX + (frame.fleet_entry.position[0] + .5) * layoutRef.current.cellSize,
         top: layoutRef.current.offsetY + (frame.fleet_entry.position[1] + .5) * layoutRef.current.cellSize,
-      }} title="任务边界共同入口，八艇在附近保持安全间距驶入">初始投放 ×{frame.fleet_entry.count}</div>}
+      }} title="任务边界共同入口，八艇自左边界中点集中驶入">初始投放 ×{frame.fleet_entry.count}</div>}
       <div className="map-scale" aria-hidden="true"><i style={{ width: layoutRef.current.cellSize * 5 }} />{Number(frame?.task_area?.cell_size_km || 0) * 5} KM</div>
       </div>
       <div className="map-information-bar">

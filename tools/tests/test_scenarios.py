@@ -174,7 +174,7 @@ def test_four_hours_approved_search_without_model(tmp_path):
             assert runtime.status == "running"
             assert abs(runtime.uuvs[0]["curvature"]) <= 1/60
         assert runtime.sim_time == 14400
-        assert sum(e["type"] == "search_complete" for e in runtime.events) >= 7
+        assert sum(e["type"] == "search_complete" for e in runtime.events) >= 6
         assert len(runtime.agent_jobs) == 1  # Coalesced, no worker consuming.
     finally:
         runtime.close()

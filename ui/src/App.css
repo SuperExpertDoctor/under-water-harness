@@ -74,6 +74,14 @@ button {
   grid-template-rows: var(--topbar-height) minmax(0, 1fr) auto var(--playback-height);
 }
 
+.app-layout.sidebar-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app-layout.sidebar-hidden .sidebar {
+  display: none;
+}
+
 .top-bar {
   grid-column: 1;
   grid-row: 1;

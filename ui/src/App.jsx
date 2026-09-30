@@ -19,7 +19,9 @@ export default function App() {
   const [mode, setMode] = useState("live");
   const [selectedUavId, setSelectedUavId] = useState(null);
   const [drawerVisible, setDrawerVisible] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(
+    () => !globalThis.matchMedia || globalThis.matchMedia("(min-width: 901px)").matches,
+  );
   const [showGrid, setShowGrid] = useState(false);
   const [showScenario, setShowScenario] = useState(false);
   const [trailMode, setTrailMode] = useState("tail");
@@ -245,7 +247,7 @@ export default function App() {
     ? (live.status === "connected" ? connectionLabel : mission.connection === "reconnecting" ? "数据已过期 · 正在重连" : "HTTP 轮询 · 正在重连") : "本地演示 · 等待后端";
 
   return (
-    <main className={`app-layout mission-v2 ${mode === "replay" ? "replay-active" : ""}`}>
+    <main className={`app-layout mission-v2 ${mode === "replay" ? "replay-active" : ""} ${sidebarOpen ? "" : "sidebar-hidden"}`}>
       <header className="top-bar">
         <div className="product-mark" aria-label="多 UUV 协同任务控制台">
           <span className="mark-index">MC</span>
@@ -344,7 +346,7 @@ export default function App() {
           >
             <Focus size={17} />
           </button>
-          <button className="icon-btn mobile-only" onClick={() => setSidebarOpen((value) => !value)} title="编队状态" aria-label="切换编队状态面板">
+          <button className={sidebarOpen ? "icon-btn active" : "icon-btn"} onClick={() => setSidebarOpen((value) => !value)} title="任务工作区侧边栏" aria-label="切换任务工作区侧边栏" aria-pressed={sidebarOpen}>
             <PanelRight size={17} />
           </button>
         </div>

@@ -61,8 +61,12 @@ def prepare_handover(runtime):
                     continue
                 searching = [boat for boat in runtime.uuvs if boat["id"] != incoming["id"] and
                     runtime.active.get(boat["id"], {}).get("kind") in ("search", "reacquire")]
-                repair = search_bundle(searching, runtime.scan_times, runtime.obstacles, runtime.regions, allow_partial=True,
-                    target_evidence=target_evidence_field(runtime.scan_times, runtime.contacts, runtime.sim_time, runtime.config))
+                tracked_contacts = {a.get("contact_id") for a in runtime.active.values()
+                                    if a.get("kind") == "track" and a.get("phase") == "tracking"}
+                repair = search_bundle(searching, runtime.scan_times, runtime.obstacles, runtime.regions,
+                    allow_partial=True, now=runtime.sim_time, window_s=runtime.config.coverage_window_min*60,
+                    target_evidence=target_evidence_field(runtime.scan_times, runtime.contacts, runtime.sim_time,
+                                                          runtime.config, tracked_contacts))
                 if repair["status"] != "succeeded":
                     continue
                 # All geometry and coverage calculations finish before any assignment changes.

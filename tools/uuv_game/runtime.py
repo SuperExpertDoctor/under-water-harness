@@ -352,7 +352,9 @@ class MissionRuntime:
             all_boats = copy.deepcopy(self.uuvs)
             old_actions = copy.deepcopy(self.active)
         bbox = data.get("bbox", _SCENE["default_search_bbox_m"])
-        target_evidence = target_evidence_field(scan_times, contacts, snapshot_time, self.config)
+        tracked_contacts = {action.get("contact_id") for action in old_actions.values()
+                            if action.get("kind") == "track" and action.get("phase") == "tracking"}
+        target_evidence = target_evidence_field(scan_times, contacts, snapshot_time, self.config, tracked_contacts)
         if name == "compute_task_allocation" and data.get("contact_id"):
             contact = contacts.get(data["contact_id"])
             if not contact or contact["state"] in ("tentative", "lost"):

@@ -10,10 +10,12 @@ from .observations import predict
 
 _INFORMATION = algorithm_settings("information")
 
-def target_evidence_field(scan_times, contacts, now, config):
-    """Target-existence evidence P(c,r) for planning, over every ledger cell."""
+def target_evidence_field(scan_times, contacts, now, config, excluded_contact_ids=()):
+    """Search-relevant target evidence for planning, over every ledger cell."""
+    excluded = set(excluded_contact_ids)
+    relevant = {contact_id: contact for contact_id, contact in contacts.items() if contact_id not in excluded}
     cells = [(col, row) for col in range(len(scan_times)) for row in range(len(scan_times[col]))]
-    return information_fields(scan_times, contacts, cells, now, config)["target_info_matrix"]
+    return information_fields(scan_times, relevant, cells, now, config)["target_info_matrix"]
 
 
 def information_fields(scan_times, contacts, searchable, now, config):

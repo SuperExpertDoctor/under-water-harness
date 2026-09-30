@@ -84,14 +84,20 @@ large finite penalty, and matched pairs are rechecked to be finite.
 
 Per-cell demand combines scan staleness (unscanned plus a revisit ramp over
 the window) with the target-evidence field from contact belief, scaled by
-`target_evidence_weight`. Bisection therefore balances information load, not
-plain area: water carrying strong target evidence yields smaller regions.
-Each region reports `workload`, `mean_value`, `max_value`, `unseen_fraction`,
-`overdue_cells`, `target_probability`, `search_cost_m` and a weighted
-`priority`, and regions are ordered by descending priority. Entry matching
-checks a Dubins route and an energy estimate against up to `entry_candidates`
-centroid-nearest cells, so one unreachable entry cell can no longer poison a
-whole region's feasibility.
+`target_evidence_weight`. Contacts already in a stable tracking phase are
+excluded from the search evidence field. Bisection therefore balances
+information load, not plain area: water carrying strong target evidence
+yields smaller regions. Energy feasibility uses a separate physical coverage
+estimate based on the cells actually due for a sweep, so evidence density
+changes the boundary but never inflates the energy check. Each region
+reports `workload`, `freshness_demand`, `mean_value`, `max_value`,
+`unseen_fraction`, `overdue_cells`, `target_evidence_mass`, `search_cost_m`
+and a weighted `priority`, and regions are ordered by descending priority.
+Entry matching checks a Dubins route and an energy estimate against up to
+`entry_candidates` centroid-nearest cells, so one unreachable entry cell can
+no longer poison a whole region's feasibility. Prior regions that overlap
+each other or repeat an owner are rejected together and trigger a global
+repartition rather than committing conflicting claims.
 
 A successful fleet assignment has one connected, nonoverlapping region per
 search boat: `K = N_search`. Tracking transit, acquisition, tracking and exit

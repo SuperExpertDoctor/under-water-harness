@@ -101,8 +101,8 @@ def test_partition_reports_information_statistics_and_priority_order():
         assert len(region["scan_cells"]) == pending
         assert region["unseen_fraction"] == pytest.approx(pending/len(region["cells"]))
         assert region["overdue_cells"] == 0
-        assert region["target_probability"] == 0.0
-        assert region["search_cost_m"] == pytest.approx(region["workload"]*10000/560)
+        assert region["target_evidence_mass"] == 0.0
+        assert region["search_cost_m"] == pytest.approx(len(region["scan_cells"])*10000/560)
         assert region["mean_value"] == pytest.approx(region["workload"]/len(region["cells"]))
         assert region["max_value"] >= region["mean_value"]
 
@@ -117,7 +117,7 @@ def test_partition_evidence_field_balances_information_demand_not_area():
     plain = partition(fleet(2), scan, [])
     hot = partition(fleet(2), scan, [], None, target_evidence=evidence)
     assert plain["status"] == hot["status"] == "succeeded"
-    assert sum(region["target_probability"] for region in hot["regions"]) == 64
+    assert sum(region["target_evidence_mass"] for region in hot["regions"]) == 64
     assert max(region["max_value"] for region in hot["regions"]) > 1.0
 
     def corner(result):
@@ -126,6 +126,58 @@ def test_partition_evidence_field_balances_information_demand_not_area():
     assert corner(hot)["workload"] > len(corner(hot)["cells"])
     with pytest.raises(ValueError):
         partition(fleet(2), scan, [], None, target_evidence=[[0.0] * 39 for _ in range(40)])
+
+
+def test_partition_rejects_conflicting_committed_regions():
+    partition = kernel("partition", "partition_regions")
+    scan = [[-1.0] * 40 for _ in range(40)]
+    boats = fleet()
+    initial = partition(boats, scan, [])
+    cells = [region["cells"] for region in initial["regions"]]
+    previous = [{"id": "a", "owner": boats[0]["id"], "cells": cells[0]},
+                {"id": "b", "owner": boats[1]["id"], "cells": cells[0]}]
+    result = partition(boats, scan, [], previous)
+    assert result["status"] == "succeeded", result
+    assert result["diagnostics"]["committed_conflict"] is True
+    owners = [region["owner"] for region in result["regions"]]
+    assert len(owners) == len(set(owners))
+    flat = [tuple(cell) for region in result["regions"] for cell in region["cells"]]
+    assert len(flat) == len(set(flat)) == 1600
+
+
+def test_partition_evidence_does_not_inflate_energy_cost():
+    partition = kernel("partition", "partition_regions")
+    scan = [[-1.0] * 40 for _ in range(40)]
+    boats = fleet(2)
+    previous = [{"id": "a", "owner": boats[0]["id"], "cells": [[x, y] for x in range(20) for y in range(40)]},
+                {"id": "b", "owner": boats[1]["id"], "cells": [[x, y] for x in range(20, 40) for y in range(40)]}]
+    plain = partition(boats, scan, [], previous)
+    hot_evidence = [[1.0] * 40 for _ in range(40)]
+    hot = partition(boats, scan, [], previous, target_evidence=hot_evidence)
+    assert plain["status"] == hot["status"] == "succeeded"
+    assert hot["diagnostics"]["committed_regions"] == 2
+    for owner in (boats[0]["id"], boats[1]["id"]):
+        before = next(r for r in plain["regions"] if r["owner"] == owner)
+        after = next(r for r in hot["regions"] if r["owner"] == owner)
+        assert after["cells"] == before["cells"]
+        assert after["search_cost_m"] == before["search_cost_m"]
+        assert after["target_evidence_mass"] > before["target_evidence_mass"]
+
+
+def test_target_evidence_field_excludes_tracked_contacts():
+    from uuv_game.information import target_evidence_field
+    from uuv_game.config import Config
+    scan = [[-1.0] * 40 for _ in range(40)]
+    config = Config()
+    contact = {"x": 2000, "y": 2000, "vx": 0.0, "vy": 0.0, "estimate_time": 100.0,
+               "last_seen": 100.0, "state": "confirmed", "position_localized": True,
+               "confidence": 0.9, "covariance": [[400.0, 0, 0, 0], [0, 400.0, 0, 0],
+                                                [0, 0, 1.0, 0], [0, 0, 0, 1.0]],
+               "samples": []}
+    full = target_evidence_field(scan, {"c1": contact}, 100.0, config)
+    excluded = target_evidence_field(scan, {"c1": contact}, 100.0, config, {"c1"})
+    assert max(max(col) for col in full) > 0
+    assert max(max(col) for col in excluded) == 0
 
 
 def test_partition_obstacle_cells_and_disconnected_failure():

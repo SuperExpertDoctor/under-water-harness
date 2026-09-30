@@ -52,10 +52,13 @@ def repair_search(runtime, exclude=(), add=(), required=True):
         runtime.pause("safety_local_repair_authorization_required")
         return False
     boats = [navigation_pose(runtime, u) for u in runtime.uuvs if u["id"] not in exclude and (u["id"] in add or runtime.active.get(u["id"], {}).get("kind") in ("search", "reacquire"))]
+    tracked_contacts = {action.get("contact_id") for action in runtime.active.values()
+                        if action.get("kind") == "track" and action.get("phase") == "tracking"}
     result = search_bundle(boats, runtime.scan_times, runtime.obstacles, runtime.regions,
         allow_partial=runtime.standing_policy["energy_rotation"], now=runtime.sim_time,
         window_s=runtime.config.coverage_window_min*60,
-        target_evidence=target_evidence_field(runtime.scan_times, runtime.contacts, runtime.sim_time, runtime.config))
+        target_evidence=target_evidence_field(runtime.scan_times, runtime.contacts, runtime.sim_time,
+                                              runtime.config, tracked_contacts))
     if result["status"] != "succeeded":
         runtime.event("allocation_blocked", {"reason": result["diagnostics"], "required": required})
         if required:

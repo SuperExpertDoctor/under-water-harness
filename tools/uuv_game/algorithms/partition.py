@@ -55,13 +55,19 @@ def _split(cells, weights, fraction=_PARTITION["balanced_split_fraction"]):
     return None
 
 
-def _assignment_cost(boat, cells, weights, obstacles):
+def _search_cost(cells, coverage):
+    due = sum(coverage[c] for c in cells)
+    scan_cells = due or max(1, math.ceil(len(cells)*_PARTITION["fallback_revisit_fraction"]))
+    return scan_cells*_CELL**2/_PARTITION["effective_swath_m"]
+
+
+def _assignment_cost(boat, cells, coverage, obstacles):
     capabilities = boat.get("capabilities", ["active", "passive"])
     if not any(capability in capabilities for capability in ("active", "search", "scan")):
         return math.inf
     cx = sum((c[0]+.5)*_CELL for c in cells)/len(cells)
     cy = sum(_WORLD-(c[1]+.5)*_CELL for c in cells)/len(cells)
-    search_cost = sum(weights[c] for c in cells)*_CELL**2/_PARTITION["effective_swath_m"]
+    search_cost = _search_cost(cells, coverage)
     energy_horizon = min(search_cost, _PARTITION["energy_horizon_m"]) if boat.get("allow_partial_patrol") is True else search_cost
     entries = sorted(cells, key=lambda c: (math.dist([cx, cy], [(c[0]+.5)*_CELL, _WORLD-(c[1]+.5)*_CELL]), c))[:_PARTITION["entry_candidates"]]
     if boat.get("allow_partial_patrol") is True:
@@ -102,7 +108,7 @@ def partition_regions(uuvs, scan_times, obstacles, previous=None, *, now=None, w
     if target_evidence is not None and (len(target_evidence) != _GRID
             or any(not isinstance(column, (list, tuple)) or len(column) != _GRID for column in target_evidence)):
         raise ValueError("target_evidence must be a 40 by 40 column-major field")
-    free, weights, evidence = set(), {}, {}
+    free, weights, freshness, evidence, coverage = set(), {}, {}, {}, {}
     latest = max(0.0, max(finite(t, "scan time") for col in scan_times for t in col)) if now is None else finite(now, "current time")
     for col in range(_GRID):
         for row in range(_GRID):
@@ -113,11 +119,12 @@ def partition_regions(uuvs, scan_times, obstacles, previous=None, *, now=None, w
             cell = (col, row)
             free.add(cell)
             timestamp = scan_times[col][row]
-            weights[cell] = 1.0 if timestamp < 0 else _PARTITION["visited_workload_floor"]+_PARTITION["visited_workload_scale"]*min(1.0, max(0, latest-timestamp)/window_s)
+            freshness[cell] = 1.0 if timestamp < 0 else _PARTITION["visited_workload_floor"]+_PARTITION["visited_workload_scale"]*min(1.0, max(0, latest-timestamp)/window_s)
+            coverage[cell] = timestamp < 0 or latest-timestamp > window_s
             hint = target_evidence[col][row] if target_evidence is not None else 0.0
             hint = min(1.0, max(0.0, float(hint))) if isinstance(hint, (int, float)) and math.isfinite(hint) else 0.0
             evidence[cell] = hint
-            weights[cell] += _PARTITION["target_evidence_weight"]*hint
+            weights[cell] = freshness[cell]+_PARTITION["target_evidence_weight"]*hint
     result = {"status": "infeasible", "regions": [], "diagnostics": {
         "free_cells": len(free), "masked_cells": _GRID**2-len(free), "unowned_cells": len(free),
         "method": "committed-incremental-demand-bisection", "coverage_guarantee": False}}
@@ -129,8 +136,10 @@ def partition_regions(uuvs, scan_times, obstacles, previous=None, *, now=None, w
         return result
     old_regions = previous.get("regions", []) if isinstance(previous, dict) else previous or []
     boats = {u["id"]: u for u in uuvs}
-    committed = {}
+    committed, claimed, committed_valid = {}, set(), True
     for region in old_regions:
+        if not isinstance(region, dict):
+            continue
         owner = region.get("owner")
         if owner not in boats or not isinstance(region.get("cells"), list):
             continue
@@ -138,8 +147,14 @@ def partition_regions(uuvs, scan_times, obstacles, previous=None, *, now=None, w
         if not usable:
             continue
         piece = max(_components(usable), key=lambda cells: (len(cells), sorted(cells)))
-        if math.isfinite(_assignment_cost(boats[owner], piece, weights, obstacles)):
+        if owner in committed or piece & claimed:
+            committed_valid = False
+            break
+        if math.isfinite(_assignment_cost(boats[owner], piece, coverage, obstacles)):
             committed[owner] = piece
+            claimed |= piece
+    if not committed_valid:
+        committed.clear()
     groups = None
     reason = "bounded connected bisection exhausted"
     pieces, dirty = [], True
@@ -158,7 +173,7 @@ def partition_regions(uuvs, scan_times, obstacles, previous=None, *, now=None, w
             if options:
                 _, _, _, owner, index = min(options)
                 committed[owner] |= pieces.pop(index)
-                if not math.isfinite(_assignment_cost(boats[owner], committed[owner], weights, obstacles)):
+                if not math.isfinite(_assignment_cost(boats[owner], committed[owner], coverage, obstacles)):
                     committed.pop(owner)
                     dirty = True
                 continue
@@ -186,7 +201,7 @@ def partition_regions(uuvs, scan_times, obstacles, previous=None, *, now=None, w
         costs = np.full((len(slots), len(pieces)), math.inf)
         for i, boat in enumerate(slots):
             for j, cells in enumerate(pieces):
-                costs[i, j] = _assignment_cost(boat, cells, weights, obstacles)
+                costs[i, j] = _assignment_cost(boat, cells, coverage, obstacles)
         try:
             rows, columns = linear_sum_assignment(costs)
             feasible = len(rows) == len(slots) and all(math.isfinite(costs[i, j]) for i, j in zip(rows, columns))
@@ -208,30 +223,34 @@ def partition_regions(uuvs, scan_times, obstacles, previous=None, *, now=None, w
         return result
     for owner in sorted(groups):
         cells = groups[owner]
-        old = next((r for r in old_regions if r["owner"] == owner), None)
-        pending = sorted(c for c in cells if scan_times[c[0]][c[1]] < 0 or latest-scan_times[c[0]][c[1]] > window_s)
+        old = next((r for r in old_regions if isinstance(r, dict) and r.get("owner") == owner), None)
+        pending = sorted(c for c in cells if coverage[c])
         scan_cells = pending or sorted(cells, key=lambda c: (scan_times[c[0]][c[1]], c))[:max(1, math.ceil(len(cells)*_PARTITION["fallback_revisit_fraction"]))]
+        freshness_demand = sum(freshness[c] for c in cells)
+        evidence_mass = sum(evidence[c] for c in cells)
         workload = sum(weights[c] for c in cells)
         unscanned = sum(scan_times[c[0]][c[1]] < 0 for c in cells)
         overdue = sum(0 <= scan_times[c[0]][c[1]] < latest-window_s for c in cells)
-        target_probability = sum(evidence[c] for c in cells)
-        search_cost = workload*_CELL**2/_PARTITION["effective_swath_m"]
-        priority = (_PRIORITY["unseen_weight"]*unscanned + _PRIORITY["value_weight"]*workload
-                    + _PRIORITY["target_weight"]*target_probability + _PRIORITY["overdue_weight"]*overdue
-                    - _PRIORITY["cost_weight"]*search_cost/_PRIORITY["cost_norm_m"])/len(cells)
+        search_cost = _search_cost(cells, coverage)
+        priority = (_PRIORITY["unseen_weight"]*unscanned/len(cells)
+                    + _PRIORITY["value_weight"]*freshness_demand/len(cells)
+                    + _PRIORITY["target_weight"]*evidence_mass/len(cells)
+                    + _PRIORITY["overdue_weight"]*overdue/len(cells)
+                    - _PRIORITY["cost_weight"]*search_cost/_PRIORITY["cost_norm_m"])
         result["regions"].append({"id": old["id"] if old else f"region-{owner}", "owner": owner,
             "cells": [list(c) for c in sorted(cells)],
             "scan_cells": [list(c) for c in scan_cells],
             "bbox_m": [min(c[0] for c in cells)*_CELL, (_GRID-1-max(c[1] for c in cells))*_CELL,
                        (max(c[0] for c in cells)+1)*_CELL, (_GRID-min(c[1] for c in cells))*_CELL],
-            "workload": workload, "unscanned_cells": unscanned,
+            "workload": workload, "freshness_demand": freshness_demand, "unscanned_cells": unscanned,
             "mean_value": workload/len(cells), "max_value": max(weights[c] for c in cells),
             "unseen_fraction": unscanned/len(cells), "overdue_cells": overdue,
-            "target_probability": target_probability, "search_cost_m": search_cost, "priority": priority})
+            "target_evidence_mass": evidence_mass, "search_cost_m": search_cost, "priority": priority})
     result["regions"].sort(key=lambda region: (-region["priority"], region["owner"]))
     result["status"] = "succeeded"
     result["diagnostics"].update(unowned_cells=0, local_repair=bool(committed),
-        committed_regions=len(committed), repartitioned_regions=len(groups)-len(committed))
+        committed_regions=len(committed), repartitioned_regions=len(groups)-len(committed),
+        committed_conflict=not committed_valid)
     if any(boat.get("allow_partial_patrol") is True for boat in uuvs):
         result["diagnostics"].update(requires_energy_rotation=True, assignment_energy_horizon_m=_PARTITION["energy_horizon_m"])
     return result

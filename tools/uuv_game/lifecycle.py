@@ -138,7 +138,7 @@ def prepare_exits(runtime):
     return True
 
 
-def replacement_pose(runtime, boat, next_poses):
+def replacement_pose(runtime, boat, next_poses, ignore=frozenset()):
     start, end = boat["pose"], next_poses[boat["id"]]
     width, height = runtime.config.width, runtime.config.height
     crossings = []
@@ -155,8 +155,13 @@ def replacement_pose(runtime, boat, next_poses):
         return None
     pose = min(crossings, key=lambda crossing: crossing[0])[1]
     margin = _LIFECYCLE["replacement_obstacle_margin_m"]
+    # Boats still held at the boundary waiting to exit are not traffic: if
+    # they counted, hulls crossing within separation of each other would pin
+    # one another's replacement forever. Spawned replacements are not in
+    # ignore and still enforce separation between simultaneous entries.
     if path_safe([pose], runtime.obstacles, [-margin, -margin, runtime.config.width+margin, runtime.config.height+margin], margin=margin) and all(
-            math.dist(pose[:2], p[:2]) >= _LIFECYCLE["replacement_separation_m"] for key, p in next_poses.items() if key != boat["id"]):
+            math.dist(pose[:2], p[:2]) >= _LIFECYCLE["replacement_separation_m"]
+            for key, p in next_poses.items() if key != boat["id"] and key not in ignore):
         return pose
     return None
 

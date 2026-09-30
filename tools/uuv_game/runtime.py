@@ -1055,7 +1055,9 @@ class MissionRuntime:
                 if self.active.get(u["id"], {}).get("kind") != "exit":
                     self.pause("safety_boundary_violation")
                     return
-                replacement = replacement_pose(self, u, {**next_poses, **replacements})
+                exiting = {key for key, action in self.active.items()
+                    if action.get("kind") == "exit" and key not in replacements}
+                replacement = replacement_pose(self, u, {**next_poses, **replacements}, ignore=exiting)
                 if replacement is None or any(math.dist(replacement[:2], p[:2]) < _LIFECYCLE["replacement_separation_m"] for p in target_poses.values()):
                     # Hold the crossing boat at the boundary for one tick
                     # instead of freezing the whole sim: other boats and

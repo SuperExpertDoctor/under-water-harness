@@ -120,6 +120,35 @@ def test_exit_crossing_replaces_boat_on_same_boundary_in_one_tick(runtime, monke
     assert [event["data"]["entry_point"] for event in runtime.events if event["type"] == "uuv_replenished"] == [[0, 2000]]
 
 
+def test_close_exit_crossings_stagger_replacements_instead_of_deadlocking(runtime, monkeypatch):
+    for boat, lane in ((runtime.uuvs[0], 1970.0), (runtime.uuvs[1], 2030.0)):
+        boat["pose"] = [1, lane, math.pi]
+        boat["remaining_range_m"] = 1000
+        runtime.active[boat["id"]] = {"kind": "exit", "phase": "exiting", "plan_id": "authorized-rotation",
+            "generation": 1, "exit_point": [0, lane], "points": [[1, lane, math.pi], [-30, lane, math.pi]],
+            "index": 0, "execution_domain": [-100, -100, 4100, 4100]}
+    for index, other in enumerate(runtime.uuvs[2:]):
+        other["pose"] = [1800+index*200, 3000, 0]
+
+    def fake_repair(rt, add=None, **_kwargs):
+        for member in (add or {}):
+            spawned = next(u for u in rt.uuvs if u["id"] == member)
+            rt.active[member] = {"kind": "search", "phase": "scanning", "generation": spawned["generation"],
+                "points": [[spawned["pose"][0]+step*5, spawned["pose"][1], 0] for step in range(400)],
+                "index": 0, "execution_domain": [-100, -100, 4100, 4100]}
+        return True
+
+    monkeypatch.setattr("uuv_game.lifecycle.repair_search", fake_repair)
+    runtime.start()
+    for _ in range(300):
+        runtime.tick()
+        if all(u["generation"] == 2 for u in runtime.uuvs[:2]):
+            break
+    assert all(u["generation"] == 2 for u in runtime.uuvs[:2]), [u["generation"] for u in runtime.uuvs[:2]]
+    replenished = [event["data"]["uuv_id"] for event in runtime.events if event["type"] == "uuv_replenished"]
+    assert sorted(replenished) == ["UUV-1", "UUV-2"]
+
+
 def test_replacement_uses_actual_crossing_not_original_exit_projection(runtime):
     boat = runtime.uuvs[0]
     boat["pose"] = [2, 1995, math.pi]

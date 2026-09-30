@@ -20,11 +20,13 @@ from ..config import Config, algorithm_settings
 _TRACK = algorithm_settings("tracking")
 
 
-def tracking_plan(uuvs, contact, obstacles, *, require_active_acquisition=True):
+def tracking_plan(uuvs, contact, obstacles, *, require_active_acquisition=True, required_members=None):
     """Enumerate bounded two/three-boat geometry using actual Dubins transits.
 
     Each slot is an arrival reference around a predicted moving contact, never
     a stationary control target. Larger input fleets trigger team selection.
+    Members listed in required_members (e.g. the discovering boat whose
+    measurements feed the predicted slot centers) must appear in every team.
     """
     if not isinstance(uuvs, list) or not 1 <= len(uuvs) <= Config().fleet_size:
         raise ValueError("tracking requires one to eight vehicles")
@@ -44,8 +46,10 @@ def tracking_plan(uuvs, contact, obstacles, *, require_active_acquisition=True):
         "candidate_routes": 0, "candidate_teams": 0, "geometry_quality": 0.0,
         "reason": "insufficient feasible cooperative observation candidates"}}
     active_members = {boat["id"] for boat in uuvs if "active" in boat.get("capabilities", ["active", "passive"])}
+    required = {member for member in (required_members or []) if member in identifiers}
     result.update(acquisition_mode="active_until_cooperative_geometry" if require_active_acquisition else "passive_existing_team",
-        acquisition_requirements={"min_active_observers": 2 if require_active_acquisition else 0, "eligible_members": sorted(active_members)})
+        acquisition_requirements={"min_active_observers": 2 if require_active_acquisition else 0, "eligible_members": sorted(active_members)},
+        required_members=sorted(required))
     if require_active_acquisition and len(active_members) < 2:
         result["diagnostics"]["reason"] = "active_acquisition_requires_two_active_sensors"
         return result
@@ -122,6 +126,8 @@ def tracking_plan(uuvs, contact, obstacles, *, require_active_acquisition=True):
         if size < 2:
             continue
         for members in combinations(sorted(feasible), size):
+            if required and not required.issubset(members):
+                continue
             if require_active_acquisition and len(active_members.intersection(members)) < 2:
                 continue
             # Keep at least one scan-capable resource when selecting from a fleet.
@@ -164,6 +170,10 @@ def tracking_plan(uuvs, contact, obstacles, *, require_active_acquisition=True):
             energy_horizon_s=_TRACK["track_energy_horizon_s"],
             conflict_solver=joint["diagnostics"]["algorithm"], conflict_nodes=joint["diagnostics"]["expanded"],
             solution_quality="feasible", arrival_is_tracking_success=False)
+    elif required and not required.issubset(feasible):
+        result["diagnostics"]["reason"] = "required_member_has_no_feasible_slot"
+    elif required:
+        result["diagnostics"]["reason"] = "no_team_contains_all_required_members"
     return result
 
 

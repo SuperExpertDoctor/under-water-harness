@@ -303,15 +303,15 @@ def test_active_bridge_requires_measured_geometry_then_fresh_passive_streak(size
     observe(runtime)
     assert all(sensor_mode(action) == "passive" for action in runtime.active.values())
     assert all(action.get("established_once") for action in runtime.active.values())
-    assert all(sample["mode"] == "active" for sample in runtime.observations if sample["time_s"] == 2)
+    assert any(sample["mode"] == "active" for sample in runtime.observations if sample["time_s"] == 2)
     assert all(time < 0 for column in runtime.scan_times for time in column), "Forward acquisition is not side-scan coverage"
-    assert runtime.contacts["CONTACT-1"]["tracking_streak"] == 0
+    assert runtime.contacts["CONTACT-1"]["tracking_streak"] == 1
     assert runtime.metrics["effective_tracking_seconds"] == 0
-    for now in (3, 4):
+    for now in (3,):
         runtime.sim_time = now
         observe(runtime)
         assert runtime.metrics["effective_tracking_seconds"] == 0
-    runtime.sim_time = 5
+    runtime.sim_time = 4
     observe(runtime)
     assert runtime.contacts["CONTACT-1"]["state"] == "tracking"
     assert runtime.contacts["CONTACT-1"]["tracking_streak"] == 3
@@ -382,3 +382,74 @@ def test_auto_selection_uses_feasible_active_pair_and_quiet_relief_is_explicit()
     quiet = tracking_plan(boats[:2], contact, [], require_active_acquisition=False)
     assert quiet["status"] == "succeeded", quiet
     assert quiet["acquisition_mode"] == "passive_existing_team"
+
+
+def _tracking_boat(runtime, member, bearing_rad, distance_m=200):
+    boat = next(u for u in runtime.uuvs if u["id"] == member)
+    boat["pose"] = [2000+distance_m*math.cos(bearing_rad), 2000+distance_m*math.sin(bearing_rad),
+        math.remainder(bearing_rad+math.pi, 2*math.pi)]
+    runtime.active[member] = {"kind": "track", "phase": "reacquiring", "plan_id": "track-plan",
+        "contact_id": "CONTACT-1", "generation": 1, "acquisition_mode": "active",
+        "execution_domain": [0, 0, runtime.config.width, runtime.config.height]}
+    return boat
+
+
+def test_quiet_target_stays_tracked_on_active_hold_and_loud_target_returns_passive(tmp_path):
+    runtime = MissionRuntime(tmp_path/"active-hold.sqlite")
+    try:
+        runtime.standing_policy["lost_reacquire"] = True
+        target = {"id": "TARGET-1", "pose": [2000.0, 2000.0, 0.0], "speed": 0.3, "curvature": 0.0,
+            "passive_signal": False, "vessel_class": "submarine"}
+        runtime.targets = [target]
+        runtime.contact_mapping["TARGET-1"] = "CONTACT-1"
+        contact = {**initialize(2000, 2000, 0, 15), "contact_id": "CONTACT-1", "state": "confirmed",
+            "last_seen": 0, "hits": [0], "samples": [], "tracking_streak": 0, "observers": []}
+        runtime.contacts["CONTACT-1"] = contact
+        _tracking_boat(runtime, "UUV-1", math.radians(30))
+        _tracking_boat(runtime, "UUV-2", math.radians(150))
+        for _ in range(8):
+            runtime.sim_time += 1.0
+            observe(runtime)
+        assert contact["last_seen"] == runtime.sim_time
+        assert contact["state"] == "tracking"
+        assert any(sample["mode"] == "active" for sample in contact["samples"])
+        assert all(runtime.active[member]["acquisition_mode"] == "active" for member in ("UUV-1", "UUV-2"))
+        target["passive_signal"] = True
+        for _ in range(8):
+            runtime.sim_time += 1.0
+            observe(runtime)
+        assert all(runtime.active[member]["acquisition_mode"] == "passive" for member in ("UUV-1", "UUV-2"))
+        assert contact["state"] == "tracking"
+        assert any(sample["mode"] == "passive" for sample in contact["samples"])
+    finally:
+        runtime.close()
+
+
+def test_passive_silence_falls_back_to_active_hold(tmp_path):
+    runtime = MissionRuntime(tmp_path/"silent-fallback.sqlite")
+    try:
+        runtime.standing_policy["lost_reacquire"] = True
+        target = {"id": "TARGET-1", "pose": [2000.0, 2000.0, 0.0], "speed": 0.3, "curvature": 0.0,
+            "passive_signal": False, "vessel_class": "submarine"}
+        runtime.targets = [target]
+        runtime.contact_mapping["TARGET-1"] = "CONTACT-1"
+        contact = {**initialize(2000, 2000, 0, 15), "contact_id": "CONTACT-1", "state": "tracking",
+            "last_seen": 0, "hits": [0], "samples": [], "tracking_streak": 5, "observers": ["UUV-1", "UUV-2"],
+            "tracking_started_at_s": 0}
+        runtime.contacts["CONTACT-1"] = contact
+        for member, bearing in (("UUV-1", math.radians(30)), ("UUV-2", math.radians(150))):
+            _tracking_boat(runtime, member, bearing)
+            runtime.active[member]["phase"] = "tracking"
+            runtime.active[member]["acquisition_mode"] = "passive"
+        runtime.sim_time += 1.0
+        observe(runtime)
+        assert all(runtime.active[member]["acquisition_mode"] == "active" for member in ("UUV-1", "UUV-2"))
+        assert all(runtime.active[member]["phase"] == "reacquiring" for member in ("UUV-1", "UUV-2"))
+        assert sum(1 for event in runtime.events if event["type"] == "tracking_active_fallback") == 2
+        for _ in range(8):
+            runtime.sim_time += 1.0
+            observe(runtime)
+        assert contact["state"] == "tracking"
+        assert contact["last_seen"] == runtime.sim_time
+    finally:
+        runtime.close()

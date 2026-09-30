@@ -27,7 +27,7 @@ def sensor_mode(action):
 def sensor_roles(action):
     kind, mode = action.get("kind"), sensor_mode(action)
     return {"side_scan": kind == "search", "forward_active": bool(kind and kind != "idle"),
-            "forward_passive": mode == "passive"}
+            "forward_passive": mode == "passive" or kind == "track"}
 
 
 def _relative_bearing(pose, point):
@@ -70,22 +70,31 @@ def observe(runtime):
             mode = observed_modes[boat["id"]]
             if mode == "off" or mode not in boat["capabilities"]:
                 continue
-            if mode == "passive" and (not contact or not target.get("passive_signal", True)):
+            action = runtime.active.get(boat["id"], {})
+            emits = []
+            if mode == "active":
+                emits.append("active")
+            if contact and target.get("passive_signal", True) and (
+                    mode == "passive" or (action.get("kind") == "track" and "passive" in boat["capabilities"])):
+                emits.append("passive")
+            if not emits:
                 continue
             if math.dist(boat["pose"][:2], target["pose"][:2]) > runtime.config.sensor_range:
                 continue
             if not visible(boat["pose"], target["pose"], runtime.obstacles):
                 continue
             roles = observed_roles[boat["id"]]
-            side_contact = roles["side_scan"] and side_scan_contains(boat["pose"], target["pose"], runtime.config)
-            front_contact = (roles["forward_passive"] if mode == "passive" else roles["forward_active"]) and forward_contains(
-                boat["pose"], target["pose"], runtime.config, passive=mode == "passive")
-            if not (side_contact or front_contact):
-                continue
-            sample = ekf.measure(boat["pose"], target["pose"], mode, runtime.rng)
-            sample.update(observer_pose=list(boat["pose"]), observer_id=boat["id"], generation=boat["generation"],
-                          observers=[boat["id"]], source="sensor", instrument="side_scan" if side_contact else "forward_passive" if mode == "passive" else "forward_active")
-            batch.append(sample)
+            for emit in emits:
+                side_contact = emit == "active" and roles["side_scan"] and side_scan_contains(boat["pose"], target["pose"], runtime.config)
+                front_contact = (roles["forward_passive"] if emit == "passive" else roles["forward_active"]) and forward_contains(
+                    boat["pose"], target["pose"], runtime.config, passive=emit == "passive")
+                if not (side_contact or front_contact):
+                    continue
+                sample = ekf.measure(boat["pose"], target["pose"], emit, runtime.rng)
+                sample.update(observer_pose=list(boat["pose"]), observer_id=boat["id"], generation=boat["generation"],
+                              observers=[boat["id"]], source="sensor",
+                              instrument="side_scan" if side_contact else "forward_passive" if emit == "passive" else "forward_active")
+                batch.append(sample)
         accepted = []
         for sample in batch:
             if not contact:
@@ -96,14 +105,16 @@ def observe(runtime):
                 runtime.contact_mapping[target["id"]] = key
                 contact = {**ekf.initialize(x, y, now, max(_OBS["initial_contact_sigma_m"], sample["range_m"]*_OBS["initial_contact_range_sigma_fraction"])),
                     "contact_id": key, "last_seen": now, "state": "tentative", "hits": [], "samples": [],
-                    "vessel_class": target.get("vessel_class", "underwater"), "tracking_streak": 0, "observers": []}
+                    "vessel_class": target.get("vessel_class", "underwater"), "tracking_streak": 0, "observers": [],
+                    "discovered_by": sample["observer_id"]}
                 runtime.contacts[key] = contact
-                runtime.event("contact_created", {"contact_id": key})
+                runtime.event("contact_created", {"contact_id": key, "observer_id": sample["observer_id"]})
             if not ekf.correct(contact, sample):
                 maximum_range = runtime.config.sensor_range
                 if contact["state"] != "lost" or accepted or sample["mode"] != "active" or not 0 < sample["range_m"] <= maximum_range+_OBS["active_reacquire_sigma_multiple"]*sample["range_sigma"]:
                     continue
                 contact.update(ekf.initialize_active(sample, now), tracking_streak=0)
+                contact["discovered_by"] = sample["observer_id"]
                 runtime.event("contact_reacquired", {"contact_id": key, "observer_id": sample["observer_id"],
                     "generation": sample["generation"], "method": "active_measurement_reinitialization"})
             runtime.observation_cursor += 1
@@ -116,6 +127,8 @@ def observe(runtime):
             runtime.observations.append(sample)
             accepted.append(sample)
             contact["samples"] = (contact["samples"]+[sample])[-_OBS["contact_sample_history"]:]
+            if sample["mode"] == "passive" and sample["observer_id"] in runtime.active:
+                runtime.active[sample["observer_id"]]["last_passive_s"] = now
         if not contact:
             continue
         old = contact["state"]
@@ -125,12 +138,16 @@ def observe(runtime):
             contact["observers"] = [s["observer_id"] for s in accepted]
         tracking = [u for u in runtime.uuvs if runtime.active.get(u["id"], {}).get("contact_id") == key
                     and runtime.active[u["id"]]["kind"] == "track"]
-        active_received = {sample["observer_id"] for sample in accepted if sample["mode"] == "active" and sample["source"] == "sensor"}
-        active_acquired = [boat for boat in tracking if boat["id"] in active_received
-            and runtime.active[boat["id"]].get("phase") != "transit"]
-        active_angles = [math.atan2(boat["pose"][1]-contact["y"], boat["pose"][0]-contact["x"]) for boat in active_acquired]
-        active_geometry = max((abs(math.sin(a-b)) for a in active_angles for b in active_angles), default=0)
-        if len(active_acquired) >= 2 and active_geometry >= _OBS["tracking_geometry_min"] and contact["uncertainty_m"] <= _OBS["tracking_uncertainty_max_m"] and any(
+        passive_received = {sample["observer_id"] for sample in accepted if sample["mode"] == "passive"}
+        received = set(passive_received)
+        received |= {s["observer_id"] for s in accepted if s["mode"] == "active"
+                     and runtime.active.get(s["observer_id"], {}).get("kind") == "track"}
+        acquired = [u for u in tracking if u["id"] in received and runtime.active[u["id"]].get("phase") != "transit"]
+        angles = [math.atan2(u["pose"][1]-contact["y"], u["pose"][0]-contact["x"]) for u in acquired]
+        geometry = max((abs(math.sin(a-b)) for a in angles for b in angles), default=0)
+        effective = len(acquired) >= 2 and geometry >= _OBS["tracking_geometry_min"] and contact["uncertainty_m"] <= _OBS["tracking_uncertainty_max_m"]
+        contact["geometry_quality"] = geometry
+        if effective and any(boat["id"] in passive_received for boat in tracking) and any(
                 runtime.active[boat["id"]].get("acquisition_mode") == "active" for boat in tracking):
             for boat in tracking:
                 runtime.active[boat["id"]]["acquisition_mode"] = "passive"
@@ -138,15 +155,18 @@ def observe(runtime):
                 if runtime.active[boat["id"]].get("phase") == "reacquiring":
                     runtime.active[boat["id"]]["phase"] = "acquiring"
             runtime.event("tracking_passive_acquisition_started", {"contact_id": key,
-                "members": [boat["id"] for boat in tracking], "observers": [boat["id"] for boat in active_acquired],
-                "geometry_quality": active_geometry, "uncertainty_m": contact["uncertainty_m"]})
-        received = {s["observer_id"] for s in accepted if s["mode"] == "passive"}
-        acquired = [u for u in tracking if u["id"] in received and runtime.active[u["id"]].get("phase") != "transit"]
-        angles = [math.atan2(u["pose"][1]-contact["y"], u["pose"][0]-contact["x"]) for u in acquired]
-        geometry = max((abs(math.sin(a-b)) for a in angles for b in angles), default=0)
-        effective = len(acquired) >= 2 and geometry >= _OBS["tracking_geometry_min"] and contact["uncertainty_m"] <= _OBS["tracking_uncertainty_max_m"]
-        contact["geometry_quality"] = geometry
+                "members": [boat["id"] for boat in tracking], "observers": [boat["id"] for boat in acquired],
+                "geometry_quality": geometry, "uncertainty_m": contact["uncertainty_m"]})
         contact["tracking_streak"] = contact.get("tracking_streak", 0)+elapsed if effective else 0
+        for boat in tracking:
+            action = runtime.active[boat["id"]]
+            if (action.get("acquisition_mode") == "passive" and action.get("phase") != "transit"
+                    and getattr(runtime, "standing_policy", {}).get("lost_reacquire")
+                    and now-action.get("last_passive_s", -math.inf) > _OBS["track_active_fallback_s"]):
+                action["acquisition_mode"] = "active"
+                action["phase"] = "reacquiring"
+                runtime.event("tracking_active_fallback", {"contact_id": key, "uuv_id": boat["id"],
+                    "silent_s": round(now-action.get("last_passive_s", now), 1)})
         if now-contact["last_seen"] > _OBS["contact_lost_after_s"]:
             contact["state"] = "lost"
             runtime.metrics["lost_seconds"] += elapsed
@@ -155,7 +175,8 @@ def observe(runtime):
             if contact["state"] == "tracking":
                 runtime.metrics["effective_tracking_seconds"] += elapsed
                 for boat in acquired:
-                    runtime.active[boat["id"]]["phase"] = "tracking"
+                    if runtime.active[boat["id"]].get("acquisition_mode") != "active":
+                        runtime.active[boat["id"]]["phase"] = "tracking"
         elif len(contact["hits"]) >= _OBS["contact_confirmation_hits"]:
             contact["state"] = "confirmed"
         if old != contact["state"]:
@@ -168,12 +189,15 @@ def observe(runtime):
                 contact["last_tracking_duration_s"] = 0
             if contact["state"] == "lost":
                 contact["lost_started_at_s"] = now
+                contact["auto_track_planned"] = False
+                contact["auto_track_requested"] = False
             elif old == "lost":
                 contact["lost_started_at_s"] = None
             runtime.event("tracking_established" if contact["state"] == "tracking" else "target_lost" if contact["state"] == "lost" else "contact_state_changed",
                           {"contact_id": key, "state": contact["state"], "observers": contact["observers"]})
             if contact["state"] == "confirmed" and old in ("tentative", "lost"):
                 runtime.event("target_found", {"contact_id": key})
+                contact["auto_track_requested"] = True
                 if old == "tentative" and hasattr(runtime, "provisional_contact"):
                     discoverer = next((sample for sample in accepted if sample["mode"] == "active"
                         and runtime.active.get(sample["observer_id"], {}).get("kind") == "search"), None)

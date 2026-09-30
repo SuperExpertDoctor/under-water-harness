@@ -356,7 +356,7 @@ class MissionRuntime:
             contact = contacts.get(data["contact_id"])
             if not contact or contact["state"] in ("tentative", "lost"):
                 raise MissionError("confirmed_contact_required", 422)
-            result = tracking_plan(members, contact, obstacles)
+            result = tracking_plan(members, contact, obstacles, required_members=[contact.get("discovered_by")])
             chosen = result.get("members", [])
             members = [boat for boat in members if boat["id"] in chosen]
             result.pop("routes", None)
@@ -400,7 +400,7 @@ class MissionRuntime:
             contact = contacts.get(contact_id)
             if not contact or contact["state"] in ("tentative", "lost"):
                 raise MissionError("confirmed_contact_required", 422)
-            result = tracking_plan(members, contact, obstacles)
+            result = tracking_plan(members, contact, obstacles, required_members=[contact.get("discovered_by")])
             chosen = result.get("members", [])
             members = [u for u in members if u["id"] in chosen]
             result.update(kind="track", contact_id=contact_id, bbox=[0, 0, self.config.width, self.config.height])
@@ -1062,6 +1062,9 @@ class MissionRuntime:
         if self.frame_id % _RUNTIME["observation_frames"] == 0:
             self._observe()
             finish_handover(self)
+            for key, contact in self.contacts.items():
+                if contact.get("auto_track_requested"):
+                    self._auto_track(key)
             for u in self.uuvs:
                 u["trail"] = (u["trail"]+[u["pose"][:2]])[-_RUNTIME["max_trail_points"]:]
         for vessel in self.vessels:
@@ -1081,6 +1084,36 @@ class MissionRuntime:
             self.last_periodic = self.sim_time
             if self._search_gap():
                 self.queue_agent("Coverage gap or overdue revisit detected; preserve valid plans.", "coverage_gap")
+
+    def _auto_track(self, contact_id):
+        contact = self.contacts.get(contact_id)
+        if not contact:
+            return
+        contact["auto_track_requested"] = False
+        if contact["state"] != "confirmed" or contact.get("auto_track_planned"):
+            return
+        if any(action.get("kind") == "track" and action.get("contact_id") == contact_id for action in self.active.values()):
+            return
+        if any(plan.get("contact_id") == contact_id and plan.get("kind") == "track" and plan["status"] in ("pending_approval", "approved", "active")
+                for plan in self.plans.values()):
+            return
+        contact["auto_track_planned"] = True
+        try:
+            result = self.calculate("plan_tracking", {"contact_id": contact_id})
+        except MissionError as exc:
+            self.event("auto_tracking_unavailable", {"contact_id": contact_id, "reason": str(exc)})
+            return
+        if result["status"] != "succeeded":
+            self.event("auto_tracking_infeasible", {"contact_id": contact_id,
+                "reason": result.get("diagnostics", {}).get("reason")})
+            return
+        try:
+            response = self.submit(result["result_id"], f"auto-track-{contact_id}-{self.frame_id}", self.episode)
+        except MissionError as exc:
+            self.event("auto_tracking_unavailable", {"contact_id": contact_id, "reason": str(exc)})
+            return
+        self.event("auto_tracking_planned", {"contact_id": contact_id, "plan_id": response.get("plan_id"),
+            "members": response.get("members"), "status": response.get("status")})
 
     def cells(self, pose):
         return [pose[0]/self.config.cell-.5, (self.config.height-pose[1])/self.config.cell-.5]

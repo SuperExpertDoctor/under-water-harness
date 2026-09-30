@@ -202,6 +202,7 @@
       "tracking_geometry_min": 0.3,
       "tracking_uncertainty_max_m": 120.0,
       "tracking_streak_s": 3.0,
+      "track_active_fallback_s": 10.0,
       "contact_lost_after_s": 15.0,
       "contact_confirmation_hits": 3,
       "confirmation_window_s": 5.0,

@@ -10,6 +10,44 @@ export async function recordingRequest(action, fetcher = fetch) {
   return result;
 }
 
+export async function exportRecordingFile(fetcher = fetch) {
+  const response = await fetcher("/api/recording/download");
+  if (!response.ok) {
+    let message = `录制导出不可用 (${response.status})`;
+    try {
+      const body = await response.json();
+      message = body.message || body.error_code || message;
+    } catch { /* keep the status-derived message */ }
+    throw new Error(message);
+  }
+  return response.blob();
+}
+
+export async function pickRecordingTarget(picker = window.showSaveFilePicker?.bind(window)) {
+  if (!picker) return null;
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+  return picker({
+    suggestedName: `mission-${stamp}.mp4`,
+    types: [{ description: "MP4 视频", accept: { "video/mp4": [".mp4"] } }],
+  });
+}
+
+export async function saveRecordingBlob(blob, filename, handle = null) {
+  if (handle) {
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return "picker";
+  }
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.click();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return "download";
+}
+
 export function createRecordingRequestTracker() {
   let latest = 0;
   let mutating = false;
@@ -43,6 +81,9 @@ export default function useRecording() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const tracker = useRef(createRecordingRequestTracker());
+  const exportPending = useRef(false);
+  const exportHandle = useRef(null);
+  const picking = useRef(false);
 
   useEffect(() => {
     let disposed = false;
@@ -65,6 +106,21 @@ export default function useRecording() {
     return () => { disposed = true; window.clearInterval(timer); };
   }, []);
 
+  useEffect(() => {
+    if (!exportPending.current || (status.status !== "completed" && status.status !== "failed")) return;
+    exportPending.current = false;
+    const handle = exportHandle.current;
+    exportHandle.current = null;
+    if (status.status !== "completed" || !status.filename) return;
+    (async () => {
+      try {
+        await saveRecordingBlob(await exportRecordingFile(), status.filename, handle);
+      } catch (failure) {
+        setError({ source: "action", atStatus: "completed", message: failure.message });
+      }
+    })();
+  }, [status]);
+
   const act = useCallback(async (action) => {
     if (busy) return;
     tracker.current.beginMutation();
@@ -77,5 +133,26 @@ export default function useRecording() {
     } finally { tracker.current.endMutation(); setBusy(false); }
   }, [busy, status.status]);
 
-  return { status, busy, error, start: () => act("start"), stop: () => act("stop") };
+  // The save dialog must open inside the click gesture: transient activation
+  // expires long before encoding finishes. Cancelling it skips the export;
+  // the finished MP4 stays on the server either way.
+  const stop = useCallback(async () => {
+    if (picking.current) return;
+    picking.current = true;
+    exportPending.current = true;
+    try {
+      exportHandle.current = await pickRecordingTarget();
+    } catch (failure) {
+      exportHandle.current = null;
+      if (failure?.name === "AbortError") {
+        exportPending.current = false;
+      } else {
+        setError({ source: "action", atStatus: status.status, message: failure.message });
+      }
+    }
+    picking.current = false;
+    act("stop");
+  }, [act, status.status]);
+
+  return { status, busy, error, start: () => act("start"), stop };
 }

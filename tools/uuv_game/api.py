@@ -15,7 +15,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .runtime import ALGORITHM_IDS, MissionRuntime, MissionError, identifier
@@ -272,6 +272,17 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
         if await request.body() not in (b"", b"{}"):
             raise RecordingError("unexpected_parameters", 422)
         return await recorder.stop()
+
+    @app.get("/api/recording/download")
+    async def recording_download():
+        status = recorder.status()
+        if status["status"] != "completed" or not status["filename"]:
+            raise RecordingError("recording_not_ready", 409)
+        root = recorder.output_dir.resolve()
+        path = (root / status["filename"]).resolve()
+        if path.parent != root or not path.is_file():
+            raise RecordingError("recording_missing", 404)
+        return FileResponse(path, media_type="video/mp4", filename=status["filename"])
 
     @app.get("/api/scene")
     async def scene():

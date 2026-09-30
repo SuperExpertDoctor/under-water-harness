@@ -284,6 +284,26 @@ button {
   color: var(--cyan);
 }
 
+.rec-btn {
+  color: var(--danger);
+}
+
+.rec-btn:hover {
+  color: #d63f56;
+}
+
+.rec-btn.recording-active {
+  color: var(--danger);
+  border-color: #e1a0ad;
+  background: #fdf0f2;
+  animation: rec-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes rec-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+
 .canvas-area {
   position: relative;
   grid-column: 1;

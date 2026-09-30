@@ -180,3 +180,42 @@ def test_recording_endpoints_require_operator_session_and_accept_no_paths(tmp_pa
                 break
             time.sleep(.01)
         assert client.get("/api/recording").json()["filename"].endswith(".mp4")
+
+
+def test_recording_download_serves_only_the_completed_mp4(tmp_path, monkeypatch):
+    monkeypatch.setattr(recording, "async_playwright", FakePlaywright)
+    monkeypatch.setattr(recording.shutil, "which", lambda executable: "/usr/bin/ffmpeg")
+
+    async def encode(*args, **_kwargs):
+        Path(args[-1]).write_bytes(b"encoded video")
+
+        class Process:
+            returncode = 0
+
+            async def communicate(self):
+                return b"", b""
+
+        return Process()
+
+    monkeypatch.setattr(recording.asyncio, "create_subprocess_exec", encode)
+    app = create_app(tmp_path/"runtime.sqlite", ticking=False, ui_url="http://127.0.0.1:5173",
+        recording_dir=tmp_path/"outputs")
+    with TestClient(app) as client:
+        assert client.get("/api/recording/download").status_code == 409
+        client.get("/api/health")
+        assert client.post("/api/recording/start", json={}).json()["status"] == "recording"
+        assert client.get("/api/recording/download").status_code == 409
+        client.post("/api/recording/stop", json={})
+        for _ in range(100):
+            if client.get("/api/recording").json()["status"] == "completed":
+                break
+            time.sleep(.01)
+        filename = client.get("/api/recording").json()["filename"]
+        response = client.get("/api/recording/download")
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("video/mp4")
+        disposition = response.headers["content-disposition"]
+        assert "attachment" in disposition and filename in disposition
+        assert response.content == b"encoded video"
+        client.app.state.recording.filename = "../escape.mp4"
+        assert client.get("/api/recording/download").status_code == 404

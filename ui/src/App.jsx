@@ -279,9 +279,9 @@ export default function App() {
         <div className="top-actions">
           <button
             type="button"
-            className={`icon-btn ${recording.status.status === "recording" ? "recording-active" : ""}`}
-            aria-label={recordingView.action === "stop" ? "停止录制界面" : "开始录制界面"}
-            title={recordingView.action === "stop" ? "停止录制并保存 MP4" : "录制完整实时界面到 outputs"}
+            className={`icon-btn rec-btn ${recording.status.status === "recording" ? "recording-active" : ""}`}
+            aria-label={recordingView.action === "stop" ? "停止录制并导出" : "开始录制界面"}
+            title={recordingView.action === "stop" ? "停止录制并导出 MP4" : "录制完整实时界面"}
             disabled={!recordingView.action || recording.busy || (recordingView.action === "start" && (mode !== "live" || !mission.ready))}
             onClick={recordingView.action === "stop" ? recording.stop : recording.start}
           >{recordingView.action === "stop" ? <Square size={14} fill="currentColor" /> : <Circle size={15} fill="currentColor" />}</button>

@@ -3,6 +3,10 @@
 .mission-v2 .canvas-area { grid-column: 2; }
 .mission-v2 .canvas-area { display: flex; flex-direction: column; min-width: 0; }
 .map-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.map-fullscreen-btn { position: absolute; top: 10px; right: 10px; z-index: 30; display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: rgba(255, 255, 255, .85); color: var(--text-soft); cursor: pointer; transition: background .15s, color .15s; }
+.map-fullscreen-btn:hover { background: #fff; color: var(--text); }
+.map-fullscreen-btn:focus-visible { outline: 2px solid #178B9D; outline-offset: 1px; }
+.canvas-area:fullscreen { width: 100%; height: 100%; }
 .map-summary { flex: 0 0 auto; border-bottom: 1px solid var(--line); background: #fff; }
 .map-situation { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-height: 44px; padding: 10px 16px; }
 .map-situation strong, .map-counters, .map-counters span { display: flex; align-items: center; gap: 6px; }

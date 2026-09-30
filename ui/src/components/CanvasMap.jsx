@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { RadioTower, Radar, Crosshair, Route, LogOut } from "lucide-react";
+import { RadioTower, Radar, Crosshair, Route, LogOut, Maximize2, Minimize2 } from "lucide-react";
 
 import { computeLayout, dragToBBox, pixelToCoord, zoomedLayout, zoomViewAt } from "../renderer/geometry";
 import { renderFrame } from "../renderer/layers";
@@ -116,6 +116,20 @@ const CanvasMap = forwardRef(function CanvasMap({
   const [selection, setSelection] = useState(null);
   const viewRef = useRef({ a: 1, bx: 0, by: 0 });
   const [viewVersion, setViewVersion] = useState(0);
+  const areaRef = useRef(null);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  // Esc exits fullscreen natively; the button tracks whatever element owns it.
+  useEffect(() => {
+    const onChange = () => setFullscreen(document.fullscreenElement === areaRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else areaRef.current?.requestFullscreen?.();
+  }, []);
 
   const viewLayout = () => zoomedLayout(layoutRef.current, viewRef.current);
 
@@ -518,7 +532,7 @@ const CanvasMap = forwardRef(function CanvasMap({
   const cellInfo = readCellInformation(frame, hoverRef.current);
 
   return (
-    <div className="canvas-area">
+    <div className="canvas-area" ref={areaRef}>
       <MapSummary frame={frame} selectedUavId={selectedUavId} onSelectUav={onSelectUav} />
       <div className="map-stage" ref={containerRef}>
       <canvas
@@ -559,6 +573,15 @@ const CanvasMap = forwardRef(function CanvasMap({
         top: viewLayout().offsetY + (frame.fleet_entry.position[1] + .5) * viewLayout().cellSize,
       }} title="任务边界共同入口，八艇自左边界中点集中驶入">初始投放 ×{frame.fleet_entry.count}</div>}
       <div className="map-scale" aria-hidden="true"><i style={{ width: viewLayout().cellSize * 5 }} />{Number(frame?.task_area?.cell_size_km || 0) * 5} KM</div>
+      <button
+        type="button"
+        className="map-fullscreen-btn"
+        onClick={toggleFullscreen}
+        aria-label={fullscreen ? "退出全屏" : "全屏展示"}
+        title={fullscreen ? "退出全屏 (ESC)" : "全屏展示"}
+      >
+        {fullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+      </button>
       </div>
       <div className="map-information-bar">
         {mapMode === "situation" ? <InformationLegend /> : <span className="planning-legend">实线：执行航线 · 虚线：候选航线 · 标记：艇及接触</span>}

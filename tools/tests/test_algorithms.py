@@ -101,7 +101,7 @@ def test_search_continuous_closed_routes(algorithms):
     for uuv in uuvs:
         points = result["routes"][uuv["id"]]
         assert points[0] == pytest.approx(uuv["pose"])
-        assert points[-1] == pytest.approx(points[0])
+        assert points[-1] == pytest.approx(points[result["cycle_start_indices"][uuv["id"]]])
         assert algorithms.path_safe(points, [], (0, 0, 4000, 4000))
         for left, right in zip(points, points[1:]):
             assert math.dist(left[:2], right[:2]) <= 5.001

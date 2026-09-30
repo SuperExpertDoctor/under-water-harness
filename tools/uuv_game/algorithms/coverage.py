@@ -53,19 +53,27 @@ def plan_search(uuvs, bbox, radius=Config().radius, obstacles=None,
                 return result
             x = feasible[0]
             waypoints.extend([[x, ymin if lane % 2 == 0 else ymax, heading], [x, ymax if lane % 2 == 0 else ymin, heading]])
-        waypoints.append(start)
+        # Close on the first lane waypoint, not the start pose: returning to
+        # the launch point every lap is a dead leg that can be kilometers of
+        # zero-coverage transit when the strip lies far from the entry.
+        waypoints.append(waypoints[1])
         points = [start]
-        for left, right in zip(waypoints, waypoints[1:]):
+        cycle_start = 0
+        for leg, (left, right) in enumerate(zip(waypoints, waypoints[1:])):
             segment = plan_path(left, right, radius=radius, obstacles=obstacles, bounds=bounds)
             if segment["status"] != "succeeded":
                 result["status"] = segment["status"]
                 result["diagnostics"].update(reason="coverage connector failed", uuv_id=uuv["id"], connector=segment["diagnostics"])
                 return result
             points.extend(segment["points"][1:])
+            if leg == 0:
+                cycle_start = len(points)-1
         routes[uuv["id"]] = points
+        routes.setdefault("_cycle_starts", {})[uuv["id"]] = cycle_start
+    cycle_starts = routes.pop("_cycle_starts", {})
     joint = resolve_conflicts({uuv["id"]: uuv["pose"] for uuv in uuvs},
         {name: path[-1] for name, path in routes.items()}, routes, obstacles,
-        cycle_start_indices={name: 0 for name in routes})
+        cycle_start_indices=cycle_starts)
     result["diagnostics"]["conflict_solver"] = joint["diagnostics"]["algorithm"]
     if joint["status"] != "succeeded":
         result["diagnostics"].update(reason="joint_route_conflict", conflict=joint["diagnostics"])

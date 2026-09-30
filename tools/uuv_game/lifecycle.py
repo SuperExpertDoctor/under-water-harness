@@ -65,9 +65,11 @@ def repair_search(runtime, exclude=(), add=(), required=True):
             runtime.pause("safety_allocation_infeasible")
         return False
     previous = {r["owner"]: r["cells"] for r in runtime.regions}
+    previous_due = {r["owner"]: r.get("scan_cells") for r in runtime.regions}
     for region in result["regions"]:
         member = region["owner"]
-        if member not in runtime.active or previous.get(member) != region["cells"] or member in add:
+        if (member not in runtime.active or previous.get(member) != region["cells"] or member in add
+                or previous_due.get(member) != region.get("scan_cells")):
             runtime.active[member] = {"plan_id": runtime.active.get(member, {}).get("plan_id", runtime.standing_policy["plan_id"]), "kind": "search", "phase": "scanning",
                 "points": result["routes"][member], "index": 0, "slot": 0, "execution_domain": [0, 0, runtime.config.width, runtime.config.height],
                 "cycle_start_index": result.get("cycle_start_indices", {}).get(member, 0),

@@ -89,7 +89,8 @@ def test_entry_transit_need_not_be_closed_but_patrol_must_be(runtime):
     result = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
     stored = runtime.results[result["result_id"]]
     points = stored["routes"]["UUV-1"]
-    stored["routes"]["UUV-1"] = [[350, 400, 0]] + points
+    cycle = stored["cycle_start_indices"]["UUV-1"]
+    stored["routes"]["UUV-1"] = [[350, 400, 0]] + points[cycle:]
     stored["cycle_start_indices"] = {"UUV-1": 1}
     assert "closed_continuation_required" not in runtime.evaluate(result["result_id"])["errors"]
 

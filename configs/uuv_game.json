@@ -258,6 +258,8 @@
     },
     "runtime": {
       "periodic_review_s": 30.0,
+      "coverage_replan_s": 180.0,
+      "auto_track_retry_s": 60.0,
       "candidate_freshness_m": 200.0,
       "contact_candidate_freshness_m": 120.0,
       "contact_candidate_max_age_s": 30.0,

@@ -64,7 +64,7 @@ def test_closed_route_repeats_without_unapproved_loiter(runtime):
     runtime.tick()
     assert action["kind"] == "search"
     assert action["points"]
-    assert action["index"] == 0
+    assert action["index"] == action.get("cycle_start_index", 0)
 
 
 def test_target_truth_is_used_only_for_independent_collision_pause(runtime):

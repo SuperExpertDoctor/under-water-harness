@@ -172,6 +172,7 @@ class MissionRuntime:
         self.agent_jobs = []
         self.agent = {"status": "offline", "model": self.config.model, "cycle": 0, "error": None}
         self.last_periodic = 0.0
+        self.last_coverage_replan = 0.0
         self.sensor_enabled = True
         self.contact_mapping = {}
         self.contact_counter = 0
@@ -270,6 +271,7 @@ class MissionRuntime:
         for plan in self.plans.values():
             if plan["status"] == "pending_approval":
                 plan["status"] = "expired"
+                self._requeue_auto_track(plan)
         self.event("permission_changed", {"mode": mode})
         self.save()
 
@@ -587,6 +589,7 @@ class MissionRuntime:
                 old["active_members"] = remaining
                 if not remaining:
                     old["status"] = "superseded"
+                    self._requeue_auto_track(old)
         for index, member in enumerate(plan["members"]):
             self.active[member] = {"plan_id": plan["plan_id"], "kind": plan["kind"], "contact_id": plan.get("contact_id"),
                 "points": plan.get("routes", {}).get(member, []), "index": 0, "slot": index,
@@ -650,12 +653,14 @@ class MissionRuntime:
             raise MissionError("approval_not_pending")
         if plan["policy_version"] != self.policy_version or self.sim_time > plan["expires_at_s"]:
             plan["status"] = "expired"
+            self._requeue_auto_track(plan)
             self.save()
             raise MissionError("approval_expired")
         if decision != "reject":
             assessment = self._assessment(plan)
             if not assessment["valid"]:
                 plan["status"] = "expired"
+                self._requeue_auto_track(plan)
                 self.save()
                 raise MissionError(";".join(assessment["errors"]))
             self._activate(plan)
@@ -665,6 +670,7 @@ class MissionRuntime:
                     "policy_version": self.policy_version})
         else:
             plan["status"] = "rejected"
+            self._requeue_auto_track(plan)
         plan["approval_scope"] = decision
         if comment is not None:
             plan["approval_comment"] = comment.strip()
@@ -1083,6 +1089,7 @@ class MissionRuntime:
         for plan in self.plans.values():
             if plan["status"] == "pending_approval" and self.sim_time > plan["expires_at_s"]:
                 plan["status"] = "expired"
+                self._requeue_auto_track(plan)
                 self.event("approval_expired", {"plan_id": plan["plan_id"]})
         for intent in self.intents:
             if intent["lifecycle"] == "active" and self.sim_time/60 >= intent["expires_at_min"]:
@@ -1091,20 +1098,49 @@ class MissionRuntime:
             self.last_periodic = self.sim_time
             if self._search_gap():
                 self.queue_agent("Coverage gap or overdue revisit detected; preserve valid plans.", "coverage_gap")
+        # Region routes sweep only the cells that were due when the last
+        # partition ran; owned cells that expire inside the coverage window
+        # would otherwise wait for an external trigger and silently decay.
+        # A throttled local repair refreshes the due set and its routes.
+        if (self.standing_policy["local_repair"]
+                and self.sim_time-self.last_coverage_replan >= _RUNTIME["coverage_replan_s"]):
+            self.last_coverage_replan = self.sim_time
+            window_s = self.config.coverage_window_min*60
+            due = any(0 <= cell[0] < len(self.scan_times) and 0 <= cell[1] < len(self.scan_times[cell[0]])
+                      and (self.scan_times[cell[0]][cell[1]] < 0
+                           or self.sim_time-self.scan_times[cell[0]][cell[1]] > window_s)
+                      for region in self.regions for cell in region["cells"])
+            if due:
+                repair_search(self, required=False)
+
+    def _requeue_auto_track(self, plan):
+        if plan.get("kind") != "track":
+            return
+        contact = self.contacts.get(plan.get("contact_id"))
+        if contact and contact.get("state") == "confirmed":
+            contact["auto_track_requested"] = True
 
     def _auto_track(self, contact_id):
         contact = self.contacts.get(contact_id)
         if not contact:
             return
         contact["auto_track_requested"] = False
-        if contact["state"] != "confirmed" or contact.get("auto_track_planned"):
+        live = any(plan.get("contact_id") == contact_id and plan.get("kind") == "track"
+            and (plan["status"] in ("pending_approval", "approved")
+                or (plan["status"] == "active" and any(
+                    self.active.get(member, {}).get("kind") == "track"
+                    and self.active[member].get("contact_id") == contact_id
+                    for member in plan.get("active_members", plan.get("members", [])))))
+            for plan in self.plans.values())
+        # A dead plan must not silence replanning: once nothing pending,
+        # approved or actively tracked remains, retry after a cooldown.
+        if (contact["state"] != "confirmed" or live
+                or self.sim_time < contact.get("auto_track_retry_at_s", 0.0)):
             return
         if any(action.get("kind") == "track" and action.get("contact_id") == contact_id for action in self.active.values()):
             return
-        if any(plan.get("contact_id") == contact_id and plan.get("kind") == "track" and plan["status"] in ("pending_approval", "approved", "active")
-                for plan in self.plans.values()):
-            return
         contact["auto_track_planned"] = True
+        contact["auto_track_retry_at_s"] = self.sim_time+_RUNTIME["auto_track_retry_s"]
         try:
             result = self.calculate("plan_tracking", {"contact_id": contact_id})
         except MissionError as exc:

@@ -5,6 +5,7 @@ import math
 
 from .algorithms.tracking import tracking_plan
 from .config import algorithm_settings
+from .information import target_evidence_field
 from .lifecycle import exit_route, nearest_boundary
 from .mission_planning import search_bundle
 
@@ -60,7 +61,8 @@ def prepare_handover(runtime):
                     continue
                 searching = [boat for boat in runtime.uuvs if boat["id"] != incoming["id"] and
                     runtime.active.get(boat["id"], {}).get("kind") in ("search", "reacquire")]
-                repair = search_bundle(searching, runtime.scan_times, runtime.obstacles, runtime.regions, allow_partial=True)
+                repair = search_bundle(searching, runtime.scan_times, runtime.obstacles, runtime.regions, allow_partial=True,
+                    target_evidence=target_evidence_field(runtime.scan_times, runtime.contacts, runtime.sim_time, runtime.config))
                 if repair["status"] != "succeeded":
                     continue
                 # All geometry and coverage calculations finish before any assignment changes.

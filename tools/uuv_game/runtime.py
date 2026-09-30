@@ -22,7 +22,7 @@ from .mission_planning import search_bundle, explicit_regions
 from .lifecycle import prepare_exits, replacement_pose, apply_replacements, repair_search, navigation_pose, exit_route
 from .handover import prepare_handover, finish_handover
 from .sensing import observe, sensor_mode, sensor_roles
-from .information import information_fields
+from .information import information_fields, target_evidence_field
 from . import adversary as enemy
 
 
@@ -352,6 +352,7 @@ class MissionRuntime:
             all_boats = copy.deepcopy(self.uuvs)
             old_actions = copy.deepcopy(self.active)
         bbox = data.get("bbox", _SCENE["default_search_bbox_m"])
+        target_evidence = target_evidence_field(scan_times, contacts, snapshot_time, self.config)
         if name == "compute_task_allocation" and data.get("contact_id"):
             contact = contacts.get(data["contact_id"])
             if not contact or contact["state"] in ("tentative", "lost"):
@@ -364,7 +365,7 @@ class MissionRuntime:
                 teams=[{"id": f"candidate-{data['contact_id']}", "task_id": data["contact_id"], "members": chosen}] if chosen else [])
         elif name == "partition_search_area" or (name == "compute_task_allocation" and "tasks" not in data):
             result = partition_regions(members, scan_times, ownership_obstacles if global_coverage else obstacles,
-                regions, now=snapshot_time, window_s=self.config.coverage_window_min*60)
+                regions, now=snapshot_time, window_s=self.config.coverage_window_min*60, target_evidence=target_evidence)
             result["algorithm"] = "connected-workload-assignment-v2"
             result["teams"] = [{"id": r["id"], "task_id": r["id"], "members": [r["owner"]], "bbox": r["bbox_m"]} for r in result["regions"]]
         elif name == "compute_task_allocation":
@@ -385,7 +386,8 @@ class MissionRuntime:
                 raise MissionError("boolean_required", 422)
             result = search_bundle(members, scan_times, ownership_obstacles, regions,
                 allow_partial=data.get("standing_policy", automatic) or self.standing_policy["energy_rotation"],
-                route_obstacles=obstacles, now=snapshot_time, window_s=self.config.coverage_window_min*60) if automatic else plan_search(members, bbox, obstacles=obstacles)
+                route_obstacles=obstacles, now=snapshot_time, window_s=self.config.coverage_window_min*60,
+                target_evidence=target_evidence) if automatic else plan_search(members, bbox, obstacles=obstacles)
             result["kind"] = "reacquire" if data.get("mode") == "reacquire" else "search"
             if not automatic:
                 result["bbox"] = bbox
@@ -408,7 +410,7 @@ class MissionRuntime:
                 remaining = [navigation_pose(self, u) for u in all_boats if u["id"] not in chosen and old_actions.get(u["id"], {}).get("kind") in ("search", "reacquire")]
                 repair = search_bundle(remaining, scan_times, obstacles, regions,
                     allow_partial=self.standing_policy["energy_rotation"], now=snapshot_time,
-                    window_s=self.config.coverage_window_min*60)
+                    window_s=self.config.coverage_window_min*60, target_evidence=target_evidence)
                 result["coverage_repair"] = repair
                 if repair["status"] != "succeeded":
                     result.update(status=repair["status"], diagnostics={"reason": "coverage_repair_failed", "details": repair["diagnostics"]})

@@ -10,6 +10,12 @@ from .observations import predict
 
 _INFORMATION = algorithm_settings("information")
 
+def target_evidence_field(scan_times, contacts, now, config):
+    """Target-existence evidence P(c,r) for planning, over every ledger cell."""
+    cells = [(col, row) for col in range(len(scan_times)) for row in range(len(scan_times[col]))]
+    return information_fields(scan_times, contacts, cells, now, config)["target_info_matrix"]
+
+
 def information_fields(scan_times, contacts, searchable, now, config):
     scans = np.asarray(scan_times, dtype=float)
     mask = np.zeros(scans.shape, dtype=bool)

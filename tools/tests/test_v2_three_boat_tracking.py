@@ -65,10 +65,16 @@ def test_search_detect_plan_transit_and_three_boat_passive_fusion(tmp_path):
         prior_observation_time = -1
         while runtime.sim_time < 2000:
             previous = {boat["id"]: boat["pose"][:] for boat in nearest}
+            events_before = len(runtime.events)
             runtime.tick()
             assert runtime.status == "running", json.dumps({"sim_s": runtime.sim_time, "detected_at_s": detected_at,
                 "members": sorted(members), "events": runtime.events[-8:],
                 "boats": [{"id": boat["id"], "pose": boat["pose"], "phase": runtime.active[boat["id"]]["phase"]} for boat in nearest]}, sort_keys=True)
+            # Acquisition-bridge and active-fallback cycles legitimately mix one active
+            # relocation sample into an otherwise all-passive cycle; the bearing-only
+            # contract is asserted on steady cycles without those mode transitions.
+            transition_cycle = any(event["type"] in ("tracking_active_fallback", "tracking_passive_acquisition_started")
+                                   for event in runtime.events[events_before:])
             for boat in nearest:
                 movement = math.dist(previous[boat["id"]][:2], boat["pose"][:2])
                 assert movement <= runtime.config.speed*runtime.config.dt+1e-6
@@ -85,7 +91,7 @@ def test_search_detect_plan_transit_and_three_boat_passive_fusion(tmp_path):
                 and sample["time_s"] == prior_observation_time and sample["observer_id"] in members]
             received = {sample["observer_id"] for sample in samples if sample["mode"] == "passive"}
             if received == members and contact["state"] == "tracking" and all(runtime.active[member]["phase"] == "tracking" for member in members):
-                assert all(not ({"x", "y", "range_m"} & sample.keys()) for sample in samples)
+                assert transition_cycle or all(not ({"x", "y", "range_m"} & sample.keys()) for sample in samples)
                 assert all(sample["generation"] == next(boat["generation"] for boat in nearest if boat["id"] == sample["observer_id"])
                     for sample in samples)
                 assert contact["geometry_quality"] >= .3

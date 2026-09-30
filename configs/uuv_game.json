@@ -106,8 +106,18 @@
       "obstacle_margin_m": 8.0,
       "balance_cut_penalty": 0.025,
       "partial_entry_candidates": 3,
+      "entry_candidates": 6,
       "fallback_revisit_fraction": 0.25,
-      "assignment_entry_budget": 1
+      "assignment_entry_budget": 1,
+      "target_evidence_weight": 1.0,
+      "region_priority": {
+        "unseen_weight": 1.0,
+        "value_weight": 1.0,
+        "target_weight": 1.0,
+        "overdue_weight": 1.0,
+        "cost_weight": 1.0,
+        "cost_norm_m": 4000.0
+      }
     },
     "tracking": {
       "minimum_remaining_range_m": 3000.0,

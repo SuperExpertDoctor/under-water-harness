@@ -71,13 +71,27 @@ is not implemented.
 
 ## Search Responsibilities and Coverage
 
-`partition_regions` uses a four-neighbor free-water grid. It prefers local
-ownership repair: departing owners merge into adjacent regions, and new owners
-split existing regions while retaining connectivity. When local repair fails,
-weighted connected bisection and SciPy linear assignment provide a bounded
-global fallback. Work weights include unscanned and revisit demand; entry
-matching checks a Dubins route and an energy estimate. Forbidden pairings use
-infinite cost, not a large finite penalty.
+`partition_regions` uses a four-neighbor free-water grid. Repartitioning is
+incremental: prior regions whose owner is still an eligible search boat stay
+frozen when they remain connected, inside free water and entry-feasible, and
+only the unowned remainder is redivided among boats currently lacking a
+region. Orphaned components are absorbed into adjacent frozen regions; when a
+new boat needs a region and nothing is free, the highest-demand frozen region
+is released and re-split. If structural repair cannot satisfy one connected
+region per boat, weighted connected bisection and SciPy linear assignment
+provide a bounded global fallback. Forbidden pairings use infinite cost, not a
+large finite penalty, and matched pairs are rechecked to be finite.
+
+Per-cell demand combines scan staleness (unscanned plus a revisit ramp over
+the window) with the target-evidence field from contact belief, scaled by
+`target_evidence_weight`. Bisection therefore balances information load, not
+plain area: water carrying strong target evidence yields smaller regions.
+Each region reports `workload`, `mean_value`, `max_value`, `unseen_fraction`,
+`overdue_cells`, `target_probability`, `search_cost_m` and a weighted
+`priority`, and regions are ordered by descending priority. Entry matching
+checks a Dubins route and an energy estimate against up to `entry_candidates`
+centroid-nearest cells, so one unreachable entry cell can no longer poison a
+whole region's feasibility.
 
 A successful fleet assignment has one connected, nonoverlapping region per
 search boat: `K = N_search`. Tracking transit, acquisition, tracking and exit

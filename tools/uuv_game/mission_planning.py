@@ -33,9 +33,10 @@ def explicit_regions(boats, bbox, obstacles, previous):
 
 
 def search_bundle(boats, scan_times, obstacles, previous=None, allow_partial=False, route_obstacles=None,
-                  now=None, window_s=None):
+                  now=None, window_s=None, target_evidence=None):
     boats = [{**boat, "allow_partial_patrol": True} for boat in boats] if allow_partial else boats
-    partition = partition_regions(boats, scan_times, obstacles, previous, now=now, window_s=window_s)
+    partition = partition_regions(boats, scan_times, obstacles, previous, now=now, window_s=window_s,
+        target_evidence=target_evidence)
     result = {**partition, "kind": "search", "algorithm": "connected-coverage-dubins-v2", "routes": {},
               "bbox": [0, 0, Config().width, Config().height], "fleet_plan": True, "cycle_start_indices": {}}
     if partition["status"] != "succeeded":

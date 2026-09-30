@@ -70,6 +70,64 @@ def test_partition_local_merge_split_and_zero():
     assert partition([], scan, [], restored)["regions"] == []
 
 
+def test_partition_freezes_committed_regions_and_redivides_only_unowned_water():
+    partition = kernel("partition", "partition_regions")
+    scan = [[-1.0] * 40 for _ in range(40)]
+    boats = fleet()
+    initial = partition(boats, scan, [])
+    dropped = [region for region in initial["regions"] if region["owner"] != boats[0]["id"]]
+    result = partition(boats, scan, [], dropped)
+    assert result["status"] == "succeeded", result
+    kept = {region["owner"]: set(map(tuple, region["cells"])) for region in dropped}
+    assert {region["owner"]: set(map(tuple, region["cells"])) for region in result["regions"] if region["owner"] in kept} == kept
+    assert result["diagnostics"]["committed_regions"] == len(kept)
+    assert result["diagnostics"]["local_repair"] is True
+    assert result["diagnostics"]["repartitioned_regions"] == 1
+    cells = [tuple(cell) for region in result["regions"] for cell in region["cells"]]
+    assert len(cells) == len(set(cells)) == 1600
+
+
+def test_partition_reports_information_statistics_and_priority_order():
+    partition = kernel("partition", "partition_regions")
+    scan = [[100.0] * 40 for _ in range(40)]
+    for col in range(40):
+        scan[col][col] = -1.0
+    result = partition(fleet(2), scan, [])
+    assert result["status"] == "succeeded"
+    assert result["regions"] == sorted(result["regions"], key=lambda region: (-region["priority"], region["owner"]))
+    assert sum(region["unseen_fraction"] * len(region["cells"]) for region in result["regions"]) == 40
+    for region in result["regions"]:
+        pending = sum(scan[cell[0]][cell[1]] < 0 for cell in region["cells"])
+        assert len(region["scan_cells"]) == pending
+        assert region["unseen_fraction"] == pytest.approx(pending/len(region["cells"]))
+        assert region["overdue_cells"] == 0
+        assert region["target_probability"] == 0.0
+        assert region["search_cost_m"] == pytest.approx(region["workload"]*10000/560)
+        assert region["mean_value"] == pytest.approx(region["workload"]/len(region["cells"]))
+        assert region["max_value"] >= region["mean_value"]
+
+
+def test_partition_evidence_field_balances_information_demand_not_area():
+    partition = kernel("partition", "partition_regions")
+    scan = [[-1.0] * 40 for _ in range(40)]
+    evidence = [[0.0] * 40 for _ in range(40)]
+    for col in range(8):
+        for row in range(8):
+            evidence[col][row] = 1.0
+    plain = partition(fleet(2), scan, [])
+    hot = partition(fleet(2), scan, [], None, target_evidence=evidence)
+    assert plain["status"] == hot["status"] == "succeeded"
+    assert sum(region["target_probability"] for region in hot["regions"]) == 64
+    assert max(region["max_value"] for region in hot["regions"]) > 1.0
+
+    def corner(result):
+        return next(region for region in result["regions"] if (0, 0) in {tuple(cell) for cell in region["cells"]})
+    assert len(corner(hot)["cells"]) < len(corner(plain)["cells"])
+    assert corner(hot)["workload"] > len(corner(hot)["cells"])
+    with pytest.raises(ValueError):
+        partition(fleet(2), scan, [], None, target_evidence=[[0.0] * 39 for _ in range(40)])
+
+
 def test_partition_obstacle_cells_and_disconnected_failure():
     partition = kernel("partition", "partition_regions")
     scan = [[-1.0] * 40 for _ in range(40)]

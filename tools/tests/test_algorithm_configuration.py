@@ -28,5 +28,9 @@ def test_behavioral_tuning_sections_are_explicit():
     assert settings("cbs")["local_replan_window_s"] == 25
     assert settings("runtime")["periodic_review_s"] == 30
     assert settings("lifecycle")["exit_trigger_buffer_m"] == 500
+    assert settings("lifecycle")["exit_stagger_step_m"] == 400
+    assert settings("lifecycle")["exit_concurrency_limit"] == 2
+    assert settings("lifecycle")["exit_forced_margin_m"] == 150
+    assert settings("lifecycle")["relief_abort_margin_m"] == 400
     assert settings("scene")["target"]["id"] == "TARGET-1"
     assert settings("handover")["acquisition_streak_s"] == 3

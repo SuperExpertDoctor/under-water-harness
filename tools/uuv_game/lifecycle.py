@@ -103,14 +103,31 @@ def strand(runtime, boat):
 
 
 def prepare_exits(runtime):
-    for boat in runtime.uuvs:
+    exiting = sum(1 for action in runtime.active.values() if action.get("kind") == "exit")
+    for index, boat in enumerate(runtime.uuvs):
         action = runtime.active.get(boat["id"])
         if not action or action["kind"] in ("exit", "stranded"):
             continue
         x, y = boat["pose"][:2]
         min_dist = min(x, y, runtime.config.width-x, runtime.config.height-y)
-        if boat["remaining_range_m"] > 1.5*min_dist+_LIFECYCLE["exit_trigger_buffer_m"]:
-            continue
+        if action.get("relief_member"):
+            # finish_handover retires this hull below 1.5*min_dist once the
+            # relief pair sustains observations; the normal trigger would fire
+            # 500m earlier and always win the race. Hold it until the abort
+            # floor so a stalled relief cannot strand the hull either.
+            if boat["remaining_range_m"] > min_dist+_LIFECYCLE["relief_abort_margin_m"]:
+                continue
+        else:
+            trigger = (1.5*min_dist+_LIFECYCLE["exit_trigger_buffer_m"]
+                       +index*_LIFECYCLE["exit_stagger_step_m"])
+            if boat["remaining_range_m"] > trigger:
+                continue
+            # Exit transits stop painting scan cells; capping how many hulls
+            # drain at once keeps queued hulls scanning through turnover waves.
+            # Below the forced margin a hull exits anyway rather than strand.
+            if (exiting >= _LIFECYCLE["exit_concurrency_limit"]
+                    and boat["remaining_range_m"] > 1.5*min_dist+_LIFECYCLE["exit_forced_margin_m"]):
+                continue
         if not runtime.standing_policy["energy_rotation"]:
             runtime.event("energy_authorization_required", {"uuv_id": boat["id"]})
             runtime.pause("safety_energy_authorization_required")
@@ -134,6 +151,7 @@ def prepare_exits(runtime):
         runtime.active[boat["id"]] = {"plan_id": runtime.standing_policy["plan_id"], "kind": "exit", "phase": "exiting", "exit_point": boundary[:2],
             "points": route["points"], "index": 0, "slot": 0, "execution_domain": [-_LIFECYCLE["exit_bounds_padding_m"], -_LIFECYCLE["exit_bounds_padding_m"],
                 runtime.config.width+_LIFECYCLE["exit_bounds_padding_m"], runtime.config.height+_LIFECYCLE["exit_bounds_padding_m"]], "generation": boat["generation"]}
+        exiting += 1
         runtime.event("energy_exit_started", {"uuv_id": boat["id"], "generation": boat["generation"], "remaining_range_m": boat["remaining_range_m"], "exit_point": boundary[:2]})
     return True
 

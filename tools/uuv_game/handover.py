@@ -48,7 +48,10 @@ def prepare_handover(runtime):
                 continue
             candidates = [boat for boat in runtime.uuvs if runtime.active.get(boat["id"], {}).get("kind") in ("search", "reacquire")
                 and "passive" in boat.get("capabilities", []) and boat["remaining_range_m"] > _reserve(runtime, boat, _HANDOVER["candidate_range_margin_m"])]
-            candidates.sort(key=lambda boat: (-boat["remaining_range_m"], math.dist(boat["pose"][:2], [contact["x"], contact["y"]]), boat["id"]))
+            # Nearest adequate candidate arrives first, shrinking the window the
+            # departing hull must hold before finish_handover can complete.
+            candidates.sort(key=lambda boat: (math.dist(boat["pose"][:2], [contact["x"], contact["y"]]),
+                                              -boat["remaining_range_m"], boat["id"]))
             for incoming in candidates[:_HANDOVER["candidate_limit"]]:
                 transit = tracking_plan([survivor, incoming], contact, runtime.obstacles, require_active_acquisition=False)
                 if transit["status"] != "succeeded":

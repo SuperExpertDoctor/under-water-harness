@@ -239,6 +239,10 @@
       "exit_route_budget": 30,
       "exit_route_energy_margin_m": 100.0,
       "exit_trigger_buffer_m": 500.0,
+      "exit_stagger_step_m": 400.0,
+      "exit_concurrency_limit": 2,
+      "exit_forced_margin_m": 150.0,
+      "relief_abort_margin_m": 400.0,
       "replacement_edge_offset_m": 80.0,
       "replacement_obstacle_margin_m": 20.0,
       "replacement_separation_m": 150.0

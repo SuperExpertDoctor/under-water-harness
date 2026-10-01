@@ -136,7 +136,7 @@
       "track_energy_horizon_s": 600.0,
       "arrival_spread_weight": 0.25,
       "geometry_weight": 180.0,
-      "third_observer_cost": 120.0,
+      "third_observer_cost": 40.0,
       "search_loss_weight": 20.0,
       "energy_cost_weight": 30000.0,
       "orbit_base_m": 180.0,

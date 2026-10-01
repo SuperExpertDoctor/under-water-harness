@@ -248,7 +248,7 @@
       "replacement_separation_m": 150.0
     },
     "handover": {
-      "early_relief_range_margin_m": 4000.0,
+      "early_relief_range_margin_m": 6000.0,
       "candidate_range_margin_m": 1500.0,
       "candidate_limit": 3,
       "arrival_time_margin_s": 3.0,

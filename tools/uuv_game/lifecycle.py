@@ -144,6 +144,14 @@ def prepare_exits(runtime):
         if not repair_search(runtime, exclude=[boat["id"]], required=False):
             runtime.event("coverage_gap_accepted", {"uuv_id": boat["id"], "generation": boat["generation"],
                 "reason": "repair_infeasible_for_remaining_fleet"})
+        if action.get("relief_member"):
+            # The relief never reached a verified pair before this hull hit the
+            # abort floor; record the streak it did achieve so mission logs can
+            # tell a stalled relief apart from one that never produced samples.
+            runtime.event("tracking_handoff_aborted", {"uuv_id": boat["id"], "contact_id": action.get("contact_id"),
+                "relief_member": action.get("relief_member"), "relief_streak_s": action.get("relief_streak_s", 0),
+                "relief_age_s": runtime.sim_time-action.get("relief_started_s", runtime.sim_time),
+                "reason": "relief_floor_reached"})
         if action["kind"] == "track":
             runtime.event("tracking_relief_required", {"uuv_id": boat["id"], "contact_id": action.get("contact_id")})
             runtime.queue_agent("A tracking boat is exiting. Plan a replacement team and verify observations; do not report handoff before acquisition.", "energy_exit")

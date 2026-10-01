@@ -34,13 +34,25 @@ export function drawMissionOverlay(context, frame, candidate, layout) {
     });
   }
   context.setLineDash([]);
+  const sensorRadiusCells = Number(frame.uavs?.find((uav) => Number.isFinite(uav.sensor_radius_cells))?.sensor_radius_cells);
   for (const contact of frame.contacts || []) {
     if (!contact.estimated_position || !Number.isFinite(contact.uncertainty_m)) continue;
     const scale = cellSize / (frame.task_area.cell_size_km * 1000);
     const radius = contact.uncertainty_m * scale;
-    context.beginPath();
     const x = offsetX + (contact.estimated_position[0] + .5) * cellSize;
     const y = offsetY + (contact.estimated_position[1] + .5) * cellSize;
+    // Cooperative-tracking zone: positions inside passive sensor range of the
+    // estimate can contribute bearings. Drawn only while a track team exists.
+    if (Number.isFinite(sensorRadiusCells) && (contact.state === "tracking" || contact.state === "degraded")) {
+      context.beginPath();
+      context.arc(x, y, sensorRadiusCells * cellSize, 0, Math.PI * 2);
+      context.strokeStyle = contact.state === "tracking" ? "#0f766e88" : "#b4530988";
+      context.lineWidth = 1.2;
+      context.setLineDash([6, 6]);
+      context.stroke();
+      context.setLineDash([]);
+    }
+    context.beginPath();
     const covariance = contact.covariance;
     if (Array.isArray(covariance?.[0]) && Number.isFinite(covariance[1]?.[1])) {
       const a = covariance[0][0];

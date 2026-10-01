@@ -316,28 +316,98 @@ export function regionLabelCell(region) {
   return cells.reduce((closest, cell) => distance(cell) < distance(closest) ? cell : closest);
 }
 
+const _CONTOUR_DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+
+// Trace closed boundary loops of a polyomino cell set. Edges are directed so
+// the owned cell stays on the right of travel; at pinch vertices (diagonally
+// touching cells) the sharpest right turn keeps each same-owner loop intact.
+function regionContours(cells) {
+  const occupied = new Set(cells.map(([col, row]) => `${col},${row}`));
+  const edges = new Map();
+  const add = (x0, y0, x1, y1) => {
+    const key = `${x0},${y0}`;
+    if (!edges.has(key)) edges.set(key, []);
+    edges.get(key).push([x1, y1]);
+  };
+  for (const [col, row] of cells) {
+    if (!occupied.has(`${col},${row - 1}`)) add(col, row, col + 1, row);
+    if (!occupied.has(`${col + 1},${row}`)) add(col + 1, row, col + 1, row + 1);
+    if (!occupied.has(`${col},${row + 1}`)) add(col + 1, row + 1, col, row + 1);
+    if (!occupied.has(`${col - 1},${row}`)) add(col, row + 1, col, row);
+  }
+  const loops = [];
+  while (edges.size) {
+    const [sx, sy] = edges.keys().next().value.split(",").map(Number);
+    const loop = [[sx, sy]];
+    let cx = sx, cy = sy, prev = null;
+    while (true) {
+      const outs = edges.get(`${cx},${cy}`);
+      if (!outs || !outs.length) break;
+      let pick = outs[0];
+      if (outs.length > 1 && prev) {
+        const idx = _CONTOUR_DIRS.findIndex((d) => d[0] === prev[0] && d[1] === prev[1]);
+        for (const d of [_CONTOUR_DIRS[(idx + 1) % 4], _CONTOUR_DIRS[idx], _CONTOUR_DIRS[(idx + 3) % 4], _CONTOUR_DIRS[(idx + 2) % 4]]) {
+          const found = outs.find(([ox, oy]) => ox - cx === d[0] && oy - cy === d[1]);
+          if (found) { pick = found; break; }
+        }
+      }
+      outs.splice(outs.indexOf(pick), 1);
+      if (!outs.length) edges.delete(`${cx},${cy}`);
+      prev = [pick[0] - cx, pick[1] - cy];
+      cx = pick[0]; cy = pick[1];
+      loop.push([cx, cy]);
+      if (cx === sx && cy === sy) break;
+      if (loop.length > cells.length * 4 + 8) break;
+    }
+    if (loop.length >= 4) loops.push(loop);
+  }
+  return loops;
+}
+
+function _cornerVertices(loop) {
+  const out = [];
+  const n = loop.length - 1;
+  for (let i = 0; i < n; i++) {
+    const a = loop[(i - 1 + n) % n], b = loop[i], c = loop[i + 1];
+    if (Math.sign(b[0] - a[0]) !== Math.sign(c[0] - b[0]) || Math.sign(b[1] - a[1]) !== Math.sign(c[1] - b[1])) out.push(b);
+  }
+  return out;
+}
+
+function _pathRoundedLoop(ctx, corners, cellSize, ox, oy, radius) {
+  const px = (p) => coordToPixel(p[0], p[1], cellSize, ox, oy);
+  const n = corners.length;
+  for (let i = 0; i < n; i++) {
+    const prev = corners[(i - 1 + n) % n], cur = corners[i], next = corners[(i + 1) % n];
+    const r = Math.min(radius, Math.hypot(cur[0] - prev[0], cur[1] - prev[1]) / 2, Math.hypot(next[0] - cur[0], next[1] - cur[1]) / 2);
+    const inX = cur[0] + Math.sign(prev[0] - cur[0]) * r, inY = cur[1] + Math.sign(prev[1] - cur[1]) * r;
+    const outX = cur[0] + Math.sign(next[0] - cur[0]) * r, outY = cur[1] + Math.sign(next[1] - cur[1]) * r;
+    const a = px([inX, inY]), b = px(cur), c = px([outX, outY]);
+    if (i === 0) ctx.moveTo(a.x, a.y); else ctx.lineTo(a.x, a.y);
+    ctx.quadraticCurveTo(b.x, b.y, c.x, c.y);
+  }
+  ctx.closePath();
+}
+
 export function drawSearchRegions(ctx, regions, cellSize, ox, oy, selectedId) {
   for (const region of regions || []) {
     const color = ownerColor(region.assigned_uav_id);
     const cells = taskCells(region);
-    const occupied = new Set(cells.map(([col, row]) => `${col},${row}`));
-    ctx.save();
+    if (!cells.length) continue;
     const selected = region.assigned_uav_id === selectedId;
-    // Responsibility is a boundary, never evidence that the interior was observed.
+    const radius = cellSize * 0.32;
+    ctx.save();
     ctx.beginPath();
-    for (const [col, row] of cells) {
-      const { x, y } = coordToPixel(col, row, cellSize, ox, oy);
-      for (const [dc, dr, x0, y0, x1, y1] of [
-        [-1, 0, x, y, x, y + cellSize], [1, 0, x + cellSize, y, x + cellSize, y + cellSize],
-        [0, -1, x, y, x + cellSize, y], [0, 1, x, y + cellSize, x + cellSize, y + cellSize],
-      ]) {
-        if (occupied.has(`${col + dc},${row + dr}`)) continue;
-        ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
-      }
+    for (const loop of regionContours(cells)) {
+      _pathRoundedLoop(ctx, _cornerVertices(loop), cellSize, ox, oy, radius);
     }
-    ctx.strokeStyle = `${color}${selected ? "FF" : "B3"}`;
-    ctx.lineWidth = selected ? 2 : 1;
-    ctx.setLineDash([]);
+    // Responsibility is a boundary plus a faint ownership wash, never evidence
+    // that the interior was observed. Even-odd fill leaves unowned holes open.
+    ctx.fillStyle = `${color}${selected ? "1C" : "11"}`;
+    ctx.fill("evenodd");
+    ctx.strokeStyle = `${color}${selected ? "FF" : "CC"}`;
+    ctx.lineWidth = selected ? 2.4 : 1.6;
+    ctx.lineJoin = "round";
     ctx.stroke();
     ctx.restore();
   }
@@ -375,12 +445,16 @@ export function drawTrackRegions(ctx, regions, contacts, cellSize, ox, oy) {
   for (const region of regions || []) {
     const [c0, r0, c1, r1] = region.bbox;
     const { x, y } = coordToPixel(c0, r0, cellSize, ox, oy);
+    const w = (c1 - c0) * cellSize, h = (r1 - r0) * cellSize;
+    const radius = Math.min(cellSize * 0.8, w / 4, h / 4);
     ctx.fillStyle = "rgba(190, 18, 60, .06)";
-    ctx.fillRect(x, y, (c1 - c0) * cellSize, (r1 - r0) * cellSize);
     ctx.strokeStyle = "#BE123C";
     ctx.lineWidth = 1.5;
     ctx.setLineDash([5, 4]);
-    ctx.strokeRect(x, y, (c1 - c0) * cellSize, (r1 - r0) * cellSize);
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, radius);
+    ctx.fill();
+    ctx.stroke();
     ctx.setLineDash([]);
     const group = (contacts || []).filter((contact) => {
       const id = contact.contact_id || contact.group_id;

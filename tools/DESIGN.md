@@ -64,7 +64,7 @@
 ```text
 ui/                         浏览器显示和人工操作
   | HTTP + WebSocket
-tools/pi/                   Node 网关 + PI SDK 会话 + 任务调度器
+agent/                   Node 网关 + PI SDK 会话 + 任务调度器
   | 注册的类型化 Tool；私有 HTTP/事件通道
 tools/uuv_game/              Python 应用
   |-- algorithms/           候选计划、分配、控制、评估
@@ -126,7 +126,7 @@ tools/
     integration/
     scenarios/
 .pi/
-  extensions/uuv-tools.ts    指向 tools/pi/extension.ts 的薄入口
+  extensions/uuv-tools.ts    指向 agent/extension.ts 的薄入口
   skills/multi-uuv-recon-tracking/
     SKILL.md
     references/

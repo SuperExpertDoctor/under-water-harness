@@ -9,7 +9,7 @@ const server = await createServer({ root: fileURLToPath(new URL("../../", import
 test.after(() => server.close());
 
 test("mission metrics distinguish unknown rates from zero and label their denominators", async () => {
-  const { MetricsTab } = await server.ssrLoadModule("/src/components/BottomDrawer.jsx");
+  const { MetricsTab } = await server.ssrLoadModule("/src/view/components/BottomDrawer.jsx");
   assert.equal(typeof MetricsTab, "function");
   const html = renderToStaticMarkup(createElement(MetricsTab, { frame: { contacts: [{ contact_id: "c1" }], mission_metrics: {
     unscanned_cells: 1584, recent_coverage_pct: 0, revisit_timeliness_pct: null,
@@ -24,7 +24,7 @@ test("mission metrics distinguish unknown rates from zero and label their denomi
 });
 
 test("mission metrics retain genuine zero success and round measured rates", async () => {
-  const { MetricsTab } = await server.ssrLoadModule("/src/components/BottomDrawer.jsx");
+  const { MetricsTab } = await server.ssrLoadModule("/src/view/components/BottomDrawer.jsx");
   assert.equal(typeof MetricsTab, "function");
   const html = renderToStaticMarkup(createElement(MetricsTab, { frame: { contacts: [{ contact_id: "c1" }], mission_metrics: {
     handoff_attempts: 1, handoff_count: 0, single_tracking_seconds: 13.6, current_lost_seconds: null,

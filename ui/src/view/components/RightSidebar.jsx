@@ -6,7 +6,7 @@ import {
   uavDisplayState,
   vehicleDisplayId,
 } from "../renderer/displayState";
-import { informationCellCounts } from "../state/missionState";
+import { informationCellCounts } from "../../state/missionState";
 import ContactPanel from "./ContactPanel";
 import CoveragePanel from "./CoveragePanel";
 import IntentPanel from "./IntentPanel";

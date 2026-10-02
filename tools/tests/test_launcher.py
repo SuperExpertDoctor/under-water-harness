@@ -4,7 +4,7 @@ import subprocess
 
 
 ROOT = Path(__file__).resolve().parents[2]
-spec = importlib.util.spec_from_file_location("uuv_launcher", ROOT/"tools/launcher.py")
+spec = importlib.util.spec_from_file_location("uuv_launcher", ROOT/"adapter/launcher.py")
 launcher = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(launcher)
 
@@ -18,7 +18,7 @@ def test_root_launcher_accepts_flags_from_another_directory(tmp_path):
 
 def test_existing_supervisor_is_recognized_without_matching_other_processes():
     previous = str(ROOT/"tools/scripts/run.py").encode()
-    current = str(ROOT/"tools/launcher.py").encode()
+    current = str(ROOT/"adapter/launcher.py").encode()
     assert launcher.is_launcher_command([b"python", previous, b"--foreground"])
     assert launcher.is_launcher_command([b"python", current, b"--foreground"])
     assert not launcher.is_launcher_command([b"python", previous, b"--status"])

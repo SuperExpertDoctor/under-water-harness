@@ -1,4 +1,4 @@
-import { VIEW_DEFS } from "../state/viewRegistry";
+import { VIEW_DEFS } from "../../state/viewRegistry";
 
 // VSCode-style activity bar: narrow left rail switching between registered
 // main views. Views stay mounted (map keeps its export ref alive); CSS

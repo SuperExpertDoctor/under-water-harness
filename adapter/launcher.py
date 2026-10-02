@@ -1,4 +1,12 @@
-"""Start local mission services without putting credentials in argv or UI."""
+"""Start local mission services without putting credentials in argv or UI.
+
+The launcher is the module skeleton of the project: it boots every
+functional directory (tools/ backend API, ui/ frontend, agent/ PI worker
+and adversary) and creates a fresh timestamped run directory under
+outputs/<YYYYMMDD-HHMMSS>/ holding that run's sqlite db, worker tokens,
+service logs, PI runtime state and recordings. outputs/runtime/ keeps
+cross-run shared state only (credentials.env, services.json).
+"""
 import argparse
 import json
 import os
@@ -13,7 +21,7 @@ from urllib.request import urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = ROOT / "outputs/runtime"
-LAUNCHER_PATHS = (ROOT / "tools/launcher.py", ROOT / "tools/scripts/run.py")
+LAUNCHER_PATHS = (ROOT / "adapter/launcher.py", ROOT / "tools/launcher.py", ROOT / "tools/scripts/run.py")
 
 
 def free_port(preferred):
@@ -113,22 +121,25 @@ def main():
             if "=" in line and not line.startswith("#"):
                 name, value = line.split("=", 1)
                 env.setdefault(name.strip(), value.strip())
-    token_path = RUNTIME / "worker.token"
-    if not token_path.exists():
-        token_path.write_text(secrets.token_urlsafe(32))
-        os.chmod(token_path, 0o600)
+    run_dir = RUNTIME.parent / time.strftime("%Y%m%d-%H%M%S")
+    run_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+    token_path = run_dir / "worker.token"
+    token_path.write_text(secrets.token_urlsafe(32))
+    os.chmod(token_path, 0o600)
     env["UUV_WORKER_TOKEN"] = token_path.read_text().strip()
-    enemy_token_path = RUNTIME / "adversary.token"
-    if not enemy_token_path.exists():
-        enemy_token_path.write_text(secrets.token_urlsafe(32))
-        os.chmod(enemy_token_path, 0o600)
+    enemy_token_path = run_dir / "adversary.token"
+    enemy_token_path.write_text(secrets.token_urlsafe(32))
+    os.chmod(enemy_token_path, 0o600)
     env["UUV_ADVERSARY_TOKEN"] = enemy_token_path.read_text().strip()
     port, ui_port = free_port(args.port), free_port(args.ui_port)
     env["UUV_API_URL"] = f"http://127.0.0.1:{port}"
     env["UUV_UI_URL"] = f"http://127.0.0.1:{ui_port}"
     env["VITE_BACKEND_PORT"] = str(port)
-    env["PYTHONPATH"] = str(ROOT / "tools")
-    env["UUV_DB"] = str(RUNTIME / "mission.sqlite")
+    env["PYTHONPATH"] = os.pathsep.join((str(ROOT), str(ROOT / "tools")))
+    env["UUV_DB"] = str(run_dir / "mission.sqlite")
+    env["UUV_RECORDING_DIR"] = str(run_dir)
+    env["UUV_PI_RUNTIME_DIR"] = str(run_dir / "pi")
+    env["UUV_ADVERSARY_RUNTIME_DIR"] = str(run_dir / "pi-adversary")
     api_env = {key: value for key, value in env.items() if key != "LONGCAT_API_KEY"}
     ui_env = {key: value for key, value in api_env.items() if key not in ("UUV_WORKER_TOKEN", "UUV_ADVERSARY_TOKEN")}
     children = []
@@ -144,21 +155,21 @@ def main():
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
     commands = [
-        ("api", [sys.executable, "-m", "uvicorn", "uuv_game.api:create_app", "--factory", "--host", "127.0.0.1", "--port", str(port), "--no-access-log"], ROOT, api_env),
+        ("api", [sys.executable, "-m", "uvicorn", "adapter.api:create_app", "--factory", "--host", "127.0.0.1", "--port", str(port), "--no-access-log"], ROOT, api_env),
         ("ui", ["node", "node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", str(ui_port), "--strictPort"], ROOT/"ui", ui_env),
     ]
     if not args.no_model:
         if not env.get("LONGCAT_API_KEY"):
             raise RuntimeError("LONGCAT_API_KEY missing; configure outputs/runtime/credentials.env or use --no-model")
         friendly_env, enemy_env = worker_environments(env)
-        commands.append(("pi", ["node", "--import", "./packages/coding-agent/src/experimental/source-resolver.ts", "tools/pi/worker.ts"], ROOT, friendly_env))
-        commands.append(("pi-adversary", ["node", "--import", "./packages/coding-agent/src/experimental/source-resolver.ts", "tools/pi/adversary.ts"], ROOT, enemy_env))
+        commands.append(("pi", ["node", "--import", "./packages/coding-agent/src/experimental/source-resolver.ts", "agent/worker.ts"], ROOT, friendly_env))
+        commands.append(("pi-adversary", ["node", "--import", "./packages/coding-agent/src/experimental/source-resolver.ts", "agent/adversary.ts"], ROOT, enemy_env))
     logs = []
     for name, command, cwd, child_env in commands:
-        log = (RUNTIME/f"{name}.log").open("a")
+        log = (run_dir/f"{name}.log").open("a")
         logs.append(log)
         children.append(subprocess.Popen(command, cwd=cwd, env=child_env, stdout=log, stderr=log))
-    services = {"supervisor_pid": os.getpid(), "backend_url": env["UUV_API_URL"], "ui_url": f"http://127.0.0.1:{ui_port}", "status": "starting", "pids": {spec[0]: child.pid for spec, child in zip(commands, children)}}
+    services = {"supervisor_pid": os.getpid(), "run_dir": str(run_dir), "backend_url": env["UUV_API_URL"], "ui_url": f"http://127.0.0.1:{ui_port}", "status": "starting", "pids": {spec[0]: child.pid for spec, child in zip(commands, children)}}
     (RUNTIME/"services.json").write_text(json.dumps(services, indent=2))
     try:
         deadline = time.monotonic() + 30

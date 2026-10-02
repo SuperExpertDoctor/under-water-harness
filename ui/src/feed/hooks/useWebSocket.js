@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { connectTelemetryStream } from "../api/websocketApi";
-import { mergeTelemetryFrame } from "../state/missionState";
+import { mergeTelemetryFrame } from "../../state/missionState";
 import {
   createInformationField,
   createInformationFieldModel,
   updateInformationField,
-} from "../state/informationField";
+} from "../../state/informationField";
 
 const TELEMETRY_RENDER_INTERVAL_MS = 1000 / 60;
 

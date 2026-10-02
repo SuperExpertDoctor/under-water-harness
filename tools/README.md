@@ -52,9 +52,9 @@ tools/.venv/bin/python -m playwright install chromium
 ```text
 ui/                 HTTP / WebSocket
   |
-uuv_game/api.py      公共 API、内部工具接口、串行决策队列
+adapter/api.py      公共 API、内部工具接口、串行决策队列
   |                     ^
-runtime.py           tools/pi/worker.ts
+runtime.py           agent/worker.ts
   |                  PI SDK + LongCat + Extension + 受信 Skill
   |
 observations.py     主动距离/方位、被动纯方位 EKF
@@ -68,7 +68,7 @@ SQLite              检查点、回放、幂等回执、历史计划
 
 Python 是状态权威，Node 只负责 PI 决策回合。模型不逐帧驱动运动。后台进程由启动器监护，浏览器关闭不终止仿真；程序崩溃后从检查点恢复，不补演离线期间的运动。检查点周期为 1 秒，因此进程崩溃可能损失最后不到一个周期的遥测，已提交的计划和回执则使用同一事务。
 
-敌方由独立 `tools/pi/adversary.ts` 原生 PI 会话控制，只有 `get_adversary_observation` 和 `set_evasion_parameters` 两个工具，使用独立令牌、运行租约和私有历史。敌方探测半径 700 m，我方 350 m；两者都存在噪声与遮挡。敌方 LLM 只能设置 0..3 m/s 速度、-1..1 转向偏好和 1..60 仿真秒有效期；80 m 最小转弯半径及安全弧线检查由 Python 控制器执行。参数失效后回退到 2.5 m/s、零偏好与近距离避让，不等待模型。每轮最多 3 次模型请求、4 次工具调用、60 秒墙钟时间，保留最近 100 份已完成的私有会话文件。共享界面仅暴露敌方服务状态，不暴露其观测、决策文本或真值。
+敌方由独立 `agent/adversary.ts` 原生 PI 会话控制，只有 `get_adversary_observation` 和 `set_evasion_parameters` 两个工具，使用独立令牌、运行租约和私有历史。敌方探测半径 700 m，我方 350 m；两者都存在噪声与遮挡。敌方 LLM 只能设置 0..3 m/s 速度、-1..1 转向偏好和 1..60 仿真秒有效期；80 m 最小转弯半径及安全弧线检查由 Python 控制器执行。参数失效后回退到 2.5 m/s、零偏好与近距离避让，不等待模型。每轮最多 3 次模型请求、4 次工具调用、60 秒墙钟时间，保留最近 100 份已完成的私有会话文件。共享界面仅暴露敌方服务状态，不暴露其观测、决策文本或真值。
 
 在线演示默认采用2倍仿真时钟，艇速仍为4 m/s。真实模型的多轮工具调用需要墙钟时间；过高倍率会使候选航线在提交前起点失效。当前200 m起点新鲜度检查没有放宽，2倍时钟为直线移动提供约25秒预算，仍不保证任意模型延迟都能提交成功。离线验收直接推进固定步长，独立控制加速倍率。
 
@@ -89,7 +89,7 @@ Python 是状态权威，Node 只负责 PI 决策回合。模型不逐帧驱动�
 | `submit_mission_plan` | 唯一常规执行入口 | 不可变计划、幂等命令、权限门 |
 | `get_action_status` | 查询候选、计划或决策作业 | 实际状态，不把接受当作完成 |
 
-Extension 注册位于 `tools/pi/extension.ts`，每个任务工具有独立参数 schema。SDK 白名单为这十个工具加受限 `read`；没有 shell、写文件、任意文件或任意网络工具。任务工具经内部 HTTP 调用 Python，请求绑定运行中的 `run_id` 和 `episode_id`；取消或租约过期后拒绝迟到执行。
+Extension 注册位于 `agent/extension.ts`，每个任务工具有独立参数 schema。SDK 白名单为这十个工具加受限 `read`；没有 shell、写文件、任意文件或任意网络工具。任务工具经内部 HTTP 调用 Python，请求绑定运行中的 `run_id` 和 `episode_id`；取消或租约过期后拒绝迟到执行。
 
 算法标识：`connected_partition`、`dubins_hybrid`、`strip_coverage`、`slot_assignment`、`distance_band`，只能用于对应工具；`default` 选择默认算法。替换算法须保持单位、失败语义和副作用边界，计算函数不能直接操纵仿真器。
 
@@ -99,7 +99,7 @@ Extension 注册位于 `tools/pi/extension.ts`，每个任务工具有独立参�
 
 ## Skill 与权限
 
-Skill 位于 `.pi/skills/multi-uuv-recon-tracking/SKILL.md`。Worker 使用 SDK 资源加载器指定这份受信 Skill，关闭其他自动发现；正文通过受限 `read` 实际读取，五份 `references/` 文档按需读取。白名单包含搜索、跟踪、能源轮换、审批和工具契约参考，拒绝越界路径和符号链接替换。资源发现与已执行读取是两回事。
+Skill 位于 `agent/skills/multi-uuv-recon-tracking/SKILL.md`。Worker 使用 SDK 资源加载器指定这份受信 Skill，关闭其他自动发现；正文通过受限 `read` 实际读取，五份 `references/` 文档按需读取。白名单包含搜索、跟踪、能源轮换、审批和工具契约参考，拒绝越界路径和符号链接替换。资源发现与已执行读取是两回事。
 
 权限规则由 Python 执行：Request 对新计划要求审批，已批准常驻规则内的动作继续；Assisted 按任务类型、剩余能源和接触不确定性计算启发式风险，超过 0.55 时审批；Full 不逐项审批，但不能跳过硬检查。当前基准分为搜索 0.2、跟踪/重搜索 0.6，再叠加能源与不确定性项，不是固定工具分数，也不是事故概率。
 
@@ -136,8 +136,8 @@ Worker 订阅原生消息、工具、压缩、重试和队列事件，按 settle
 
 ```sh
 PYTHONPATH=tools python -m pytest tools/tests -q
-node --import ./packages/coding-agent/src/experimental/source-resolver.ts --test tools/pi/*.test.ts
-npx tsc -p tools/pi/tsconfig.json --noEmit
+node --import ./packages/coding-agent/src/experimental/source-resolver.ts --test agent/*.test.ts
+npx tsc -p agent/tsconfig.json --noEmit
 npm run check
 ```
 
@@ -145,7 +145,7 @@ UI 状态和组件测试从 `ui/` 目录运行，包含所有 `state/*.test.js`�
 
 ```sh
 cd ui
-node --test src/state/*.test.js src/renderer/*.test.js
+node --test src/state/*.test.js src/view/renderer/*.test.js src/feed/**/*.test.js
 cd ..
 ```
 

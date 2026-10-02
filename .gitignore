@@ -45,3 +45,6 @@ collect.sh
 packages/agent/docs/extensions/pi-server-artifact/index.md
 
 outputs/
+# Python
+__pycache__/
+*.pyc

@@ -5,9 +5,9 @@ import time
 from fastapi.testclient import TestClient
 import pytest
 
-import uuv_game.recording as recording
-from uuv_game.api import create_app
-from uuv_game.recording import RecordingError, RecordingManager
+import adapter.recording as recording
+from adapter.api import create_app
+from adapter.recording import RecordingError, RecordingManager
 
 
 class FakeVideo:

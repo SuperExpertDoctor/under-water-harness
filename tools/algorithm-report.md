@@ -260,8 +260,8 @@ From the repository root:
 
 ```sh
 PYTHONPATH=tools python -m pytest tools/tests -q
-node --import ./packages/coding-agent/src/experimental/source-resolver.ts --test tools/pi/*.test.ts
-npx tsc -p tools/pi/tsconfig.json --noEmit
+node --import ./packages/coding-agent/src/experimental/source-resolver.ts --test agent/*.test.ts
+npx tsc -p agent/tsconfig.json --noEmit
 npm run check
 ```
 

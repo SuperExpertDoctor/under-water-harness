@@ -1,4 +1,4 @@
-import { routeToCells } from "../state/missionState";
+import { routeToCells } from "../../state/missionState";
 
 export function drawMissionOverlay(context, frame, candidate, layout) {
   if (!frame?.task_area) return;

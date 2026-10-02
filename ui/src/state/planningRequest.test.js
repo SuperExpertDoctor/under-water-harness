@@ -9,7 +9,7 @@ const server = await createServer({ root: fileURLToPath(new URL("../../", import
 test.after(() => server.close());
 
 test("automatic coverage omits local bounds and members while explicit coverage retains both", async () => {
-  const { planningRequest } = await server.ssrLoadModule("/src/components/AgentPanel.jsx");
+  const { planningRequest } = await server.ssrLoadModule("/src/view/components/AgentPanel.jsx");
   assert.equal(typeof planningRequest, "function");
   const bbox = [250, 250, 3750, 3750];
   assert.deepEqual(planningRequest("plan_search", true, ["UUV-1"], bbox, ""), { tool: "plan_search", standing_policy: true });
@@ -20,7 +20,7 @@ test("automatic coverage omits local bounds and members while explicit coverage 
 });
 
 test("automatic whole-area planning does not expose ignored local boundary inputs", async () => {
-  const { default: AgentPanel } = await server.ssrLoadModule("/src/components/AgentPanel.jsx");
+  const { default: AgentPanel } = await server.ssrLoadModule("/src/view/components/AgentPanel.jsx");
   const html = renderToStaticMarkup(createElement(AgentPanel, { tab: "planning", frame: { episode_id: "e", uavs: [] },
     mission: { ready: true, state: {}, tasks: [], skills: [] }, selection: [1, 1, 2, 2] }));
   assert.ok(!html.includes("搜索边界"));

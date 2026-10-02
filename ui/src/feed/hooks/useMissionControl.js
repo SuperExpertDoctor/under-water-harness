@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { missionApi } from "../api/missionApi";
 import { connectStateStream } from "../api/websocketApi";
-import { mergeMissionState, mergeTelemetryFrame, shouldApplySnapshot } from "../state/missionState";
+import { mergeMissionState, mergeTelemetryFrame, shouldApplySnapshot } from "../../state/missionState";
 
 export default function useMissionControl(enabled) {
   const [state, setState] = useState({});

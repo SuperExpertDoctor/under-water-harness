@@ -9,7 +9,7 @@ const server = await createServer({ root: fileURLToPath(new URL("../../", import
 test.after(() => server.close());
 
 test("console exposes timeline agent metrics and retained secondary views", async () => {
-  const { default: Drawer } = await server.ssrLoadModule("/src/components/BottomDrawer.jsx");
+  const { default: Drawer } = await server.ssrLoadModule("/src/view/components/BottomDrawer.jsx");
   const html = renderToStaticMarkup(createElement(Drawer, { frame: {}, visible: true }));
   for (const label of ["时间线", "Agent 运行", "任务指标", "区域", "目标状态"]) assert.ok(html.includes(label), label);
   assert.ok(!html.includes('aria-label="参数"'));
@@ -17,7 +17,7 @@ test("console exposes timeline agent metrics and retained secondary views", asyn
 });
 
 test("contact transitions do not masquerade as completed decisions", async () => {
-  const { default: Drawer } = await server.ssrLoadModule("/src/components/BottomDrawer.jsx");
+  const { default: Drawer } = await server.ssrLoadModule("/src/view/components/BottomDrawer.jsx");
   const events = [
     { id: 1, type: "provisional_contact_aborted", time: 1, data: { uuv_id: "UUV-1" } },
     { id: 2, type: "tracking_reacquisition_started", time: 2, data: { uuv_id: "UUV-1" } },
@@ -28,7 +28,7 @@ test("contact transitions do not masquerade as completed decisions", async () =>
 });
 
 test("conversation renders safe Markdown without raw HTML or executable links", async () => {
-  const { default: Conversation } = await server.ssrLoadModule("/src/components/ConversationPanel.jsx");
+  const { default: Conversation } = await server.ssrLoadModule("/src/view/components/ConversationPanel.jsx");
   const mission = { ready: true, state: { messages: [{ id: "m", role: "assistant", text: "**Observed** <script>alert(1)</script> [bad](javascript:alert(1))", status: "streaming" }] } };
   const html = renderToStaticMarkup(createElement(Conversation, { mission, frame: {}, readOnly: false }));
   assert.ok(html.includes("<strong>Observed</strong>"));
@@ -38,14 +38,14 @@ test("conversation renders safe Markdown without raw HTML or executable links", 
 });
 
 test("boat data includes generation energy range heading speed and sensor phase", async () => {
-  const { default: Panel } = await server.ssrLoadModule("/src/components/UuvStatusPanel.jsx");
+  const { default: Panel } = await server.ssrLoadModule("/src/view/components/UuvStatusPanel.jsx");
   const frame = { uavs: [{ id: "UUV-1", generation: 3, energy_pct: 42, remaining_range_m: 4800, speed_mps: 4, heading_deg: 90, sensor_mode: "passive", operation_mode: "track", task_phase: "acquire", position: [1, 2] }] };
   const html = renderToStaticMarkup(createElement(Panel, { frame, selectedUuvId: "UUV-1" }));
   for (const label of ["G3", "42.0%", "4800 m", "4.0 m/s", "90.0°", "passive", "建立协同观测"]) assert.ok(html.includes(label), label);
 });
 
 test("conversation exposes native tool results in collapsed traceable output", async () => {
-  const { default: Conversation } = await server.ssrLoadModule("/src/components/ConversationPanel.jsx");
+  const { default: Conversation } = await server.ssrLoadModule("/src/view/components/ConversationPanel.jsx");
   const mission = { ready: true, state: { messages: [{ id: "m", role: "assistant", text: "Plan ready", run_id: "r1" }], events: [{ id: 3, type: "tool_execution_end", data: { run_id: "r1", tool_call_id: "call-1", tool_name: "plan_search", text: "candidate-42", is_error: false } }] } };
   const html = renderToStaticMarkup(createElement(Conversation, { mission, frame: {}, readOnly: false }));
   assert.match(html, /<details class="tool-output"/);
@@ -54,7 +54,7 @@ test("conversation exposes native tool results in collapsed traceable output", a
 });
 
 test("read-only replay does not expose messages or active generation from the live episode", async () => {
-  const { default: Conversation } = await server.ssrLoadModule("/src/components/ConversationPanel.jsx");
+  const { default: Conversation } = await server.ssrLoadModule("/src/view/components/ConversationPanel.jsx");
   const mission = { ready: true, state: { messages: [{ id: "live-only", role: "assistant", text: "LIVE SECRET TASK" }], jobs: [{ run_id: "live-run", status: "running" }] } };
   const html = renderToStaticMarkup(createElement(Conversation, { mission, frame: { episode_id: "replay" }, readOnly: true }));
   assert.ok(!html.includes("LIVE SECRET TASK"));
@@ -63,7 +63,7 @@ test("read-only replay does not expose messages or active generation from the li
 });
 
 test("map draws only active sensor coverage at the backend radius", async () => {
-  const { drawUavScanRanges } = await server.ssrLoadModule("/src/renderer/layers.js");
+  const { drawUavScanRanges } = await server.ssrLoadModule("/src/view/renderer/layers.js");
   const radii = [];
   const context = { save() {}, restore() {}, beginPath() {}, fill() {}, stroke() {}, setLineDash() {}, arc(_x, _y, radius) { radii.push(radius); } };
   drawUavScanRanges(context, [
@@ -74,7 +74,7 @@ test("map draws only active sensor coverage at the backend radius", async () => 
 });
 
 test("map heading rotates the fallback hull from SI counterclockwise to screen coordinates", async () => {
-  const { drawUavs } = await server.ssrLoadModule("/src/renderer/layers.js");
+  const { drawUavs } = await server.ssrLoadModule("/src/view/renderer/layers.js");
   const rotations = [];
   const context = { save() {}, restore() {}, translate() {}, beginPath() {}, moveTo() {}, lineTo() {}, closePath() {}, fill() {}, rotate(angle) { rotations.push(angle); } };
   drawUavs(context, [{ id: "UUV-1", position: [2, 3], heading_deg: 90, status: "searching" }], 10, 0, 0, null, {}, []);
@@ -82,7 +82,7 @@ test("map heading rotates the fallback hull from SI counterclockwise to screen c
 });
 
 test("top-row region labels leave clearance for the task-area header", async () => {
-  const { drawLabels } = await server.ssrLoadModule("/src/renderer/layers.js");
+  const { drawLabels } = await server.ssrLoadModule("/src/view/renderer/layers.js");
   const rectangles = [];
   const context = { save() {}, restore() {}, strokeRect() {}, measureText: () => ({ width: 30 }), fillText() {}, fillRect(...rect) { rectangles.push(rect); } };
   const placed = drawLabels(context, { search_regions: [{ id: "r1", assigned_uav_id: "UUV-1", cells: [[0, 0]], bbox: [0, 0, 10, 20] }] },

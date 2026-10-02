@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Activity, BarChart3, Bot, Clipboard, GripHorizontal, Map, Radar, X } from "lucide-react";
-import { buildAgentRuntimeRows, buildDecisionRows, buildTimelineRows, coverageDescriptions } from "../state/missionState";
+import { buildAgentRuntimeRows, buildDecisionRows, buildTimelineRows, coverageDescriptions } from "../../state/missionState";
 
 const TABS = [
   { label: "决策过程", icon: Activity },

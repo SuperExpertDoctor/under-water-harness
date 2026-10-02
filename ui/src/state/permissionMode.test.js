@@ -9,7 +9,7 @@ const server = await createServer({ root: fileURLToPath(new URL("../../", import
 test.after(() => server.close());
 
 test("permission selector names active approval level and scopes full access to mission plans", async () => {
-  const { default: MissionControl } = await server.ssrLoadModule("/src/components/MissionControl.jsx");
+  const { default: MissionControl } = await server.ssrLoadModule("/src/view/components/MissionControl.jsx");
   const html = renderToStaticMarkup(createElement(MissionControl, {
     mission: { ready: true, busy: false, state: { autonomy_mode: "assisted", agent: { status: "idle" } } },
     frame: { runtime_status: "ready" }, readOnly: false,

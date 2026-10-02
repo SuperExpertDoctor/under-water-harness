@@ -1,4 +1,4 @@
-import type { ProviderConfigInput } from "../../packages/coding-agent/src/core/provider-composer.ts";
+import type { ProviderConfigInput } from "../packages/coding-agent/src/core/provider-composer.ts";
 
 export const TOOL_NAMES: readonly string[] = ["get_mission_state", "get_observations", "partition_search_area", "compute_task_allocation", "plan_path", "plan_search", "plan_tracking", "evaluate_plan", "submit_mission_plan", "get_action_status"];
 

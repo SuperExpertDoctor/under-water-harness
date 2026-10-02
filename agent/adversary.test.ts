@@ -6,7 +6,7 @@ import { test } from "node:test";
 import { Value } from "typebox/value";
 import { SessionManager } from "@earendil-works/pi-coding-agent";
 import { fauxAssistantMessage, fauxToolCall } from "@earendil-works/pi-ai";
-import { createHarness } from "../../packages/coding-agent/test/suite/harness.ts";
+import { createHarness } from "../packages/coding-agent/test/suite/harness.ts";
 import { AdversaryBudget, ADVERSARY_TOOLS, createAdversarySession, pruneAdversarySessions } from "./adversary.ts";
 
 test("native adversary session has only two restrictive tools and no filesystem or friendly tools", async () => {

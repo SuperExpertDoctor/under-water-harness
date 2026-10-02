@@ -8,7 +8,7 @@ import { createMissionResources } from "./resources.ts";
 import type { BackendToolSpec } from "./tool-adapter.ts";
 import { RoutineCooldown, withRunHeartbeat } from "./scheduling.ts";
 
-const root = resolve(import.meta.dirname, "../..");
+const root = resolve(import.meta.dirname, "..");
 const api = process.env.UUV_API_URL || "http://127.0.0.1:8765";
 const workerToken = process.env.UUV_WORKER_TOKEN;
 const key = process.env.LONGCAT_API_KEY;
@@ -57,7 +57,7 @@ async function makeSession(episode: string): Promise<AgentSession> {
   const toolSpecs = ((await getJson("/internal/agent/tools")).tools ?? []) as BackendToolSpec[];
   const toolNames = toolSpecs.map((entry) => entry.name);
   const settings = SettingsManager.inMemory({ compaction: { enabled: true }, retry: { enabled: true, maxRetries: 1, baseDelayMs: 2000 } });
-  const loader = createMissionResources(runtimeDir, resolve(root, ".pi/skills/multi-uuv-recon-tracking"), settings, async (name, params, signal) => {
+  const loader = createMissionResources(runtimeDir, resolve(import.meta.dirname, "skills/multi-uuv-recon-tracking"), settings, async (name, params, signal) => {
       if (!activeJob || ++calls > 24) throw new Error("turn_tool_budget_exceeded");
       const job = activeJob;
       await heartbeatRun(job, signal);

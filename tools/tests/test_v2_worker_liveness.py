@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from fastapi.testclient import TestClient
 import pytest
 
-from uuv_game import api
+from adapter import api
 
 
 @pytest.mark.parametrize("heartbeat_age, expected", [(16, "idle"), (31, "offline")])

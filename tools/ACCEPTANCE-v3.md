@@ -7,7 +7,7 @@ Baseline: `c0144b1`. This round implements the approved single-target, eight-UUV
 | Check | Result | Evidence |
 | --- | --- | --- |
 | Python regression suite | 262 passed | `PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 PYTHONPATH=tools python -m pytest tools/tests -q`, 167.47 s |
-| Native PI tests | 17 passed | `node --import ./packages/coding-agent/src/experimental/source-resolver.ts --test tools/pi/*.test.ts` |
+| Native PI tests | 17 passed | `node --import ./packages/coding-agent/src/experimental/source-resolver.ts --test agent/*.test.ts` |
 | UI state and renderer tests | 45 passed | Five `ui/src/{state,renderer}/*.test.js` files |
 | PI TypeScript and repository checks | Passed | PI `tsc --noEmit`; root `npm run check`, 1482 files, no fixes |
 | Real friendly LongCat workflow | Passed, 862.954 wall seconds | `../outputs/v3-longcat-acceptance.json` |

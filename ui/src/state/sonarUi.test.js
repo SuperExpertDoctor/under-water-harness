@@ -9,7 +9,7 @@ const server = await createServer({ root: fileURLToPath(new URL("../../", import
 test.after(() => server.close());
 
 test("status data distinguishes side scan, front active and front passive", async () => {
-  const { default: Panel } = await server.ssrLoadModule("/src/components/UuvStatusPanel.jsx");
+  const { default: Panel } = await server.ssrLoadModule("/src/view/components/UuvStatusPanel.jsx");
   const html = renderToStaticMarkup(createElement(Panel, { frame: { uavs: [
     { id: "UUV-1", generation: 1, status: "searching", sensor_mode: "active", sensor_roles: { side_scan: true, forward_active: true, forward_passive: false } },
     { id: "UUV-2", generation: 1, status: "acquiring", sensor_mode: "active", sensor_roles: { side_scan: false, forward_active: true, forward_passive: false } },
@@ -21,7 +21,7 @@ test("status data distinguishes side scan, front active and front passive", asyn
 });
 
 test("configured primary rolling window is visible and selectable", async () => {
-  const { default: Coverage } = await server.ssrLoadModule("/src/components/CoveragePanel.jsx");
+  const { default: Coverage } = await server.ssrLoadModule("/src/view/components/CoveragePanel.jsx");
   const html = renderToStaticMarkup(createElement(Coverage, { frame: { episode_id: "m", coverage_metrics: {
     schema_version: "persistent-coverage/v1", status: "ok", as_of_min: 5,
     primary_window_min: 2, fixed_searchable_area_km2: 16, cumulative_pct: 50,
@@ -32,7 +32,7 @@ test("configured primary rolling window is visible and selectable", async () => 
 });
 
 test("pending approval sits inline in the linked conversation with scoped choices", async () => {
-  const { default: Conversation } = await server.ssrLoadModule("/src/components/ConversationPanel.jsx");
+  const { default: Conversation } = await server.ssrLoadModule("/src/view/components/ConversationPanel.jsx");
   const mission = { ready: true, state: { messages: [{ id: "answer", role: "assistant", run_id: "run-7", text: "Planning" }], events: [
     { type: "tool_completed", data: { plan_id: "plan-7", run_id: "run-7" } },
   ], plans: [{ plan_id: "plan-7", kind: "search", members: ["UUV-1"], status: "pending_approval", reason: "human_required", risk: .62, expires_at_s: 200, fallback: "protective_pause" }] } };
@@ -56,7 +56,7 @@ test("pending approval sits inline in the linked conversation with scoped choice
 });
 
 test("resolved approval remains in the linked turn without another decision button", async () => {
-  const { default: Conversation } = await server.ssrLoadModule("/src/components/ConversationPanel.jsx");
+  const { default: Conversation } = await server.ssrLoadModule("/src/view/components/ConversationPanel.jsx");
   const mission = { ready: true, state: { messages: [{ id: "answer", role: "assistant", plan_id: "plan-9", text: "Done" }], events: [
     { type: "approval_requested", data: { plan_id: "plan-9" } },
   ], plans: [{ plan_id: "plan-9", kind: "track", members: ["UUV-2"], status: "rejected" }] } };
@@ -66,7 +66,7 @@ test("resolved approval remains in the linked turn without another decision butt
 });
 
 test("unlinked approval names the missing association rather than guessing a turn", async () => {
-  const { default: Conversation } = await server.ssrLoadModule("/src/components/ConversationPanel.jsx");
+  const { default: Conversation } = await server.ssrLoadModule("/src/view/components/ConversationPanel.jsx");
   const mission = { ready: true, state: { messages: [{ id: "other", role: "assistant", text: "Unrelated" }], plans: [
     { plan_id: "plan-unknown", kind: "search", members: ["UUV-1"], status: "pending_approval" },
   ] } };
@@ -76,7 +76,7 @@ test("unlinked approval names the missing association rather than guessing a tur
 });
 
 test("multiple pending requests remain visible inline", async () => {
-  const { default: Conversation } = await server.ssrLoadModule("/src/components/ConversationPanel.jsx");
+  const { default: Conversation } = await server.ssrLoadModule("/src/view/components/ConversationPanel.jsx");
   const mission = { ready: true, state: { messages: [], plans: [
     { plan_id: "first", kind: "search", status: "pending_approval" },
     { plan_id: "second", kind: "track", status: "pending_approval" },
@@ -87,14 +87,14 @@ test("multiple pending requests remain visible inline", async () => {
 });
 
 test("pending approval does not block inspecting mission data", async () => {
-  const { default: Sidebar } = await server.ssrLoadModule("/src/components/RightSidebar.jsx");
+  const { default: Sidebar } = await server.ssrLoadModule("/src/view/components/RightSidebar.jsx");
   const mission = { ready: true, state: { messages: [], plans: [{ plan_id: "pending", status: "pending_approval" }] } };
   const html = renderToStaticMarkup(createElement(Sidebar, { mission, frame: {}, readOnly: false }));
   assert.doesNotMatch(html, /aria-selected="false"[^>]*disabled=""[^>]*>数据/);
 });
 
 test("decision tab renders a time ordered scheduling table", async () => {
-  const { default: Drawer } = await server.ssrLoadModule("/src/components/BottomDrawer.jsx");
+  const { default: Drawer } = await server.ssrLoadModule("/src/view/components/BottomDrawer.jsx");
   const frame = { episode_id: "e1", plans: [{ plan_id: "p1", kind: "search", status: "active", members: ["UUV-1"], decision_reason: "补充覆盖" }] };
   const events = [{ id: 1, episode_id: "e1", time: 2, type: "mission_assignment_committed", data: { plan_id: "p1" } }];
   const html = renderToStaticMarkup(createElement(Drawer, { frame, events, visible: true, readOnly: true }));
@@ -106,7 +106,7 @@ test("decision tab renders a time ordered scheduling table", async () => {
 });
 
 test("operations view lists approval history without duplicate decision actions", async () => {
-  const { default: AgentPanel } = await server.ssrLoadModule("/src/components/AgentPanel.jsx");
+  const { default: AgentPanel } = await server.ssrLoadModule("/src/view/components/AgentPanel.jsx");
   const mission = { state: { plans: [{ plan_id: "plan-history", kind: "search", members: ["UUV-1"], status: "pending_approval" }] } };
   const html = renderToStaticMarkup(createElement(AgentPanel, { tab: "approvals", mission, frame: {}, readOnly: false }));
   assert.match(html, /审批记录/);
@@ -115,7 +115,7 @@ test("operations view lists approval history without duplicate decision actions"
 });
 
 test("map renders two rotated side-scan swaths instead of an omnidirectional disk", async () => {
-  const { drawUavScanRanges } = await server.ssrLoadModule("/src/renderer/layers.js");
+  const { drawUavScanRanges } = await server.ssrLoadModule("/src/view/renderer/layers.js");
   const arcs = [];
   const context = { save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, closePath() {}, fill() {}, stroke() {}, setLineDash() {},
     arc(_x, _y, radius, from, to) { arcs.push({ radius, from, to }); } };
@@ -129,7 +129,7 @@ test("map renders two rotated side-scan swaths instead of an omnidirectional dis
 });
 
 test("passive tracking draws a wide fixed fan in a distinct translucent color", async () => {
-  const { drawUavScanRanges } = await server.ssrLoadModule("/src/renderer/layers.js");
+  const { drawUavScanRanges } = await server.ssrLoadModule("/src/view/renderer/layers.js");
   const fills = [];
   const arcs = [];
   const context = { save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, closePath() {}, stroke() {}, setLineDash() {},
@@ -146,7 +146,7 @@ test("passive tracking draws a wide fixed fan in a distinct translucent color", 
 });
 
 test("boats with sensors off draw no forward fan", async () => {
-  const { drawUavScanRanges } = await server.ssrLoadModule("/src/renderer/layers.js");
+  const { drawUavScanRanges } = await server.ssrLoadModule("/src/view/renderer/layers.js");
   const fills = [];
   const context = { save() {}, restore() {}, beginPath() {}, moveTo() {}, lineTo() {}, closePath() {}, stroke() {}, setLineDash() {},
     fill() { fills.push(context.fillStyle); },

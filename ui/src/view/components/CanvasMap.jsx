@@ -4,7 +4,7 @@ import { RadioTower, Radar, Crosshair, Route, LogOut, Maximize2, Minimize2, Rota
 import { computeLayout, dragToBBox, pixelToCoord, zoomedLayout, zoomViewAt } from "../renderer/geometry";
 import { renderFrame } from "../renderer/layers";
 import { drawMissionOverlay } from "../renderer/missionOverlay";
-import { interpolateUuv } from "../state/missionState";
+import { interpolateUuv } from "../../state/missionState";
 import { ownerColor } from "../renderer/colors";
 
 export function readCellInformation(frame, cell) {

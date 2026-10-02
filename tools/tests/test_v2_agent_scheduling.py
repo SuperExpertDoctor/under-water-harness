@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from uuv_game.api import create_app
+from adapter.api import create_app
 
 
 HEADERS = {"Authorization": "Bearer scheduling-worker"}

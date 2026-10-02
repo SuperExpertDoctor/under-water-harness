@@ -18,10 +18,10 @@ from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from .runtime import ALGORITHM_IDS, MissionRuntime, MissionError, identifier
+from uuv_game.runtime import ALGORITHM_IDS, MissionRuntime, MissionError, identifier
+from uuv_game.plugins import catalog as plugin_catalog, install_plugin, uninstall_plugin
+from uuv_game.agent_tools import catalog as tool_catalog, is_builtin, names as tool_names, resolve as resolve_tool
 from .agent_events import session_event
-from .plugins import catalog as plugin_catalog, install_plugin, uninstall_plugin
-from .agent_tools import catalog as tool_catalog, is_builtin, names as tool_names, resolve as resolve_tool
 from .recording import RecordingError, RecordingManager
 
 
@@ -37,7 +37,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
     browser_secret = secrets.token_urlsafe(32)
     runtime = MissionRuntime(db_path)
     recorder = RecordingManager(ui_url or os.environ.get("UUV_UI_URL"),
-        recording_dir or Path(__file__).resolve().parents[2] / "outputs")
+        recording_dir or os.environ.get("UUV_RECORDING_DIR") or Path(__file__).resolve().parents[1] / "outputs")
 
     def requeue_feedback(job):
         if runtime.status == "stopped" or job["episode_id"] != runtime.episode:
@@ -392,7 +392,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
     async def skill(skill_id):
         if skill_id != SKILL_ID:
             raise MissionError("skill_not_found", 404)
-        path = Path(__file__).resolve().parents[2] / ".pi/skills" / SKILL_ID / "SKILL.md"
+        path = Path(__file__).resolve().parents[1] / "agent/skills" / SKILL_ID / "SKILL.md"
         return {"id": skill_id, "content": path.read_text() if path.exists() else "Mission workflow: observe, plan, evaluate, submit, verify."}
 
     @app.post("/api/skills/{skill_id}/execute")

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { collectReplayMarkers } from "../renderer/replayEvents";
+import { collectReplayMarkers } from "../../view/renderer/replayEvents";
 
 const CHUNK_SIZE = 120;
 

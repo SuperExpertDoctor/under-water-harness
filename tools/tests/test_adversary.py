@@ -7,7 +7,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from uuv_game.api import create_app
+from adapter.api import create_app
 from uuv_game.runtime import MissionRuntime
 
 

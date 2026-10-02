@@ -8,7 +8,7 @@ import pytest
 from fastapi import WebSocketDisconnect
 from fastapi.testclient import TestClient
 
-from uuv_game.api import create_app
+from adapter.api import create_app
 
 
 HEADERS = {"Authorization": "Bearer test-worker"}
@@ -171,7 +171,7 @@ def test_state_websocket_emits_reset_when_new_cursor_matches_old(client):
 
 
 def test_skill_endpoint_returns_the_real_trusted_skill(client):
-    path = Path(__file__).resolve().parents[2] / ".pi/skills/multi-uuv-recon-tracking/SKILL.md"
+    path = Path(__file__).resolve().parents[2] / "agent/skills/multi-uuv-recon-tracking/SKILL.md"
     assert client.get("/api/skills/multi-uuv-recon-tracking").json()["content"] == path.read_text()
 
 

@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 import pytest
 
-from uuv_game.api import create_app
+from adapter.api import create_app
 
 
 @pytest.fixture

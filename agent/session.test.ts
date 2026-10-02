@@ -10,7 +10,7 @@ import type { BackendToolSpec } from "./tool-adapter.ts";
 import { Value } from "typebox/value";
 import { createMissionResources, readTrustedSkill } from "./resources.ts";
 import { fauxAssistantMessage, fauxToolCall } from "@earendil-works/pi-ai";
-import { createHarness, getUserTexts } from "../../packages/coding-agent/test/suite/harness.ts";
+import { createHarness, getUserTexts } from "../packages/coding-agent/test/suite/harness.ts";
 import { FeedbackDelivery, PublicEventProjector, runUntilSettled, type PublicSessionEvent } from "./bridge.ts";
 
 // Mirror of the backend catalog's parameter schemas (tools/uuv_game/agent_tools/)
@@ -104,7 +104,7 @@ test("native session streams tools and drains steer and followUp before settled"
 
 test("native loader discovers only trusted skill and restricted read performs actual file reads", async () => {
   const directory = await mkdtemp(join(tmpdir(), "uuv-trusted-skill-test-"));
-  const skillDirectory = resolve(".pi/skills/multi-uuv-recon-tracking");
+  const skillDirectory = resolve(import.meta.dirname, "skills/multi-uuv-recon-tracking");
   let session;
   try {
     const settingsManager = SettingsManager.inMemory();

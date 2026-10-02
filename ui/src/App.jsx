@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Circle, Focus, Grid3X3, History, PanelBottom, PanelRight, Radio, Route, Square, Wind } from "lucide-react";
 
-import ActivityBar from "./components/ActivityBar";
-import BottomDrawer from "./components/BottomDrawer";
-import CanvasMap from "./components/CanvasMap";
-import PlaybackBar from "./components/PlaybackBar";
-import PluginPanel from "./components/PluginPanel";
-import RightSidebar from "./components/RightSidebar";
-import MissionControl from "./components/MissionControl";
-import useMissionControl from "./hooks/useMissionControl";
-import useRecording, { recordingPresentation } from "./hooks/useRecording";
-import useReplay from "./hooks/useReplay";
-import useMp4Export from "./hooks/useMp4Export";
-import useWebSocket from "./hooks/useWebSocket";
+import ActivityBar from "./view/components/ActivityBar";
+import BottomDrawer from "./view/components/BottomDrawer";
+import CanvasMap from "./view/components/CanvasMap";
+import PlaybackBar from "./view/components/PlaybackBar";
+import PluginPanel from "./view/components/PluginPanel";
+import RightSidebar from "./view/components/RightSidebar";
+import MissionControl from "./view/components/MissionControl";
+import useMissionControl from "./feed/hooks/useMissionControl";
+import useRecording, { recordingPresentation } from "./feed/hooks/useRecording";
+import useReplay from "./feed/hooks/useReplay";
+import useMp4Export from "./view/hooks/useMp4Export";
+import useWebSocket from "./feed/hooks/useWebSocket";
 import { DEMO_FRAME } from "./state/demoFrame";
 import { applyInformationField } from "./state/informationField";
 

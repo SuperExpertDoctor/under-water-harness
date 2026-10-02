@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, Eye, Play, Send, Square, X, Workflow } from "lucide-react";
-import { selectionToMeters } from "../state/missionState";
+import { selectionToMeters } from "../../state/missionState";
 
 export function planningRequest(tool, automatic, members, bbox, contactId) {
   const request = { tool, ...(!automatic ? { members } : {}) };

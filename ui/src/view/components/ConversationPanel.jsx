@@ -2,7 +2,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUpRight, Check, CircleX, CornerDownRight, Eye, LoaderCircle, MessageSquareQuote, Send, ShieldAlert, Square, X } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { annotationPayload, groupApprovalsByMessage } from "../state/missionState";
+import { annotationPayload, groupApprovalsByMessage } from "../../state/missionState";
 
 const STATUS = { streaming: "生成中", completed: "完成", failed: "失败", cancelled: "已停止", queued: "已排队", delivered: "已送达" };
 const TOOL_LABELS = {

@@ -22,7 +22,7 @@
 | --- | --- |
 | `PYTHONPATH=tools python -m pytest tools/tests -q` | 97通过，28.99秒 |
 | PI配置及实际SDK会话测试 | 4通过 |
-| `npx tsc -p tools/pi/tsconfig.json --noEmit` | 通过 |
+| `npx tsc -p agent/tsconfig.json --noEmit` | 通过 |
 | UI任务状态测试 | 7通过 |
 | UI诊断渲染回归 | infeasible对象、timed_out对象、旧数组格式均显示 |
 | `npm run check:browser-smoke` | 通过 |

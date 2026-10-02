@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Plus, Power, RotateCcw, Trash2, X, ZoomIn, ZoomOut } from "lucide-react";
 
-import { PLUGIN_DEFS, PLUGIN_EDGES, derivePluginGraph, portText } from "../state/pluginGraph";
+import { PLUGIN_DEFS, PLUGIN_EDGES, derivePluginGraph, portText } from "../../state/pluginGraph";
 
 const STORAGE_KEY = "uuv.pluginLibrary.v1";
 const NODE_W = 176;

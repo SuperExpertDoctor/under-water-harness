@@ -3,8 +3,8 @@
 import copy
 import math
 
-from .algorithms.tracking import tracking_plan
-from .config import algorithm_settings
+from ..algorithms.tracking import tracking_plan
+from ..config import algorithm_settings
 from .information import target_evidence_field
 from .lifecycle import exit_route, nearest_boundary
 from .mission_planning import search_bundle

@@ -2,9 +2,9 @@
 
 import math
 
-from .config import algorithm_settings
+from ..config import algorithm_settings
 from .information import target_evidence_field
-from .algorithms.planning import plan_path, path_safe
+from ..algorithms.planning import plan_path, path_safe
 from .mission_planning import search_bundle
 
 _LIFECYCLE = algorithm_settings("lifecycle")

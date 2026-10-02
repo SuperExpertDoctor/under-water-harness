@@ -3,7 +3,7 @@
 import math
 
 from . import observations as ekf
-from .config import algorithm_settings
+from ..config import algorithm_settings
 
 _OBS = algorithm_settings("observations")
 

@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 
-from .config import algorithm_settings
+from ..config import algorithm_settings
 
 _OBS = algorithm_settings("observations")
 

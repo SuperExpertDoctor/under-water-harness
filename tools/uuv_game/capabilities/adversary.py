@@ -7,9 +7,9 @@ import copy
 import math
 import random
 
-from .algorithms.motion import integrate
-from .algorithms.planning import path_safe
-from .config import algorithm_settings
+from ..algorithms.motion import integrate
+from ..algorithms.planning import path_safe
+from ..config import algorithm_settings
 from .observations import measure
 from .sensing import visible
 

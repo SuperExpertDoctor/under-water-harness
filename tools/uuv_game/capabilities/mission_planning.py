@@ -1,11 +1,11 @@
 """Compose pure per-boat algorithms into atomic mission candidates."""
 
-from .config import Config, algorithm_settings
-from .algorithms.partition import partition_regions
-from .algorithms.coverage import plan_region_search
-from .algorithms.partition import _components
-from .algorithms.planning import path_safe
-from .algorithms.conflicts import resolve_conflicts
+from ..config import Config, algorithm_settings
+from ..algorithms.partition import partition_regions
+from ..algorithms.coverage import plan_region_search
+from ..algorithms.partition import _components
+from ..algorithms.planning import path_safe
+from ..algorithms.conflicts import resolve_conflicts
 
 _MISSION = algorithm_settings("mission_planning")
 

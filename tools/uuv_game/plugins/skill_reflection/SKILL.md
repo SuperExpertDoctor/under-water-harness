@@ -33,9 +33,16 @@
 
 ## 存储
 
-`outputs/runtime/skills/`：`<slug>.md` 正文 + `index.json` 元数据
-（Beta 后验 alpha/beta、confidence、uses、version、pending 使用基线、
-rewards 历史、library_size 覆盖值）。跨运行共享。
+`tools/skills/`（算法目录）：每技能一个 `<slug>/SKILL.md` 文件夹 +
+`index.json` 元数据（Beta 后验 alpha/beta、confidence、uses、version、
+pending 使用基线、rewards 历史、library_size 覆盖值、source 标记）。
+
+**两种入库方式**：人工 —— 在 `tools/skills/` 下放 `<slug>/SKILL.md`
+（可选 `---` frontmatter 声明 `title`/`category`/`description`），
+下次 `load()` 自动登记；自动 —— `skill_reflection__distill` 写同一
+布局。初始加载由 configs `algorithms.skills.load_mode` 控制：
+`scan` 扫描全部 SKILL.md 文件夹，`manual` 只登记 `manual_skills`
+列出的 slug。
 
 ## 配置（configs/uuv_game.json `algorithms.skills`）
 

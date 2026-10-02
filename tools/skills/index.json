@@ -1,0 +1,38 @@
+{
+ "version": 1,
+ "library_size": null,
+ "skills": {
+  "handover-fuel-relay": {
+   "slug": "handover-fuel-relay",
+   "alpha": 1.5,
+   "beta": 1.5,
+   "confidence": 0.5,
+   "uses": 1,
+   "pending": [],
+   "rewards": [
+    {
+     "t": 9999.0,
+     "reward": 0.5
+    }
+   ],
+   "version": 2,
+   "title": "低油轮换接力",
+   "category": "track-handover",
+   "description": "低油返航时接替艇持续跟踪的协作经验",
+   "updated_at": 1790921620.4136899,
+   "last_used_s": 0.0,
+   "last_metrics": {
+    "sim_time": 0.0,
+    "coverage_pct": 0.0,
+    "recent_coverage_pct": 0.0,
+    "effective_tracking_seconds": 0.0,
+    "lost_seconds": 0.0,
+    "handoff_count": 0,
+    "handoff_attempts": 0,
+    "handoff_success_rate": null,
+    "tracking_contacts": 0
+   },
+   "source": "distilled"
+  }
+ }
+}

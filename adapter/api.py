@@ -421,6 +421,24 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
             raise MissionError("skill_not_found", 404)
         return {"id": entry["slug"], **entry}
 
+    @app.put("/api/skills/{skill_id}")
+    async def save_skill(skill_id, request: Request):
+        data = await payload(request, episode=False)
+        body = data.get("content")
+        if not isinstance(body, str):
+            raise MissionError("invalid_skill_content", 422)
+        if skill_id == SKILL_ID:
+            path = Path(__file__).resolve().parents[1] / "agent/skills" / SKILL_ID / "SKILL.md"
+            path.write_text(body, encoding="utf-8")
+            return {"id": skill_id, "saved": True}
+        impl = _skill_impl()
+        if impl is None:
+            raise MissionError("skills_disabled", 409)
+        entry = impl.save_skill(skill_id, body)
+        if entry is None:
+            raise MissionError("skill_not_found", 404)
+        return {"id": entry["slug"], **entry, "saved": True}
+
     @app.post("/api/skills/config")
     async def skills_config(request: Request):
         data = await payload(request, episode=False)

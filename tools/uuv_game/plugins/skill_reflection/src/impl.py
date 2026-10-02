@@ -17,6 +17,7 @@ distilled knowledge.
 
 import json
 import math
+import time
 from . import bandit, store
 from ....config import algorithm_settings
 
@@ -122,6 +123,7 @@ def _entry_summary(entry, meta):
             "description": entry.get("description"), "confidence": entry.get("confidence"),
             "ucb": round(bandit.ucb(entry, store.total_uses(meta)), 4),
             "uses": entry.get("uses", 0), "version": entry.get("version", 1),
+            "source": entry.get("source", "distilled"),
             "updated_at": entry.get("updated_at"), "last_metrics": entry.get("last_metrics")}
 
 
@@ -135,6 +137,19 @@ def library(rt=None):
                     key=lambda s: -s["ucb"])
     return {"library_size": cap, "categories": [{"id": k, **{kk: v[kk] for kk in ("title", "goal", "chain")}} for k, v in CATEGORIES.items()],
             "skills": skills[:cap]}
+
+
+def save_skill(slug, body):
+    """Manual edit — writes the SKILL.md body (no version bump; refine is
+    the distillation path). Returns the entry summary or None."""
+    meta = store.load()
+    entry = meta["skills"].get(slug)
+    if entry is None:
+        return None
+    store.write_body(slug, body)
+    entry["updated_at"] = time.time()
+    store.save(meta)
+    return _entry_summary(entry, meta)
 
 
 def read_skill(slug):

@@ -11,6 +11,7 @@ import importlib
 import pkgutil
 
 from .review import accounting_wrapper, review
+from ..config import algorithm_settings
 
 _MODULES = {}
 
@@ -28,6 +29,15 @@ def _load():
                 raise ValueError(
                     f"builtin tool failed review: {'; '.join(issues)}")
             _MODULES[spec["name"]] = module
+    # Initial loading follows algorithms.tools.load_mode: "scan" registers
+    # every module found; "manual" restricts to manual_tools by name
+    # (plugin-declared tools are not gated — they belong to their plugin's
+    # own load/enable lifecycle).
+    settings = algorithm_settings("tools")
+    if settings.get("load_mode", "scan") == "manual":
+        keep = set(settings.get("manual_tools", []))
+        for name in [n for n in list(_MODULES) if n not in keep]:
+            del _MODULES[name]
 
 
 _load()

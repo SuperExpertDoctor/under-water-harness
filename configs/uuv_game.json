@@ -316,7 +316,13 @@
       "window_s": 900.0,
       "reward_window_s": 300.0,
       "reflect_max_chars": 3500,
-      "refine_confidence_floor": 0.4
+      "refine_confidence_floor": 0.4,
+      "load_mode": "scan",
+      "manual_skills": []
+    },
+    "tools": {
+      "load_mode": "scan",
+      "manual_tools": []
     }
   }
 }

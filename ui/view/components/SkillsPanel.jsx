@@ -35,6 +35,10 @@ export default function SkillsPanel() {
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [sizeDraft, setSizeDraft] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [saveState, setSaveState] = useState(null);
+  const editingRef = useRef(false);
   const timer = useRef(null);
 
   const refresh = useCallback(async () => {
@@ -56,6 +60,7 @@ export default function SkillsPanel() {
     if (!selected) { setDetail(null); return undefined; }
     let alive = true;
     const load = async () => {
+      if (editingRef.current) return; // don't clobber the editor
       try {
         const doc = await skillApi.get(selected);
         if (alive) setDetail(doc);
@@ -63,6 +68,9 @@ export default function SkillsPanel() {
         if (alive) setDetail(null);
       }
     };
+    setEditing(false);
+    editingRef.current = false;
+    setSaveState(null);
     load();
     const t = setInterval(load, POLL_MS);
     return () => { alive = false; clearInterval(t); };
@@ -138,9 +146,48 @@ export default function SkillsPanel() {
           <div className="skill-detail-empty">加载中…</div>
         ) : (
           <>
-            <article className="skill-doc">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{detail.content || "（无文档内容）"}</ReactMarkdown>
-            </article>
+            <div className="skill-doc-bar">
+              {!editing ? (
+                <button type="button" onClick={() => { setDraft(detail.content || ""); setEditing(true); editingRef.current = true; }}>
+                  编辑
+                </button>
+              ) : (
+                <>
+                  <button type="button" disabled={saveState === "saving"} onClick={async () => {
+                    setSaveState("saving");
+                    try {
+                      await skillApi.save(selected, { content: draft });
+                      setDetail((d) => d ? { ...d, content: draft } : d);
+                      setSaveState("saved");
+                      setEditing(false);
+                      editingRef.current = false;
+                    } catch {
+                      setSaveState("error");
+                    }
+                  }}>
+                    {saveState === "saving" ? "保存中…" : "保存"}
+                  </button>
+                  <button type="button" onClick={() => { setEditing(false); editingRef.current = false; setSaveState(null); }}>
+                    取消
+                  </button>
+                  {saveState === "error" && <span className="skill-save-error">保存失败</span>}
+                </>
+              )}
+              {saveState === "saved" && !editing && <span className="skill-save-ok">已保存</span>}
+            </div>
+            {editing ? (
+              <textarea
+                className="skill-doc-editor"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                aria-label="编辑 SKILL.md"
+                spellCheck={false}
+              />
+            ) : (
+              <article className="skill-doc">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{detail.content || "（无文档内容）"}</ReactMarkdown>
+              </article>
+            )}
             <footer className="skill-status">
               {detail.category !== "mission" && (
                 <>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Circle, Focus, Grid3X3, History, PanelBottom, PanelRight, Radio, Route, Square, Wind } from "lucide-react";
+import { Circle, Focus, Grid3X3, History, Moon, PanelBottom, PanelRight, Radio, Route, Square, Sun, SunMoon, Wind } from "lucide-react";
 
 import ActivityBar from "./view/components/ActivityBar";
 import BottomDrawer from "./view/components/BottomDrawer";
@@ -9,6 +9,7 @@ import PluginPanel from "./view/components/PluginPanel";
 import SkillsPanel from "./view/components/SkillsPanel";
 import RightSidebar from "./view/components/RightSidebar";
 import MissionControl from "./view/components/MissionControl";
+import useTheme from "./state/theme";
 import useMissionControl from "./feed/hooks/useMissionControl";
 import useRecording, { recordingPresentation } from "./feed/hooks/useRecording";
 import useReplay from "./feed/hooks/useReplay";
@@ -44,6 +45,7 @@ export default function App() {
   const [selectedMessageId, setSelectedMessageId] = useState(null);
   const mapExporterRef = useRef(null);
   const mission = useMissionControl(mode === "live");
+  const theme = useTheme();
   const recording = useRecording();
   const recordingView = recordingPresentation(recording.status, recording.error);
   const live = useWebSocket(mode === "live" && mission.ready);
@@ -352,6 +354,15 @@ export default function App() {
           </button>
           <button className={sidebarOpen ? "icon-btn active" : "icon-btn"} onClick={() => setSidebarOpen((value) => !value)} title="任务工作区侧边栏" aria-label="切换任务工作区侧边栏" aria-pressed={sidebarOpen}>
             <PanelRight size={17} />
+          </button>
+          <button
+            className={theme.mode === "auto" ? "icon-btn active" : "icon-btn"}
+            onClick={theme.cycle}
+            title={`主题: ${{ light: "浅色", dark: "深色", auto: "自动" }[theme.mode]} — 点击切换`}
+            aria-label="切换界面主题"
+            aria-pressed={theme.mode === "auto"}
+          >
+            {theme.mode === "light" ? <Sun size={17} /> : theme.mode === "dark" ? <Moon size={17} /> : <SunMoon size={17} />}
           </button>
         </div>
         <MissionControl mission={mission} frame={frame} readOnly={readOnly}

@@ -14,6 +14,9 @@ export const skillApi = {
   get(skillId, options) {
     return httpApi.get(`/api/skills/${encodeURIComponent(skillId)}`, options);
   },
+  save(skillId, payload = {}, options) {
+    return httpApi.put(`/api/skills/${encodeURIComponent(skillId)}`, payload, options);
+  },
   execute(skillId, payload = {}, options) {
     return httpApi.post(
       `/api/skills/${encodeURIComponent(skillId)}/execute`,

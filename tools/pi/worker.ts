@@ -2,9 +2,10 @@ import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { createAgentSession, ModelRuntime, SessionManager, SettingsManager, type AgentSession } from "@earendil-works/pi-coding-agent";
-import { longcatConfig, redact, TOOL_NAMES } from "./config.ts";
+import { longcatConfig, redact } from "./config.ts";
 import { FeedbackDelivery, PublicEventProjector, publicDecisionReason, runUntilSettled, runWithReasonRetry } from "./bridge.ts";
 import { createMissionResources } from "./resources.ts";
+import type { BackendToolSpec } from "./tool-adapter.ts";
 import { RoutineCooldown, withRunHeartbeat } from "./scheduling.ts";
 
 const root = resolve(import.meta.dirname, "../..");
@@ -42,7 +43,19 @@ async function request(path: string, data: unknown, signal?: AbortSignal): Promi
   return result;
 }
 
+async function getJson(path: string): Promise<Record<string, unknown>> {
+  const response = await fetch(`${api}${path}`, { headers: { Authorization: `Bearer ${workerToken}` }, signal: AbortSignal.timeout(30000) });
+  const result = await response.json() as Record<string, unknown>;
+  if (!response.ok) throw new Error(String(result.error_code || `HTTP_${response.status}`));
+  return result;
+}
+
 async function makeSession(episode: string): Promise<AgentSession> {
+  // Tool catalog is backend-sourced: ten builtins + every plugin-declared
+  // TOOLS entry currently registered. The adapter turns each spec into a
+  // full ToolDefinition, so a plugin drop-in alone can extend the agent.
+  const toolSpecs = ((await getJson("/internal/agent/tools")).tools ?? []) as BackendToolSpec[];
+  const toolNames = toolSpecs.map((entry) => entry.name);
   const settings = SettingsManager.inMemory({ compaction: { enabled: true }, retry: { enabled: true, maxRetries: 1, baseDelayMs: 2000 } });
   const loader = createMissionResources(runtimeDir, resolve(root, ".pi/skills/multi-uuv-recon-tracking"), settings, async (name, params, signal) => {
       if (!activeJob || ++calls > 24) throw new Error("turn_tool_budget_exceeded");
@@ -65,12 +78,12 @@ async function makeSession(episode: string): Promise<AgentSession> {
       } finally {
         if (activeJob === job && !runFailure) startDeadline?.();
       }
-  });
+  }, toolSpecs);
   await loader.reload();
   const { session: created } = await createAgentSession({ cwd: runtimeDir, agentDir: runtimeDir, modelRuntime, model,
-    thinkingLevel: "off", tools: [...TOOL_NAMES, "read"], resourceLoader: loader, settingsManager: settings,
+    thinkingLevel: "off", tools: [...toolNames, "read"], resourceLoader: loader, settingsManager: settings,
     sessionManager: SessionManager.continueRecent(runtimeDir, resolve(runtimeDir, episode)) });
-  if (created.getActiveToolNames().sort().join(",") !== [...TOOL_NAMES, "read"].sort().join(",")) throw new Error("Mission tool registration incomplete");
+  if (created.getActiveToolNames().sort().join(",") !== [...toolNames, "read"].sort().join(",")) throw new Error("Mission tool registration incomplete");
   return created;
 }
 

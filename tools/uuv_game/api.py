@@ -21,10 +21,10 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from .runtime import ALGORITHM_IDS, MissionRuntime, MissionError, identifier
 from .agent_events import session_event
 from .plugins import catalog as plugin_catalog, install_plugin, uninstall_plugin
+from .agent_tools import catalog as tool_catalog, is_builtin, names as tool_names, resolve as resolve_tool
 from .recording import RecordingError, RecordingManager
 
 
-TOOL_NAMES = ("get_mission_state", "get_observations", "partition_search_area", "compute_task_allocation", "plan_path", "plan_search", "plan_tracking", "evaluate_plan", "submit_mission_plan", "get_action_status")
 SKILL_ID = "multi-uuv-recon-tracking"
 WORKER_LEASE_SECONDS = 15
 WORKER_LIVENESS_SECONDS = 30  # Includes the healthy worker's 15-second success cooldown.
@@ -209,13 +209,14 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
             return copy.deepcopy(response)
 
     async def invoke(name, data, worker=False):
-        if name not in TOOL_NAMES:
+        mode, fn = resolve_tool(name)
+        if fn is None:
             raise MissionError("unknown_tool", 404)
-        if name in ("partition_search_area", "compute_task_allocation", "plan_path", "plan_search", "plan_tracking"):
+        if mode == "calculate":
             with runtime.lock:
                 if worker:
                     active_run(data)
-            result = await asyncio.to_thread(runtime.calculate, name, data)
+            result = await asyncio.to_thread(fn, runtime, data, worker)
             with runtime.lock:
                 if worker:
                     active_run(data)
@@ -223,26 +224,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
         with runtime.lock:
             if worker:
                 active_run(data)
-            if name == "get_mission_state":
-                return runtime.mission_state()
-            if name == "get_observations":
-                records = [o for o in runtime.observations if o["time_s"] > float(data.get("after_s", -1)) and o.get("sequence", 0) > int(data.get("cursor", -1))]
-                records = records[:min(100, max(1, int(data.get("limit", 50))))]
-                return {"observations": copy.deepcopy(records), "cursor": records[-1]["sequence"] if records else runtime.observation_cursor}
-            if name == "evaluate_plan":
-                return runtime.evaluate(data.get("result_id"))
-            if name == "submit_mission_plan":
-                if not data.get("command_id"):
-                    raise MissionError("command_id_required", 422)
-                if worker and (not isinstance(data.get("decision_reason"), str) or not 1 <= len(data["decision_reason"].strip()) <= 500):
-                    raise MissionError("decision_reason_required", 422)
-                return runtime.submit(data.get("result_id"), data["command_id"], data.get("episode_id"), data.get("decision_reason"))
-            action_id = data.get("action_id")
-            result = runtime.plans.get(action_id) or runtime.results.get(action_id) or runtime.receipts.get(action_id) or runtime.store.get_plan(action_id)
-            result = result or next((j for j in runtime.agent_jobs if j["run_id"] == action_id), None)
-            if not result:
-                raise MissionError("action_not_found", 404)
-            return copy.deepcopy(runtime.summary(result))
+            return fn(runtime, data, worker)
 
     @app.get("/api/health")
     async def health():
@@ -422,7 +404,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
 
     @app.get("/api/algorithm/status")
     async def algorithm_status():
-        return {"status": "ready", "algorithms": list(ALGORITHM_IDS.values()), "tools": TOOL_NAMES}
+        return {"status": "ready", "algorithms": list(ALGORITHM_IDS.values()), "tools": tool_names()}
 
     @app.get("/api/plugins")
     async def plugins():
@@ -715,16 +697,25 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
             runtime.event("debug_sensor_changed", {"enabled": runtime.sensor_enabled})
             return {"status": "applied", "sensor_enabled": runtime.sensor_enabled}
 
+    @app.get("/internal/agent/tools")
+    async def agent_tool_catalog(request: Request):
+        _ = request
+        return tool_catalog()
+
     @app.post("/internal/tools/{name}")
     async def tool(name, request: Request):
         data = await payload(request, episode=False)
         with runtime.lock:
             active_run(data)
-            params = {key: copy.deepcopy(data[key]) for key in ("mission_revision", "algorithm_id", "members", "bbox", "goal",
-                "contact_id", "result_id", "command_id", "action_id", "mode", "after_s", "limit", "standing_policy", "cursor") if key in data}
-            if isinstance(data.get("tasks"), list):
-                params["tasks"] = [{key: copy.deepcopy(task[key]) for key in ("id", "center", "size", "priority") if key in task}
-                    for task in data["tasks"][:8] if isinstance(task, dict)]
+            if is_builtin(name):
+                params = {key: copy.deepcopy(data[key]) for key in ("mission_revision", "algorithm_id", "members", "bbox", "goal",
+                    "contact_id", "result_id", "command_id", "action_id", "mode", "after_s", "limit", "standing_policy", "cursor", "decision_reason") if key in data}
+                if isinstance(data.get("tasks"), list):
+                    params["tasks"] = [{key: copy.deepcopy(task[key]) for key in ("id", "center", "size", "priority") if key in task}
+                        for task in data["tasks"][:8] if isinstance(task, dict)]
+            else:
+                params = {key: copy.deepcopy(value) for key, value in data.items()
+                          if key not in ("run_id", "episode_id")}
             runtime.event("tool_started", {"tool": name, "run_id": data["run_id"], "params": params})
         try:
             result = await invoke(name, data, worker=True)

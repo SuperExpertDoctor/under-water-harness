@@ -58,3 +58,37 @@ def tick_stages(runtime):
     append at the end of the pipeline.
     """
     return []
+
+
+def _probe(runtime, params, worker=False):
+    """Tool body: runs under runtime.lock. Params arrive as a plain dict —
+    validate defensively. Raise MissionError(code, status) for domain
+    errors; anything else becomes a generic tool failure."""
+    return {"uuv_id": params.get("uuv_id"), "status": "ok"}
+
+
+# Optional: agent-callable tools exposed by this plugin — the plugin-side
+# half of pi's ToolDefinition. Names must start with "<plugin-id>__" so a
+# plugin can never shadow a builtin tool. Each entry is registered in the
+# shared catalog; the PI worker adapts it into registerTool() for you.
+TOOLS = {
+    "my_plugin__probe": {
+        "description": "描述这个工具让模型知道什么时候调用它",
+        "snippet": "一行摘要，进入系统提示词的 Available tools",
+        "guidelines": ["给模型的使用规则"],
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "uuv_id": {"type": "string", "minLength": 1},
+            },
+            "required": ["uuv_id"],
+            "additionalProperties": False,
+        },
+        # optional, defaults: {"type": "json_schema", "strict": "prefer"}
+        "constrained_sampling": {"type": "json_schema", "strict": "prefer"},
+        # optional, default "parallel"; declare "sequential" when the tool
+        # mutates shared mission state
+        "execution_mode": "parallel",
+        "execute": _probe,
+    },
+}

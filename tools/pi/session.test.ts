@@ -6,11 +6,31 @@ import { test } from "node:test";
 import { createAgentSession, DefaultResourceLoader, SessionManager, SettingsManager } from "@earendil-works/pi-coding-agent";
 import { TOOL_NAMES } from "./config.ts";
 import { missionExtension } from "./extension.ts";
+import type { BackendToolSpec } from "./tool-adapter.ts";
 import { Value } from "typebox/value";
 import { createMissionResources, readTrustedSkill } from "./resources.ts";
 import { fauxAssistantMessage, fauxToolCall } from "@earendil-works/pi-ai";
 import { createHarness, getUserTexts } from "../../packages/coding-agent/test/suite/harness.ts";
 import { FeedbackDelivery, PublicEventProjector, runUntilSettled, type PublicSessionEvent } from "./bridge.ts";
+
+// Mirror of the backend catalog's parameter schemas (tools/uuv_game/agent_tools/)
+// so these tests exercise the same shapes the adapter registers in production.
+const snapshot = { episode_id: { type: "string", minLength: 1 }, mission_revision: { type: "integer", minimum: 0 } };
+const fleet = { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 8, uniqueItems: true };
+const algorithm = (id: string) => ({ type: "string", enum: ["default", id] });
+const obj = (properties: Record<string, unknown>, required?: string[]) => ({ type: "object", properties, additionalProperties: false, ...(required ? { required } : {}) });
+const TEST_SPECS: BackendToolSpec[] = [
+  { name: "get_mission_state", description: "state", parameters: obj({}) },
+  { name: "get_observations", description: "obs", parameters: obj({ after_s: { type: "number", minimum: 0 }, cursor: { type: "integer", minimum: 0 }, limit: { type: "integer", minimum: 1, maximum: 100 } }) },
+  { name: "partition_search_area", description: "partition", parameters: obj({ ...snapshot, algorithm_id: algorithm("connected_partition"), members: fleet }) },
+  { name: "compute_task_allocation", description: "allocation", parameters: obj({ ...snapshot, algorithm_id: algorithm("slot_assignment"), contact_id: { type: "string", minLength: 1 }, tasks: { type: "array", maxItems: 8, items: obj({ id: { type: "string", minLength: 1 }, center: { type: "array", items: { type: "number" }, minItems: 2, maxItems: 2 }, size: { type: "integer", minimum: 1, maximum: 3 }, priority: { type: "number", minimum: 1, maximum: 10 } }, ["id", "center", "size", "priority"]) } }) },
+  { name: "plan_path", description: "path", parameters: obj({ ...snapshot, algorithm_id: algorithm("dubins_hybrid"), members: { type: "array", items: { type: "string", minLength: 1 }, minItems: 1, maxItems: 1 }, goal: { type: "array", items: { type: "number" }, minItems: 3, maxItems: 3 } }, ["members", "goal"]) },
+  { name: "plan_search", description: "search", parameters: obj({ ...snapshot, algorithm_id: algorithm("strip_coverage"), members: fleet, bbox: { type: "array", items: { type: "number", minimum: 0, maximum: 4000 }, minItems: 4, maxItems: 4 }, mode: { type: "string", enum: ["search", "reacquire"] }, standing_policy: { type: "boolean" } }) },
+  { name: "plan_tracking", description: "tracking", parameters: obj({ ...snapshot, algorithm_id: algorithm("distance_band"), contact_id: { type: "string", minLength: 1 }, members: { type: "array", items: { type: "string", minLength: 1 }, minItems: 2, maxItems: 3, uniqueItems: true } }, ["contact_id"]) },
+  { name: "evaluate_plan", description: "evaluate", parameters: obj({ result_id: { type: "string", minLength: 1 } }, ["result_id"]) },
+  { name: "submit_mission_plan", description: "submit", parameters: obj({ episode_id: { type: "string", minLength: 1 }, result_id: { type: "string", minLength: 1 }, command_id: { type: "string", minLength: 1 }, decision_reason: { type: "string", minLength: 1, maxLength: 500 } }, ["episode_id", "result_id", "command_id", "decision_reason"]), execution_mode: "sequential" },
+  { name: "get_action_status", description: "status", parameters: obj({ action_id: { type: "string", minLength: 1 } }, ["action_id"]) },
+];
 
 test("real SDK exposes ten independent strict mission tools and no coding tools", async () => {
   const directory = await mkdtemp(join(tmpdir(), "uuv-sdk-test-"));
@@ -19,7 +39,7 @@ test("real SDK exposes ten independent strict mission tools and no coding tools"
     const settingsManager = SettingsManager.inMemory();
     const resourceLoader = new DefaultResourceLoader({ cwd: directory, agentDir: directory, settingsManager,
       noExtensions: true, noSkills: true, noThemes: true, noContextFiles: true, noPromptTemplates: true,
-      extensionFactories: [missionExtension(async () => ({ status: "test" }))] });
+      extensionFactories: [missionExtension(async () => ({ status: "test" }), TEST_SPECS)] });
     await resourceLoader.reload();
     ({ session } = await createAgentSession({ cwd: directory, agentDir: directory, resourceLoader, settingsManager,
       tools: [...TOOL_NAMES], sessionManager: SessionManager.inMemory(directory) }));
@@ -57,7 +77,7 @@ test("native session streams tools and drains steer and followUp before settled"
     extensionFactories: [missionExtension(async () => {
       await feedback?.deliver([{ id: "s", text: "operator steering", delivery: "steer" }, { id: "f", text: "operator follow-up", delivery: "followUp" }]);
       return { status: "succeeded", episode_id: "offline" };
-    })],
+    }, TEST_SPECS)],
   });
   try {
     feedback = new FeedbackDelivery(harness.session);
@@ -88,7 +108,7 @@ test("native loader discovers only trusted skill and restricted read performs ac
   let session;
   try {
     const settingsManager = SettingsManager.inMemory();
-    const resourceLoader = createMissionResources(directory, skillDirectory, settingsManager, async () => ({}));
+    const resourceLoader = createMissionResources(directory, skillDirectory, settingsManager, async () => ({}), TEST_SPECS);
     await resourceLoader.reload();
     assert.deepEqual(resourceLoader.getSkills().skills.map((skill) => skill.name), ["multi-uuv-recon-tracking"]);
     ({ session } = await createAgentSession({ cwd: directory, agentDir: directory, resourceLoader, settingsManager, tools: [...TOOL_NAMES, "read"], sessionManager: SessionManager.inMemory(directory) }));

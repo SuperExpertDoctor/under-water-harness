@@ -72,6 +72,29 @@ Optional module hooks:
         pause); any other return value continues. ``after`` names a
         STAGE_SLOTS entry; unknown names append at pipeline end.
 
+    TOOLS = {"<plugin_id>__<suffix>": {...}}
+        Exposes agent-callable tools on this plugin — the plugin-side half
+        of pi's ToolDefinition. Every spec dict requires:
+
+            description   model-facing description
+            parameters    JSON-schema dict for the tool arguments
+            execute       fn(runtime, params, worker=False) -> dict,
+                          always run under runtime.lock
+
+        and mirrors the optional ToolDefinition fields:
+
+            snippet, guidelines, constrained_sampling
+            (default {"type": "json_schema", "strict": "prefer"}),
+            execution_mode ("parallel" default / "sequential")
+
+        Tool names MUST start with "<plugin_id>__" (plugin id with '-'
+        replaced by '_') so a plugin can never shadow a builtin tool —
+        validated at install time. Dropping the file in registers the
+        tools in agent_tools.catalog() and makes them callable through
+        /internal/tools/<name>; the PI worker's adapter turns each entry
+        into a full registerTool() definition, so no TS change is needed
+        for the agent to call it.
+
 Runtime surface available to plugin code (the "port" between plugins and
 the simulator; plugins must not import MissionRuntime itself):
 

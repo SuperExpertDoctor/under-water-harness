@@ -149,6 +149,9 @@ def install_plugin(source):
     for slot in spec.get("owns_stages", ()):
         if slot not in STAGE_SLOTS:
             raise ValueError(f"unknown pipeline slot: {slot}")
+    tools = getattr(probe, "TOOLS", None)
+    if tools is not None:
+        _validate_tools(tools, pid)
     filename = pid.replace("-", "_")
     path = _PACKAGE_DIR / f"{filename}.py"
     if path.exists():
@@ -156,6 +159,40 @@ def install_plugin(source):
     path.write_text(source, encoding="utf-8")
     reload_plugins()
     return next(s for s in PLUGIN_SPECS if s["id"] == pid)
+
+
+def _validate_tools(tools, plugin_id):
+    """Install-time check for a plugin's TOOLS map (see contract.py)."""
+    if not isinstance(tools, dict):
+        raise ValueError("TOOLS must be a dict of tool specs")
+    prefix = f"{plugin_id.replace('-', '_')}__"
+    for name, entry in tools.items():
+        if not isinstance(name, str) or not name.startswith(prefix):
+            raise ValueError(
+                f"tool name must start with '{prefix}': {name!r}")
+        if not isinstance(entry, dict):
+            raise ValueError(f"tool spec must be a dict: {name}")
+        for key in ("description", "parameters", "execute"):
+            if key not in entry:
+                raise ValueError(f"tool {name} missing required key: {key}")
+        if not callable(entry["execute"]):
+            raise ValueError(f"tool {name} execute must be callable")
+        if not isinstance(entry["parameters"], dict):
+            raise ValueError(f"tool {name} parameters must be a JSON-schema dict")
+
+
+def plugin_tool_specs():
+    """Merged TOOLS declared by every registered plugin.
+
+    Read live from the module objects so install/uninstall/reload reflect
+    immediately; agent_tools merges this into its catalog and dispatch.
+    """
+    specs = {}
+    for module in _MODULES.values():
+        tools = getattr(module, "TOOLS", None)
+        if isinstance(tools, dict):
+            specs.update(tools)
+    return specs
 
 
 def uninstall_plugin(plugin_id):

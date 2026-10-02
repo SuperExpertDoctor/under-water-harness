@@ -33,23 +33,20 @@ def _load():
 
 _load()
 
+def _edge_dict(entry):
+    if isinstance(entry, dict):
+        return dict(entry)
+    return {"from": entry[0], "to": entry[1]}
+
+
 PLUGIN_SPECS = sorted(
-    (dict(m.PLUGIN) for m in _MODULES.values()),
+    ({**m.PLUGIN, "edges": [_edge_dict(e) for e in m.PLUGIN.get("edges", ())]}
+     for m in _MODULES.values()),
     key=lambda s: (s.get("layer", 99), s["id"]),
 )
 
-def _edge_dicts():
-    edges = []
-    for module in _MODULES.values():
-        for entry in module.PLUGIN.get("edges", []):
-            if isinstance(entry, dict):
-                edges.append(dict(entry))
-            else:
-                edges.append({"from": entry[0], "to": entry[1]})
-    return edges
-
-
-PLUGIN_EDGES = _edge_dicts()
+PLUGIN_EDGES = [_edge_dict(e) for m in _MODULES.values()
+                for e in m.PLUGIN.get("edges", ())]
 
 _EDGE_SUBJECT_FNS = {}
 for _module in _MODULES.values():

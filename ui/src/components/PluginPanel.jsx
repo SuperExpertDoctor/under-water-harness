@@ -1,0 +1,266 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Power, Trash2, X } from "lucide-react";
+
+import { PLUGIN_DEFS, PLUGIN_EDGES, derivePluginGraph, portText } from "../state/pluginGraph";
+
+const STORAGE_KEY = "uuv.pluginLibrary.v1";
+const NODE_W = 176;
+const NODE_H = 96;
+
+function loadLibrary() {
+  try {
+    const raw = globalThis.localStorage?.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { disabled: parsed.disabled || [], custom: parsed.custom || [] };
+    }
+  } catch { /* fall through to defaults */ }
+  return { disabled: [], custom: [] };
+}
+
+function portCount(kind) {
+  return kind === "none" ? 0 : kind === "one" ? 1 : 3;
+}
+
+export default function PluginPanel({ frame, events }) {
+  const [library, setLibrary] = useState(loadLibrary);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState({ name: "", desc: "" });
+  const [pinned, setPinned] = useState(null);
+  const areaRef = useRef(null);
+  const [size, setSize] = useState({ w: 900, h: 560 });
+
+  const defs = useMemo(() => [...PLUGIN_DEFS, ...library.custom], [library.custom]);
+  const graph = useMemo(() => derivePluginGraph(frame, events), [frame, events]);
+  const visibleDefs = defs.filter((d) => !library.disabled.includes(d.id));
+
+  useEffect(() => {
+    try { globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(library)); } catch { /* storage optional */ }
+  }, [library]);
+
+  useEffect(() => {
+    if (!areaRef.current) return undefined;
+    const observer = new ResizeObserver((entries) => {
+      const rect = entries[0]?.contentRect;
+      if (rect) setSize({ w: rect.width, h: rect.height });
+    });
+    observer.observe(areaRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Layout: plugins sit in fixed columns by layer, evenly spaced rows. The
+  // graph keeps a minimum canvas width so columns never clip; the pane scrolls
+  // horizontally when the container is narrower.
+  const layout = useMemo(() => {
+    const byLayer = new Map();
+    for (const def of visibleDefs) {
+      const list = byLayer.get(def.layer) || [];
+      list.push(def);
+      byLayer.set(def.layer, list);
+    }
+    const layers = [...byLayer.keys()].sort((a, b) => a - b);
+    const gap = 72;
+    const canvasW = Math.max(size.w, NODE_W / 2 + 56 + layers.length * (NODE_W + gap));
+    const canvasH = Math.max(size.h - 34, 240);
+    const map = new Map();
+    const minLayer = layers[0] ?? 0;
+    const maxLayer = layers[layers.length - 1] ?? 0;
+    for (const layer of layers) {
+      const list = byLayer.get(layer);
+      const x = maxLayer === minLayer
+        ? canvasW / 2
+        : NODE_W / 2 + 48 + (layer - minLayer) * ((canvasW - NODE_W - 96) / (maxLayer - minLayer));
+      list.forEach((def, index) => {
+        const y = canvasH * ((index + 1) / (list.length + 1));
+        map.set(def.id, { x, y });
+      });
+    }
+    return { positions: map, canvasW, canvasH };
+  }, [visibleDefs, size]);
+  const positions = layout.positions;
+
+  const edgeGeometry = (edge) => {
+    const a = positions.get(edge.from);
+    const b = positions.get(edge.to);
+    if (!a || !b) return null;
+    const x1 = a.x + NODE_W / 2;
+    const y1 = a.y;
+    const x2 = b.x - NODE_W / 2;
+    const y2 = b.y;
+    const dx = Math.max(48, (x2 - x1) / 2);
+    return {
+      path: `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`,
+      mid: { x: (x1 + x2) / 2, y: (y1 + y2) / 2 - 12 },
+      head: { x: x2, y: y2 },
+    };
+  };
+
+  const togglePlugin = (id) => {
+    setLibrary((lib) => ({
+      ...lib,
+      disabled: lib.disabled.includes(id) ? lib.disabled.filter((x) => x !== id) : [...lib.disabled, id],
+    }));
+    if (pinned === id) setPinned(null);
+  };
+  const removePlugin = (id) => {
+    setLibrary((lib) => ({ disabled: lib.disabled.filter((x) => x !== id), custom: lib.custom.filter((p) => p.id !== id) }));
+    if (pinned === id) setPinned(null);
+  };
+  const addPlugin = () => {
+    const name = draft.name.trim();
+    if (!name) return;
+    const id = `custom-${Date.now().toString(36)}`;
+    setLibrary((lib) => ({
+      ...lib,
+      custom: [...lib.custom, {
+        id, name, desc: draft.desc.trim() || "自定义插件", layer: 4, color: "#6d28d9",
+        inputs: "many", outputs: "many", custom: true,
+      }],
+    }));
+    setDraft({ name: "", desc: "" });
+    setAdding(false);
+  };
+
+  const edgeFor = (id) => pinned === id;
+
+  return (
+    <div className="plugin-panel" role="region" aria-label="插件视图">
+      <aside className="plugin-library">
+        <header className="plugin-library-head">
+          <span>插件库</span>
+          <span className="plugin-count">{defs.length}</span>
+          <button type="button" className="icon-btn" title="添加插件" aria-label="添加插件" onClick={() => setAdding((v) => !v)}>
+            {adding ? <X size={15} /> : <Plus size={15} />}
+          </button>
+        </header>
+        {adding && (
+          <div className="plugin-add">
+            <input
+              value={draft.name}
+              onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
+              placeholder="插件名称"
+              aria-label="插件名称"
+            />
+            <input
+              value={draft.desc}
+              onChange={(e) => setDraft((d) => ({ ...d, desc: e.target.value }))}
+              placeholder="功能描述（可选）"
+              aria-label="功能描述"
+            />
+            <button type="button" onClick={addPlugin} disabled={!draft.name.trim()}>添加</button>
+          </div>
+        )}
+        <ul className="plugin-list">
+          {defs.map((def) => {
+            const enabled = !library.disabled.includes(def.id);
+            const node = graph.nodes[def.id];
+            return (
+              <li key={def.id} className={`plugin-card ${enabled ? "" : "off"}`}>
+                <div className="plugin-card-top">
+                  <span className="plugin-dot" style={{ background: def.color }} />
+                  <strong>{def.name}</strong>
+                  <button
+                    type="button"
+                    className={`plugin-power ${enabled ? "on" : ""}`}
+                    title={enabled ? "关闭插件（仅影响显示）" : "启用插件"}
+                    aria-pressed={enabled}
+                    onClick={() => togglePlugin(def.id)}
+                  >
+                    <Power size={13} />
+                  </button>
+                  {def.custom && (
+                    <button type="button" className="plugin-remove" title="删除插件" aria-label={`删除 ${def.name}`} onClick={() => removePlugin(def.id)}>
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </div>
+                <p>{def.desc}</p>
+                <div className="plugin-card-foot">
+                  <span>{portText(def)}</span>
+                  {enabled && node?.active && <em>运行中</em>}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </aside>
+
+      <section className="plugin-graph" ref={areaRef} aria-label="插件连接关系">
+        <div className="plugin-graph-scroll">
+        <div className="plugin-graph-inner" style={{ width: layout.canvasW, height: layout.canvasH }}>
+        <svg className="plugin-edges" width={layout.canvasW} height={layout.canvasH} aria-hidden="true">
+          <defs>
+            <marker id="plugin-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
+            </marker>
+          </defs>
+          {PLUGIN_EDGES.map((edge) => {
+            if (!positions.get(edge.from) || !positions.get(edge.to)) return null;
+            const geo = edgeGeometry(edge);
+            if (!geo) return null;
+            const live = graph.edges.find((e) => e.key === edge.key);
+            const active = live?.active;
+            const highlight = pinned && (edge.from === pinned || edge.to === pinned);
+            const color = active ? "#0f766e" : highlight ? "#1d4ed8" : "#94a3b8";
+            return (
+              <g key={edge.key} style={{ color }} className={active ? "edge-live" : ""}>
+                <path d={geo.path} fill="none" stroke="currentColor" strokeWidth={active ? 2.4 : 1.4}
+                  strokeDasharray={active ? "7 5" : "4 5"} markerEnd="url(#plugin-arrow)" opacity={active ? 0.95 : 0.45} />
+                {active && live.subjects.length > 0 && (
+                  <text x={geo.mid.x} y={geo.mid.y} textAnchor="middle" className="edge-label">
+                    {live.subjects.slice(0, 3).join(" · ")}{live.subjects.length > 3 ? ` +${live.subjects.length - 3}` : ""}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+
+        {visibleDefs.map((def) => {
+          const pos = positions.get(def.id);
+          if (!pos) return null;
+          const node = graph.nodes[def.id] || { active: false, subjects: [], meta: null };
+          const pins = portCount(def.inputs);
+          const pouts = portCount(def.outputs);
+          return (
+            <div
+              key={def.id}
+              className={`plugin-node ${node.active ? "live" : ""} ${pinned === def.id ? "pinned" : ""}`}
+              style={{ left: pos.x - NODE_W / 2, top: pos.y - NODE_H / 2, width: NODE_W, minHeight: NODE_H, borderColor: node.active ? def.color : undefined }}
+              onClick={() => setPinned((p) => (p === def.id ? null : def.id))}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setPinned((p) => (p === def.id ? null : def.id)); }}
+              title={def.desc}
+            >
+              <span className="plugin-ports in" aria-hidden="true">
+                {Array.from({ length: pins }, (_, i) => <i key={i} style={{ background: def.color }} />)}
+              </span>
+              <span className="plugin-ports out" aria-hidden="true">
+                {Array.from({ length: pouts }, (_, i) => <i key={i} style={{ background: def.color }} />)}
+              </span>
+              <header><span className="plugin-dot" style={{ background: def.color }} />{def.name}</header>
+              <div className="plugin-node-meta">{node.active ? (node.meta || "运行中") : "待机"}</div>
+              {node.subjects.length > 0 && (
+                <div className="plugin-subjects">
+                  {node.subjects.slice(0, 4).map((s) => <b key={s}>{s}</b>)}
+                  {node.subjects.length > 4 && <b>+{node.subjects.length - 4}</b>}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        </div>
+        </div>
+
+        <footer className="plugin-sim">
+          {graph.sim.simMin != null && <span>sim t = {graph.sim.simMin.toFixed(1)} min</span>}
+          {graph.sim.frameId != null && <span>frame #{graph.sim.frameId}</span>}
+          {graph.sim.cycle != null && <span>cycle {graph.sim.cycle}</span>}
+          {graph.sim.mode && <span>权限 {graph.sim.mode}</span>}
+          <span className="plugin-hint">逻辑视图 · 由实时状态推导</span>
+        </footer>
+      </section>
+    </div>
+  );
+}

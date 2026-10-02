@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Circle, Focus, Grid3X3, History, PanelBottom, PanelRight, Radio, Route, Square, Wind } from "lucide-react";
+import { Circle, Focus, Grid3X3, History, PanelBottom, PanelRight, Radio, Route, Square, Wind, Workflow } from "lucide-react";
 
 import BottomDrawer from "./components/BottomDrawer";
 import CanvasMap from "./components/CanvasMap";
 import PlaybackBar from "./components/PlaybackBar";
+import PluginPanel from "./components/PluginPanel";
 import RightSidebar from "./components/RightSidebar";
 import MissionControl from "./components/MissionControl";
 import useMissionControl from "./hooks/useMissionControl";
@@ -17,6 +18,7 @@ import { applyInformationField } from "./state/informationField";
 
 export default function App() {
   const [mode, setMode] = useState("live");
+  const [pluginView, setPluginView] = useState(false);
   const [selectedUavId, setSelectedUavId] = useState(null);
   const [drawerVisible, setDrawerVisible] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(
@@ -247,7 +249,7 @@ export default function App() {
     ? (live.status === "connected" ? connectionLabel : mission.connection === "reconnecting" ? "数据已过期 · 正在重连" : "HTTP 轮询 · 正在重连") : "本地演示 · 等待后端";
 
   return (
-    <main className={`app-layout mission-v2 ${mode === "replay" ? "replay-active" : ""} ${sidebarOpen ? "" : "sidebar-hidden"}`}>
+    <main className={`app-layout mission-v2 ${mode === "replay" ? "replay-active" : ""} ${sidebarOpen ? "" : "sidebar-hidden"} ${pluginView ? "plugin-view" : ""}`}>
       <header className="top-bar">
         <div className="product-mark" aria-label="多 UUV 协同任务控制台">
           <span className="mark-index">MC</span>
@@ -346,6 +348,9 @@ export default function App() {
           >
             <Focus size={17} />
           </button>
+          <button className={pluginView ? "icon-btn active" : "icon-btn"} onClick={() => setPluginView((value) => !value)} title="插件视图" aria-label="切换插件视图" aria-pressed={pluginView}>
+            <Workflow size={17} />
+          </button>
           <button className={sidebarOpen ? "icon-btn active" : "icon-btn"} onClick={() => setSidebarOpen((value) => !value)} title="任务工作区侧边栏" aria-label="切换任务工作区侧边栏" aria-pressed={sidebarOpen}>
             <PanelRight size={17} />
           </button>
@@ -380,6 +385,10 @@ export default function App() {
         }}
         selectedScenarioVesselId={selectedScenarioVesselId}
         onSelectScenarioVessel={setSelectedScenarioVesselId}
+      />
+      <PluginPanel
+        frame={displayFrame}
+        events={mode === "live" ? mission.state.events || liveEvents : replayEvents}
       />
       <RightSidebar
         mission={mission}

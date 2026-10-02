@@ -35,6 +35,8 @@ Request mode requires human approval for new plans. Assisted mode delegates rout
 
 Read `references/approval-policy.md` when explaining approvals or standing authorization, and `references/tool-contracts.md` when handling tool fields or failures. Use the actual restricted `read` tool; these references are not implicitly loaded. Tools calculate candidates; only `submit_mission_plan` can submit one for execution. No arbitrary file access or shell is available.
 
+Plugin tools (e.g. `skill_reflection__lookup`) are registered but inactive at session start to save tokens: call `load_plugin_tools` with an empty `tool_names` list to see what is available, then activate by name before first use.
+
 If a calculation times out, report it separately from infeasibility. Retry only with changed input or a reason. If approval is stale, observe again and generate a new candidate. A protection pause is explicit and only humans may resume the simulation. Model waits do not pause existing authorized control.
 
 ## Communication

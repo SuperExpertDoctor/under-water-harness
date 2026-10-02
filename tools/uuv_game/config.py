@@ -52,5 +52,7 @@ class Config:
 
     def public(self):
         runtime = algorithm_settings("runtime")
+        skills = algorithm_settings("skills")
         return {"simulation": asdict(self), "permissions": {"assisted_risk_limit": runtime["risk_approval_threshold"]},
-                "retention": {"events": runtime["max_events"], "frames_per_episode": runtime["frames_per_episode"], "episodes": runtime["max_episodes"]}}
+                "retention": {"events": runtime["max_events"], "frames_per_episode": runtime["frames_per_episode"], "episodes": runtime["max_episodes"]},
+                "skills": {"library_size": skills["library_size"], "window_s": skills["window_s"], "reward_window_s": skills["reward_window_s"]}}

@@ -263,15 +263,34 @@ export default function PluginPanel({ frame, events }) {
         <ul className="plugin-list">
           {defs.map((def) => {
             const enabled = def.enabled !== false && !uiDisabled(def);
-            const custom = !def.core;
+            const category = def.category || (def.core ? "core" : "custom");
             const node = graph.nodes[def.id];
             const tip = (def.guidelines || []).join("\n");
+            const categoryTip =
+              category === "core"
+                ? "基本功能插件：随系统运行，不可关闭"
+                : category === "extension"
+                  ? "扩展功能插件：可启停，不可删除"
+                  : "自定义插件：可启停，可删除";
             return (
               <li key={def.id} className={`plugin-card ${enabled ? "" : "off"}`} title={tip || undefined}>
                 <div className="plugin-card-top">
                   <span className="plugin-dot" style={{ background: def.color }} />
                   <strong>{def.name}</strong>
-                  {custom ? (
+                  <span className={`plugin-badge ${category}`} title={categoryTip}>
+                    {category === "core" ? "基本" : category === "extension" ? "扩展" : "自定义"}
+                  </span>
+                  {category === "core" ? (
+                    <button
+                      type="button"
+                      className="plugin-power locked"
+                      title="基本功能插件，不可关闭"
+                      aria-label={`${def.name} 不可关闭`}
+                      disabled
+                    >
+                      <Power size={13} />
+                    </button>
+                  ) : (
                     <button
                       type="button"
                       className={`plugin-power ${enabled ? "on" : ""}`}
@@ -281,18 +300,8 @@ export default function PluginPanel({ frame, events }) {
                     >
                       <Power size={13} />
                     </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="plugin-power locked"
-                      title="基础控制算法插件，不可关闭"
-                      aria-label={`${def.name} 不可关闭`}
-                      disabled
-                    >
-                      <Power size={13} />
-                    </button>
                   )}
-                  {custom && (
+                  {category === "custom" && (
                     <button type="button" className="plugin-remove" title="删除插件" aria-label={`删除 ${def.name}`} onClick={() => removePlugin(def.id)}>
                       <Trash2 size={13} />
                     </button>

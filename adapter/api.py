@@ -209,7 +209,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
             return copy.deepcopy(response)
 
     async def invoke(name, data, worker=False):
-        mode, fn = resolve_tool(name)
+        mode, fn = resolve_tool(name, runtime.plugin_states)
         if fn is None:
             raise MissionError("unknown_tool", 404)
         if mode == "calculate":
@@ -384,16 +384,54 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
             raise MissionError("unknown_operation", 404)
         return receipt(data, apply)
 
+    def _skill_impl():
+        """skill_reflection plugin's store face — None when the plugin is
+        absent or disabled (the whole skills surface then reports off)."""
+        if not runtime.plugin_enabled("skill-reflection"):
+            return None
+        try:
+            from uuv_game.plugins.skill_reflection.src import impl as skill_impl
+        except ImportError:
+            return None
+        return skill_impl
+
     @app.get("/api/skills")
     async def skills():
-        return {"skills": [{"id": SKILL_ID, "name": "Multi-UUV reconnaissance and tracking", "description": "Observation, planning, permission and execution workflow"}]}
+        impl = _skill_impl()
+        builtin = {"id": SKILL_ID, "slug": SKILL_ID, "title": "多UUV侦察跟踪任务流程",
+                   "name": "Multi-UUV reconnaissance and tracking", "category": "mission",
+                   "description": "Observation, planning, permission and execution workflow", "source": "mission"}
+        if impl is None:
+            return {"enabled": False, "skills": [builtin], "library_size": None, "categories": []}
+        lib = impl.library()
+        return {"enabled": True, "skills": [builtin, *lib["skills"]],
+                "library_size": lib["library_size"], "categories": lib["categories"]}
 
     @app.get("/api/skills/{skill_id}")
     async def skill(skill_id):
-        if skill_id != SKILL_ID:
+        if skill_id == SKILL_ID:
+            path = Path(__file__).resolve().parents[1] / "agent/skills" / SKILL_ID / "SKILL.md"
+            return {"id": skill_id, "slug": skill_id, "title": "多UUV侦察跟踪任务流程",
+                    "content": path.read_text() if path.exists() else "Mission workflow: observe, plan, evaluate, submit, verify."}
+        impl = _skill_impl()
+        if impl is None:
+            raise MissionError("skills_disabled", 409)
+        entry = impl.read_skill(skill_id)
+        if entry is None:
             raise MissionError("skill_not_found", 404)
-        path = Path(__file__).resolve().parents[1] / "agent/skills" / SKILL_ID / "SKILL.md"
-        return {"id": skill_id, "content": path.read_text() if path.exists() else "Mission workflow: observe, plan, evaluate, submit, verify."}
+        return {"id": entry["slug"], **entry}
+
+    @app.post("/api/skills/config")
+    async def skills_config(request: Request):
+        data = await payload(request, episode=False)
+        impl = _skill_impl()
+        if impl is None:
+            raise MissionError("skills_disabled", 409)
+        try:
+            size = int(data.get("library_size"))
+        except (TypeError, ValueError):
+            raise MissionError("invalid_library_size", 422)
+        return {"library_size": impl.set_library_size(size)}
 
     @app.post("/api/skills/{skill_id}/execute")
     async def execute_skill(skill_id, request: Request):
@@ -404,7 +442,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
 
     @app.get("/api/algorithm/status")
     async def algorithm_status():
-        return {"status": "ready", "algorithms": list(ALGORITHM_IDS.values()), "tools": tool_names()}
+        return {"status": "ready", "algorithms": list(ALGORITHM_IDS.values()), "tools": tool_names(runtime.plugin_states)}
 
     @app.get("/api/plugins")
     async def plugins():
@@ -700,7 +738,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
     @app.get("/internal/agent/tools")
     async def agent_tool_catalog(request: Request):
         _ = request
-        return tool_catalog()
+        return tool_catalog(runtime.plugin_states)
 
     @app.post("/internal/tools/{name}")
     async def tool(name, request: Request):

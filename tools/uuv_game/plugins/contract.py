@@ -33,6 +33,13 @@ Required ``PLUGIN`` keys:
     inputs    port cardinality: "none" | "one" | "many"
     outputs   port cardinality: "none" | "one" | "many"
     core      True for base control algorithms (never disableable)
+    category  plugin kind: "core" (basic functions — toggle greyed out, not
+              disableable, not removable), "extension" (feature extensions
+              like skill_reflection — toggleable but NOT removable), or
+              "custom" (default; toggleable and removable via the API).
+              Defaults to "core" when core=True else "custom". Plugins
+              installed through POST /api/plugins are always "custom" —
+              other categories ship in the repo only.
 
 Optional ``PLUGIN`` keys:
     snippet     one-line summary shown on the library card (falls back to

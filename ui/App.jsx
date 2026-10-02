@@ -6,6 +6,7 @@ import BottomDrawer from "./view/components/BottomDrawer";
 import CanvasMap from "./view/components/CanvasMap";
 import PlaybackBar from "./view/components/PlaybackBar";
 import PluginPanel from "./view/components/PluginPanel";
+import SkillsPanel from "./view/components/SkillsPanel";
 import RightSidebar from "./view/components/RightSidebar";
 import MissionControl from "./view/components/MissionControl";
 import useMissionControl from "./feed/hooks/useMissionControl";
@@ -389,6 +390,7 @@ export default function App() {
         frame={displayFrame}
         events={mode === "live" ? mission.state.events || liveEvents : replayEvents}
       />
+      <SkillsPanel />
       <RightSidebar
         mission={mission}
         frame={displayFrame}

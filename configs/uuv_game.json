@@ -310,6 +310,13 @@
     },
     "mission_planning": {
       "explicit_region_obstacle_margin_m": 80.0
+    },
+    "skills": {
+      "library_size": 10,
+      "window_s": 900.0,
+      "reward_window_s": 300.0,
+      "reflect_max_chars": 3500,
+      "refine_confidence_floor": 0.4
     }
   }
 }

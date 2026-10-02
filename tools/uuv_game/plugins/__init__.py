@@ -147,6 +147,8 @@ def install_plugin(source):
         raise ValueError(f"plugin id already registered: {pid}")
     if spec.get("core"):
         raise ValueError("custom plugins cannot claim core status")
+    if spec.get("category", "custom") != "custom":
+        raise ValueError("installed plugins are always category 'custom'")
     for key in ("inputs", "outputs"):
         if spec[key] not in _PORT_KINDS:
             raise ValueError(f"PLUGIN {key} must be one of {sorted(_PORT_KINDS)}")
@@ -187,14 +189,18 @@ def _validate_tools(tools, plugin_id):
                 + "; ".join(issues))
 
 
-def plugin_tool_specs():
-    """Merged TOOLS declared by every registered plugin.
+def plugin_tool_specs(enabled=None):
+    """Merged TOOLS declared by every registered (and enabled) plugin.
 
     Read live from the module objects so install/uninstall/reload reflect
     immediately; agent_tools merges this into its catalog and dispatch.
+    ``enabled`` maps plugin id -> bool (runtime.plugin_states); plugins
+    disabled there contribute no tools at all.
     """
     specs = {}
     for module in _MODULES.values():
+        if enabled is not None and not enabled.get(module.PLUGIN["id"], True):
+            continue
         tools = getattr(module, "TOOLS", None)
         if isinstance(tools, dict):
             specs.update(tools)
@@ -208,6 +214,8 @@ def uninstall_plugin(plugin_id):
         return False
     if module.PLUGIN.get("core"):
         raise ValueError("core plugins cannot be removed")
+    if module.PLUGIN.get("category") == "extension":
+        raise ValueError("extension plugins can be disabled but not removed")
     name = module.__name__.rsplit(".", 1)[-1]
     path = _PACKAGE_DIR / f"{name}.py"
     if path.exists():
@@ -225,7 +233,9 @@ def stage_impl(slot):
 
 def catalog(enabled=None):
     states = enabled or {}
-    return {"plugins": [{**spec, "enabled": states.get(spec["id"], True)}
+    return {"plugins": [{**spec,
+                         "category": spec.get("category") or ("core" if spec.get("core") else "custom"),
+                         "enabled": states.get(spec["id"], True)}
                         for spec in PLUGIN_SPECS],
             "edges": PLUGIN_EDGES}
 

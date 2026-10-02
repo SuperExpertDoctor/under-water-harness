@@ -28,6 +28,9 @@ export const skillApi = {
       options,
     );
   },
+  setConfig(payload = {}, options) {
+    return httpApi.post("/api/skills/config", payload, options);
+  },
 };
 
 export default skillApi;

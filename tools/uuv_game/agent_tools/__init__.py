@@ -33,52 +33,58 @@ def _load():
 _load()
 
 
-def _plugin_specs():
+def _plugin_specs(enabled=None):
     from ..plugins import plugin_tool_specs  # late import: plugins -> agent_tools is one-way
-    return plugin_tool_specs()
+    return plugin_tool_specs(enabled)
 
 
-def spec(name):
+def spec(name, enabled=None):
     """Spec dict for a tool name, builtin or plugin-declared (or None)."""
     module = _MODULES.get(name)
     if module is not None:
         return module.TOOL
-    return _plugin_specs().get(name)
+    return _plugin_specs(enabled).get(name)
 
 
-def names():
-    return sorted(set(_MODULES) | set(_plugin_specs()))
+def names(enabled=None):
+    return sorted(set(_MODULES) | set(_plugin_specs(enabled)))
 
 
 def is_builtin(name):
     return name in _MODULES
 
 
-def resolve(name):
+def resolve(name, enabled=None):
     """(mode, execute) for a tool name; (None, None) when unknown.
 
     mode is "calculate" (run off the lock in a worker thread) or "lock"
     (run under runtime.lock). Plugin-declared tools always run "lock".
+    ``enabled`` (plugin id -> bool) keeps disabled plugins' tools
+    unresolvable as well as unlisted.
     """
     module = _MODULES.get(name)
     if module is not None:
         return (module.TOOL.get("mode", "lock"),
                 accounting_wrapper(module.execute, module.TOOL.get("calls_model", False)))
-    entry = _plugin_specs().get(name)
+    entry = _plugin_specs(enabled).get(name)
     if entry is not None:
         return ("lock", accounting_wrapper(
             entry["execute"], entry.get("calls_model", False)))
     return None, None
 
 
-def catalog():
-    """JSON-serializable tool descriptors for the agent-side adapter."""
+def catalog(enabled=None):
+    """JSON-serializable tool descriptors for the agent-side adapter.
+
+    ``enabled`` (plugin id -> bool) drops disabled plugins' tools.
+    """
+    plugin_names = set(_plugin_specs(enabled))
     tools = []
-    for name in names():
-        entry = {key: value for key, value in spec(name).items()
+    for name in names(enabled):
+        entry = {key: value for key, value in spec(name, enabled).items()
                  if key not in ("mode", "execute")}
         entry.setdefault("name", name)
-        entry.setdefault("plugin", name in _plugin_specs())
+        entry.setdefault("plugin", name in plugin_names)
         entry.setdefault("execution_mode", "parallel")
         entry.setdefault("constrained_sampling",
                          {"type": "json_schema", "strict": "prefer"})

@@ -78,6 +78,7 @@ def catalog():
         entry = {key: value for key, value in spec(name).items()
                  if key not in ("mode", "execute")}
         entry.setdefault("name", name)
+        entry.setdefault("plugin", name in _plugin_specs())
         entry.setdefault("execution_mode", "parallel")
         entry.setdefault("constrained_sampling",
                          {"type": "json_schema", "strict": "prefer"})

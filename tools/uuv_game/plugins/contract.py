@@ -105,6 +105,12 @@ Optional module hooks:
         Tool names MUST start with "<plugin_id>__" (plugin id with '-'
         replaced by '_') so a plugin can never shadow a builtin tool.
 
+        Plugin tools are lazily activated on the agent side: the worker
+        registers them but starts them inactive (catalog flags them
+        "plugin": true), so their snippet/guidelines stay out of the
+        system prompt until the model calls the agent-side
+        load_plugin_tools loader to activate them by name.
+
         Install-time review (agent_tools/review.py) gates registration —
         the spec only reaches the catalog when it passes the production
         bar: raising on invalid input (with required params, execute({})

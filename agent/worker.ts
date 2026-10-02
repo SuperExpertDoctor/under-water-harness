@@ -52,10 +52,15 @@ async function getJson(path: string): Promise<Record<string, unknown>> {
 
 async function makeSession(episode: string): Promise<AgentSession> {
   // Tool catalog is backend-sourced: ten builtins + every plugin-declared
-  // TOOLS entry currently registered. The adapter turns each spec into a
-  // full ToolDefinition, so a plugin drop-in alone can extend the agent.
+  // TOOLS entry currently registered (flagged spec.plugin). The adapter
+  // turns each spec into a full ToolDefinition, so a plugin drop-in alone
+  // can extend the agent.
   const toolSpecs = ((await getJson("/internal/agent/tools")).tools ?? []) as BackendToolSpec[];
   const toolNames = toolSpecs.map((entry) => entry.name);
+  const pluginToolNames = new Set(toolSpecs.filter((entry) => entry.plugin).map((entry) => entry.name));
+  // Lazy tool loadout: builtins + the loader stay active; plugin tools
+  // register but wait for load_plugin_tools to activate them on demand.
+  const activeTools = [...toolNames.filter((name) => !pluginToolNames.has(name)), "read", "load_plugin_tools"];
   const settings = SettingsManager.inMemory({ compaction: { enabled: true }, retry: { enabled: true, maxRetries: 1, baseDelayMs: 2000 } });
   const loader = createMissionResources(runtimeDir, resolve(import.meta.dirname, "skills/multi-uuv-recon-tracking"), settings, async (name, params, signal) => {
       if (!activeJob || ++calls > 24) throw new Error("turn_tool_budget_exceeded");
@@ -81,9 +86,10 @@ async function makeSession(episode: string): Promise<AgentSession> {
   }, toolSpecs);
   await loader.reload();
   const { session: created } = await createAgentSession({ cwd: runtimeDir, agentDir: runtimeDir, modelRuntime, model,
-    thinkingLevel: "off", tools: [...toolNames, "read"], resourceLoader: loader, settingsManager: settings,
+    thinkingLevel: "off", tools: [...toolNames, "read", "load_plugin_tools"], resourceLoader: loader, settingsManager: settings,
     sessionManager: SessionManager.continueRecent(runtimeDir, resolve(runtimeDir, episode)) });
-  if (created.getActiveToolNames().sort().join(",") !== [...toolNames, "read"].sort().join(",")) throw new Error("Mission tool registration incomplete");
+  created.setActiveToolsByName(activeTools);
+  if (created.getActiveToolNames().sort().join(",") !== activeTools.slice().sort().join(",")) throw new Error("Mission tool registration incomplete");
   return created;
 }
 
@@ -101,7 +107,7 @@ function heartbeatRun(job: Job, signal?: AbortSignal): Promise<void> {
 
 process.on("SIGTERM", () => { running = false; void session?.abort(); });
 process.on("SIGINT", () => { running = false; void session?.abort(); });
-console.log("PI worker ready: LongCat, ten mission tools and trusted skill read");
+console.log("PI worker ready: LongCat, mission tools active, plugin tools lazy");
 while (running) {
   try {
     const next = await request("/internal/agent/next", schedule.nextRequest(performance.now()));

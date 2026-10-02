@@ -17,6 +17,9 @@ export interface BackendToolSpec {
   parameters: Record<string, unknown>;
   constrained_sampling?: false | ConstrainedSamplingConfig;
   execution_mode?: "sequential" | "parallel";
+  /** Backend-set marker: the tool came from a plugin's TOOLS map, so it
+   *  registers lazily (inactive until load_plugin_tools activates it). */
+  plugin?: boolean;
 }
 
 /**

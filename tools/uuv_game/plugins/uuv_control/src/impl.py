@@ -1,32 +1,21 @@
-"""Builtin plugin: UUV platform control (heading/speed/sensor telemetry).
-
-Owns the motion pipeline stage: per-UUV preferred controls, joint Dubins
-validation, adversary stepping, pose integration, boundary turnover.
+"""Implementation of the uuv-control plugin — internal; the
+public interface is re-exported by the package __init__.
 """
 
 import math
 
-from ..algorithms.tracking import acquisition_control, tracking_control, follow_path
-from ..algorithms.control import choose_controls
-from ..algorithms.motion import integrate
-from ..capabilities.lifecycle import replacement_pose, apply_replacements
-from ..capabilities import adversary as enemy
-from ..config import algorithm_settings
+from ....algorithms.tracking import acquisition_control, tracking_control, follow_path
+from ....algorithms.control import choose_controls
+from ....algorithms.motion import integrate
+from ....capabilities.lifecycle import replacement_pose, apply_replacements
+from ....capabilities import adversary as enemy
+from ....config import algorithm_settings
 
 _RUNTIME = algorithm_settings("runtime")
 _CONTROL = algorithm_settings("control")
 _LIFECYCLE = algorithm_settings("lifecycle")
 _OBS = algorithm_settings("observations")
 
-PLUGIN = {
-    "id": "uuv-control", "name": "UUV 平台控制", "layer": 4, "color": "#475569",
-    "desc": "航向 / 速度 / 传感器模式执行与平台遥测",
-    "snippet": "执行航向、速度与传感器模式的平台指令",
-    "guidelines": ["所有插件的运动意图最终经此输出到平台", "核心算法插件，不可关闭"],
-    "inputs": "many", "outputs": "one", "core": True,
-    "edges": [],
-    "owns_stages": ["motion"],
-}
 
 
 def activity(runtime, ctx):

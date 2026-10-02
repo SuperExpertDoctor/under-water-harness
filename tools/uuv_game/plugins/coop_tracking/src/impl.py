@@ -1,26 +1,12 @@
-"""Builtin plugin: cooperative target tracking (passive-forward sonar team).
-
-Owns the provisional-lease and handover-preparation pipeline stages; the
-stage functions run inside the runtime's tick under its synchronization.
+"""Implementation of the coop-tracking plugin — internal; the
+public interface is re-exported by the package __init__.
 """
 
-from ..capabilities.handover import prepare_handover
-from ..config import algorithm_settings
+from ....capabilities.handover import prepare_handover
+from ....config import algorithm_settings
 
 _RUNTIME = algorithm_settings("runtime")
 
-PLUGIN = {
-    "id": "coop-tracking", "name": "协同目标跟踪", "layer": 3, "color": "#be123c",
-    "desc": "多艇前视被动声纳在协同区内编队稳定跟踪",
-    "snippet": "多艇在协同区内按被动方位编队稳定跟踪",
-    "guidelines": ["成员到位且几何达标后整队切换被动模式", "核心算法插件，不可关闭"],
-    "inputs": "many", "outputs": "many", "core": True,
-    "edges": [
-        ("coop-tracking", "reacquire"),
-        ("coop-tracking", "uuv-control"),
-    ],
-    "owns_stages": ["track_leases", "handover_prep", "motion", "observations"],
-}
 
 
 def activity(runtime, ctx):

@@ -1,9 +1,19 @@
 """Plugin contract for the UUV control stack.
 
-A plugin is a single ``*.py`` file dropped into ``tools/uuv_game/plugins/``.
-The loader imports every module whose name does not start with ``_`` and
-registers it when the module defines a ``PLUGIN`` dict. Copy
-``plugins/_template.py`` as a starting point.
+A plugin is a folder package under ``tools/uuv_game/plugins/`` (a single
+``*.py`` file is also accepted). The loader imports every module whose
+name does not start with ``_`` and registers it when the module defines
+a ``PLUGIN`` dict. Copy ``plugins/_template/`` as a starting point — it
+shows the canonical layout:
+
+    plugins/<plugin-id>/
+        __init__.py   public interface: PLUGIN + re-exported hooks
+        src/          internal implementation (split freely)
+        SKILL.md      usage doc
+
+Only ``__init__.py`` is the interface; export ``activity``,
+``EDGE_SUBJECTS``, ``STAGES``, ``tick_stages`` and ``TOOLS`` there
+(typically ``from .src import impl`` + assignment).
 
 The contract mirrors the pi tool definition (prompt contribution + parameter
 contract + sampling/validation constraint + execute body), split the same way:

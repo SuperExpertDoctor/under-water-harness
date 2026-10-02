@@ -1,8 +1,12 @@
 """Plugin registry and drop-in loader for the UUV control stack.
 
-Every ``*.py`` file in this directory whose name does not start with ``_``
-is imported once; modules that define a ``PLUGIN`` dict are registered.
-The contract is documented in ``contract.py`` and ``_template.py``.
+A plugin is either a folder package or a single ``*.py`` file — both
+must not start with ``_`` and are imported once; modules defining a
+``PLUGIN`` dict are registered. The folder form is the canonical one
+(see ``_template/``): ``__init__.py`` exposes the interface (PLUGIN +
+activity/EDGE_SUBJECTS/STAGES/tick_stages/TOOLS), implementations live
+under ``src/``, and ``SKILL.md`` is the usage doc. The contract is
+documented in ``contract.py``.
 
 Public surface (kept import-compatible with the old plugins.py module):
     PLUGIN_SPECS        discovered spec dicts, sorted by (layer, id)

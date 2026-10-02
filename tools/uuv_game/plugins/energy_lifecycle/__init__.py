@@ -3,7 +3,7 @@
 Owns the exit-preparation pipeline stage.
 """
 
-from ..capabilities.lifecycle import prepare_exits
+from .src import impl
 
 PLUGIN = {
     "id": "energy-lifecycle", "name": "能源轮换", "layer": 0, "color": "#0f766e",
@@ -19,22 +19,6 @@ PLUGIN = {
     "owns_stages": ["exit_prep", "motion"],
 }
 
-
-def activity(runtime, ctx):
-    for uid in ctx.L["exiting"] + ctx.L["relief"] + ctx.L["low_fuel"]:
-        ctx.hit(uid)
-    count = len(set(ctx.L["exiting"] + ctx.L["relief"] + ctx.L["low_fuel"]))
-    ctx.meta(f"{count} 艇轮换中" if count else None)
-
-
-EDGE_SUBJECTS = {
-    "energy-lifecycle>path-planning": lambda L: L["exiting"],
-    "energy-lifecycle>task-allocation": lambda L: L["relief"] + L["low_fuel"],
-}
-
-
-def stage_exit_prep(rt):
-    return prepare_exits(rt)
-
-
-STAGES = {"exit_prep": stage_exit_prep}
+activity = impl.activity
+EDGE_SUBJECTS = impl.EDGE_SUBJECTS
+STAGES = impl.STAGES

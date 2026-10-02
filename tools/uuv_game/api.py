@@ -426,7 +426,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
 
     @app.get("/api/plugins")
     async def plugins():
-        return plugin_catalog()
+        return plugin_catalog(runtime.plugin_states)
 
     @app.post("/api/algorithm/task-plan")
     @app.post("/api/algorithm/decision")

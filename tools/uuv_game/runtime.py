@@ -23,7 +23,7 @@ from .lifecycle import prepare_exits, replacement_pose, apply_replacements, repa
 from .handover import prepare_handover, finish_handover
 from .sensing import observe, sensor_mode, sensor_roles
 from .information import information_fields, target_evidence_field
-from .plugins import frame_activity as plugin_frame_activity
+from .plugins import PLUGIN_SPECS, frame_activity as plugin_frame_activity
 from . import adversary as enemy
 
 
@@ -69,6 +69,23 @@ class MissionRuntime:
         self.rng = random.Random(self.config.seed)
         self.last_heartbeat = 0.0
         self._initial()
+        # Tick stages run through the plugin registry: each stage belongs to
+        # the control plugins that own it, and the loop skips a stage only
+        # when every owning plugin is disabled (core plugins cannot be
+        # disabled, so today every stage always runs).
+        self.plugin_states = {spec["id"]: True for spec in PLUGIN_SPECS}
+        self._tick_stages = (
+            (("coop-tracking",), self._stage_provisional_leases),
+            (("reacquire", "region-partition"), self._stage_contact_repairs),
+            (("coop-tracking",), self._stage_handover_prepare),
+            (("energy-lifecycle",), self._stage_exit_prepare),
+            (("coop-tracking", "path-planning", "coverage-search", "reacquire",
+              "energy-lifecycle", "uuv-control"), self._stage_motion),
+            (("sensor-fusion", "coop-tracking"), self._stage_observations),
+            (None, self._stage_scene),
+            (("task-allocation",), self._stage_plan_lifecycle),
+            (("region-partition", "coverage-search"), self._stage_coverage_review),
+        )
         saved = self.store.load()
         if saved:
             for key, value in saved.items():
@@ -864,6 +881,16 @@ class MissionRuntime:
             "duration_s": None, "expires_at_s": None, "source": "system"})
         self.adversary["maneuver_history"] = history[-200:]
 
+    def plugin_enabled(self, plugin_id):
+        return self.plugin_states.get(plugin_id, True)
+
+    def set_plugin_enabled(self, plugin_id, enabled=True):
+        spec = next((spec for spec in PLUGIN_SPECS if spec["id"] == plugin_id), None)
+        if spec is None or (spec.get("core") and not enabled):
+            return False
+        self.plugin_states[plugin_id] = bool(enabled)
+        return True
+
     @synchronized
     def tick(self):
         if self.status != "running":
@@ -875,10 +902,22 @@ class MissionRuntime:
             self.adversary["status"] = "degraded"
         if self.adversary.get("parameters") and self.adversary["parameters"]["expires_at_s"] <= self.sim_time:
             self.clear_target_maneuver("机动参数到期，恢复默认控制")
+        # Registry-driven pipeline: a stage is skipped only when every owning
+        # plugin is disabled; a stage returning False aborts the tick (pause).
+        for plugins, stage in self._tick_stages:
+            if plugins and not all(self.plugin_enabled(pid) for pid in plugins):
+                continue
+            if stage() is False:
+                return
+
+    def _stage_provisional_leases(self):
         for member, action in list(self.active.items()):
             if action.get("provisional") and self.sim_time >= action["expires_at_s"]:
                 if not self._end_provisional_contact(member, "lease_expired"):
-                    return
+                    return False
+        return True
+
+    def _stage_contact_repairs(self):
         stale_contacts = {action["contact_id"] for action in self.active.values()
             if action.get("kind") == "track" and not action.get("provisional") and action.get("contact_id") in self.contacts
             and self.contacts[action["contact_id"]]["state"] == "lost"
@@ -893,7 +932,7 @@ class MissionRuntime:
                 if action.get("kind") == "track" and action.get("contact_id") == contact_id]
             if not self.standing_policy.get("local_repair"):
                 self.pause("safety_stale_contact_repair_authorization_required")
-                return
+                return False
             for member in members:
                 self.active.pop(member)
             if repair_search(self, add=members, required=False):
@@ -906,10 +945,17 @@ class MissionRuntime:
         if pending and self.standing_policy["local_repair"]:
             repair_search(self, add=pending, required=False)
         self.repair_pending.difference_update(self.active)
+        return True
+
+    def _stage_handover_prepare(self):
         if self.frame_id % _RUNTIME["safety_review_frames"] == 0:
             prepare_handover(self)
-        if not prepare_exits(self):
-            return
+        return True
+
+    def _stage_exit_prepare(self):
+        return prepare_exits(self)
+
+    def _stage_motion(self):
         next_poses = {}
         controls = {}
         for u in self.uuvs:
@@ -919,13 +965,13 @@ class MissionRuntime:
                 continue
             if action.get("generation", u["generation"]) != u["generation"]:
                 self.pause("safety_stale_generation")
-                return
+                return False
             pose = u["pose"]
             if action["kind"] == "track":
                 estimate = self.contacts.get(action.get("contact_id"))
                 if not estimate or (estimate["state"] == "lost" and not self.standing_policy["lost_reacquire"]):
                     self.pause("safety_tracking_contact_lost")
-                    return
+                    return False
                 if estimate["state"] == "lost":
                     if action.get("phase") != "transit":
                         action["phase"] = "reacquiring"
@@ -963,7 +1009,7 @@ class MissionRuntime:
                         preferred = 0
                     elif math.dist(points[action.get("cycle_start_index", 0)][:2], points[-1][:2]) > _RUNTIME["closed_route_tolerance_m"]:
                         self.pause("safety_no_authorized_continuation")
-                        return
+                        return False
                     else:
                         action["index"] = action.get("cycle_start_index", 0)
                         preferred = follow_path(pose, points[action["index"]:action["index"]+_RUNTIME["lookahead_points"]])
@@ -975,7 +1021,7 @@ class MissionRuntime:
                     preferred = follow_path(pose, points[nearest:nearest+_RUNTIME["lookahead_points"]])
             else:
                 self.pause("safety_no_authorized_continuation")
-                return
+                return False
             domain = action.get("execution_domain", [0, 0, self.config.width, self.config.height])
             if action["kind"] != "exit" and min(pose[0], pose[1], self.config.width-pose[0], self.config.height-pose[1]) < _CONTROL["obstacle_margin_m"]:
                 pad = _CONTROL["obstacle_margin_m"]
@@ -989,9 +1035,10 @@ class MissionRuntime:
                 "boats": [{"id": u["id"], "pose": u["pose"], "curvature": u["curvature"]} for u in self.uuvs]})
             provisional = next((member for member, action in self.active.items() if action.get("provisional")), None)
             if provisional and self._end_provisional_contact(provisional, "unsafe_joint_control"):
-                return self.tick()
+                self.tick()
+                return False
             self.pause("safety_infeasible")
-            return
+            return False
         if control_diagnostics.get("held_boats"):
             self.event("boats_held", {"uuv_ids": control_diagnostics["held_boats"]})
         for u in self.uuvs:
@@ -1008,7 +1055,7 @@ class MissionRuntime:
                 next_dist = math.dist(next_poses[first["id"]][:2], next_poses[second["id"]][:2])
                 if next_dist < self.config.separation and next_dist < math.dist(first["pose"][:2], second["pose"][:2]):
                     self.pause("safety_infeasible")
-                    return
+                    return False
         target_poses = {}
         for target in self.targets:
             enemy.sample(self.adversary, target["pose"], self.uuvs, self.obstacles,
@@ -1055,7 +1102,7 @@ class MissionRuntime:
             if not 0 <= x <= self.config.width or not 0 <= y <= self.config.height:
                 if self.active.get(u["id"], {}).get("kind") != "exit":
                     self.pause("safety_boundary_violation")
-                    return
+                    return False
                 exiting = {key for key, action in self.active.items()
                     if action.get("kind") == "exit" and key not in replacements}
                 replacement = replacement_pose(self, u, {**next_poses, **replacements}, ignore=exiting)
@@ -1075,6 +1122,9 @@ class MissionRuntime:
             target["pose"] = target_poses[target["id"]]
         self.sim_time = round(self.sim_time+self.config.dt, 6)
         self.frame_id += 1
+        return True
+
+    def _stage_observations(self):
         if self.frame_id % _RUNTIME["observation_frames"] == 0:
             self._observe()
             finish_handover(self)
@@ -1083,12 +1133,18 @@ class MissionRuntime:
                     self._auto_track(key)
             for u in self.uuvs:
                 u["trail"] = (u["trail"]+[u["pose"][:2]])[-_RUNTIME["max_trail_points"]:]
+        return True
+
+    def _stage_scene(self):
         for vessel in self.vessels:
             target = next((target for target in self.targets if target["id"] == vessel["scenario_entity_id"]), None)
             if target:
                 contact = self.contacts.get(self.contact_mapping.get(target["id"]), {})
                 vessel.update(position=self.cells(target["pose"]), heading_deg=-math.degrees(target["pose"][2]),
                     surveillance_stage={"tentative": "detected", "confirmed": "probing", "tracking": "tracking"}.get(contact.get("state"), "undetected"))
+        return True
+
+    def _stage_plan_lifecycle(self):
         for plan in self.plans.values():
             if plan["status"] == "pending_approval" and self.sim_time > plan["expires_at_s"]:
                 plan["status"] = "expired"
@@ -1097,6 +1153,9 @@ class MissionRuntime:
         for intent in self.intents:
             if intent["lifecycle"] == "active" and self.sim_time/60 >= intent["expires_at_min"]:
                 intent["lifecycle"] = "expired"
+        return True
+
+    def _stage_coverage_review(self):
         if self.sim_time-self.last_periodic >= _RUNTIME["periodic_review_s"]:
             self.last_periodic = self.sim_time
             if self._search_gap():
@@ -1115,6 +1174,7 @@ class MissionRuntime:
                       for region in self.regions for cell in region["cells"])
             if due:
                 repair_search(self, required=False)
+        return True
 
     def _requeue_auto_track(self, plan):
         if plan.get("kind") != "track":

@@ -60,8 +60,10 @@ PLUGIN_EDGES = [
 ]
 
 
-def catalog():
-    return {"plugins": PLUGIN_SPECS, "edges": PLUGIN_EDGES}
+def catalog(enabled=None):
+    states = enabled or {}
+    return {"plugins": [{**spec, "enabled": states.get(spec["id"], True)} for spec in PLUGIN_SPECS],
+            "edges": PLUGIN_EDGES}
 
 
 def frame_activity(runtime):
@@ -72,7 +74,10 @@ def frame_activity(runtime):
     energy lifecycle), and phase says where inside that plugin it is
     (transit -> cooperative path planning toward a slot or region).
     """
-    nodes = {spec["id"]: {"active": False, "subjects": [], "meta": None} for spec in PLUGIN_SPECS}
+    states = runtime.plugin_states
+    nodes = {spec["id"]: {"active": False, "subjects": [], "meta": None,
+                          "enabled": states.get(spec["id"], True)}
+             for spec in PLUGIN_SPECS}
 
     def hit(pid, subject=None):
         node = nodes[pid]

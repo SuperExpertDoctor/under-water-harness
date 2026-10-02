@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { RadioTower, Radar, Crosshair, Route, LogOut, Maximize2, Minimize2 } from "lucide-react";
+import { RadioTower, Radar, Crosshair, Route, LogOut, Maximize2, Minimize2, RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
 
 import { computeLayout, dragToBBox, pixelToCoord, zoomedLayout, zoomViewAt } from "../renderer/geometry";
 import { renderFrame } from "../renderer/layers";
@@ -132,6 +132,22 @@ const CanvasMap = forwardRef(function CanvasMap({
   }, []);
 
   const viewLayout = () => zoomedLayout(layoutRef.current, viewRef.current);
+
+  const applyZoom = useCallback((deltaY) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const next = zoomViewAt(viewRef.current, rect.width / 2, rect.height / 2, deltaY);
+    if (next === viewRef.current) return;
+    viewRef.current = next;
+    setViewVersion((version) => version + 1);
+  }, []);
+
+  const resetZoom = useCallback(() => {
+    if (viewRef.current.a === 1) return;
+    viewRef.current = { a: 1, bx: 0, by: 0 };
+    setViewVersion((version) => version + 1);
+  }, []);
 
   useEffect(() => {
     let disposed = false;
@@ -582,6 +598,11 @@ const CanvasMap = forwardRef(function CanvasMap({
       >
         {fullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
       </button>
+      <div className="map-zoom zoom-controls" role="group" aria-label="地图缩放">
+        <button type="button" onClick={() => applyZoom(-250)} aria-label="放大" title="放大"><ZoomIn size={15} /></button>
+        <button type="button" onClick={() => applyZoom(250)} aria-label="缩小" title="缩小"><ZoomOut size={15} /></button>
+        <button type="button" onClick={resetZoom} aria-label="重置缩放" title="重置缩放"><RotateCcw size={15} /></button>
+      </div>
       </div>
       <div className="map-information-bar">
         {mapMode === "situation" ? <InformationLegend /> : <span className="planning-legend">实线：执行航线 · 虚线：候选航线 · 标记：艇及接触</span>}

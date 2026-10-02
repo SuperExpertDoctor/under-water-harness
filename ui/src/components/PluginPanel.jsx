@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Plus, Power, Trash2, X } from "lucide-react";
+import { Plus, Power, RotateCcw, Trash2, X, ZoomIn, ZoomOut } from "lucide-react";
 
 import { PLUGIN_DEFS, PLUGIN_EDGES, derivePluginGraph, portText } from "../state/pluginGraph";
 
@@ -30,6 +30,7 @@ export default function PluginPanel({ frame, events }) {
   const [catalog, setCatalog] = useState(null);
   const [drags, setDrags] = useState({});
   const [dragging, setDragging] = useState(null);
+  const [zoom, setZoom] = useState(1);
   const dragRef = useRef(null);
   const areaRef = useRef(null);
   const innerRef = useRef(null);
@@ -67,9 +68,9 @@ export default function PluginPanel({ frame, events }) {
     return () => observer.disconnect();
   }, []);
 
-  // Layout: plugins sit in fixed columns by layer, evenly spaced rows. The
-  // graph keeps a minimum canvas width so columns never clip; the pane scrolls
-  // horizontally when the container is narrower.
+  // Layout: a rightward-growing tree. Each topology layer is a column at
+  // fixed spacing; children cluster near their parents instead of spreading
+  // evenly, and the canvas extends (and scrolls) as the tree fans out.
   const layout = useMemo(() => {
     const byLayer = new Map();
     for (const def of visibleDefs) {
@@ -78,27 +79,37 @@ export default function PluginPanel({ frame, events }) {
       byLayer.set(def.layer, list);
     }
     const layers = [...byLayer.keys()].sort((a, b) => a - b);
-    const gap = 72;
-    const canvasW = Math.max(size.w, NODE_W / 2 + 56 + layers.length * (NODE_W + gap));
-    const canvasH = Math.max(size.h - 34, 240);
+    const xGap = NODE_W + 84;
+    const rowGap = NODE_H + 22;
+    const padX = NODE_W / 2 + 24;
+    const padY = NODE_H / 2 + 16;
     const map = new Map();
-    const minLayer = layers[0] ?? 0;
-    const maxLayer = layers[layers.length - 1] ?? 0;
-    for (const layer of layers) {
-      const list = byLayer.get(layer);
-      const x = maxLayer === minLayer
-        ? canvasW / 2
-        : NODE_W / 2 + 48 + (layer - minLayer) * ((canvasW - NODE_W - 96) / (maxLayer - minLayer));
-      list.forEach((def, index) => {
-        const y = canvasH * ((index + 1) / (list.length + 1));
-        map.set(def.id, { x, y });
-      });
-    }
+    let maxRows = 1;
+    layers.forEach((layer, layerIndex) => {
+      const hints = byLayer.get(layer).map((def) => {
+        const parents = edgeDefs
+          .filter((edge) => edge.to === def.id && map.has(edge.from))
+          .map((edge) => map.get(edge.from).y);
+        return { def, hint: parents.length ? parents.reduce((s, y) => s + y, 0) / parents.length : null };
+      }).sort((a, b) => (a.hint ?? Infinity) - (b.hint ?? Infinity));
+      const used = new Set();
+      let freeRow = 0;
+      for (const item of hints) {
+        let row = item.hint == null ? freeRow : Math.max(0, Math.round((item.hint - padY) / rowGap));
+        while (used.has(row)) row += 1;
+        used.add(row);
+        freeRow = Math.max(freeRow, row + 1);
+        map.set(item.def.id, { x: padX + layerIndex * xGap, y: padY + row * rowGap });
+      }
+      if (used.size) maxRows = Math.max(maxRows, Math.max(...used) + 1);
+    });
     for (const [id, pos] of Object.entries(drags)) {
       if (map.has(id)) map.set(id, pos);
     }
+    const canvasW = Math.max(padX * 2 + Math.max(0, layers.length - 1) * xGap + NODE_W, size.w);
+    const canvasH = Math.max(padY * 2 + maxRows * rowGap, size.h - 34);
     return { positions: map, canvasW, canvasH };
-  }, [visibleDefs, size, drags]);
+  }, [visibleDefs, edgeDefs, size, drags]);
   const positions = layout.positions;
 
   const edgeGeometry = (edge) => {
@@ -125,15 +136,15 @@ export default function PluginPanel({ frame, events }) {
     const pos = positions.get(def.id);
     if (!pos) return;
     const rect = innerRef.current.getBoundingClientRect();
-    dragRef.current = { id: def.id, ox: event.clientX - rect.left - pos.x, oy: event.clientY - rect.top - pos.y, moved: false };
+    dragRef.current = { id: def.id, ox: (event.clientX - rect.left) / zoom - pos.x, oy: (event.clientY - rect.top) / zoom - pos.y, moved: false };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
   const onNodePointerMove = (event, def) => {
     const drag = dragRef.current;
     if (!drag || drag.id !== def.id) return;
     const rect = innerRef.current.getBoundingClientRect();
-    const nx = Math.min(Math.max(event.clientX - rect.left - drag.ox, NODE_W / 2), layout.canvasW - NODE_W / 2);
-    const ny = Math.min(Math.max(event.clientY - rect.top - drag.oy, NODE_H / 2), layout.canvasH - NODE_H / 2);
+    const nx = Math.min(Math.max((event.clientX - rect.left) / zoom - drag.ox, NODE_W / 2), layout.canvasW - NODE_W / 2);
+    const ny = Math.min(Math.max((event.clientY - rect.top) / zoom - drag.oy, NODE_H / 2), layout.canvasH - NODE_H / 2);
     if (!drag.moved && Math.hypot(nx - positions.get(def.id).x, ny - positions.get(def.id).y) < 3) return;
     drag.moved = true;
     setDragging(def.id);
@@ -256,7 +267,8 @@ export default function PluginPanel({ frame, events }) {
 
       <section className="plugin-graph" ref={areaRef} aria-label="插件连接关系">
         <div className="plugin-graph-scroll">
-        <div className="plugin-graph-inner" ref={innerRef} style={{ width: layout.canvasW, height: layout.canvasH }}>
+        <div style={{ width: layout.canvasW * zoom, height: layout.canvasH * zoom }}>
+        <div className="plugin-graph-inner" ref={innerRef} style={{ width: layout.canvasW, height: layout.canvasH, transform: `scale(${zoom})`, transformOrigin: "0 0" }}>
         <svg className="plugin-edges" width={layout.canvasW} height={layout.canvasH} aria-hidden="true">
           <defs>
             <marker id="plugin-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -324,6 +336,12 @@ export default function PluginPanel({ frame, events }) {
           );
         })}
         </div>
+        </div>
+        </div>
+        <div className="graph-zoom zoom-controls" role="group" aria-label="插件图缩放">
+          <button type="button" onClick={() => setZoom((z) => Math.min(2.5, z * 1.25))} aria-label="放大" title="放大"><ZoomIn size={15} /></button>
+          <button type="button" onClick={() => setZoom((z) => Math.max(0.4, z / 1.25))} aria-label="缩小" title="缩小"><ZoomOut size={15} /></button>
+          <button type="button" onClick={() => setZoom(1)} aria-label="重置缩放" title="重置缩放"><RotateCcw size={15} /></button>
         </div>
 
         <footer className="plugin-sim">

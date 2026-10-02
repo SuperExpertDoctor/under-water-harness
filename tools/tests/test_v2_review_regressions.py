@@ -7,7 +7,7 @@ import zlib
 
 import pytest
 
-from uuv_game.lifecycle import replacement_pose
+from uuv_game.capabilities.lifecycle import replacement_pose
 from uuv_game.runtime import MissionError, MissionRuntime
 from uuv_game.store import Store
 

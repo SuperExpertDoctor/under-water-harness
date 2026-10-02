@@ -7,7 +7,7 @@ import pytest
 from uuv_game.algorithms import planning
 from uuv_game.algorithms.tracking import tracking_plan
 from uuv_game.algorithms.coverage import plan_search
-from uuv_game.mission_planning import search_bundle
+from uuv_game.capabilities.mission_planning import search_bundle
 
 def collision_solver():
     return importlib.import_module("uuv_game.algorithms.conflicts")

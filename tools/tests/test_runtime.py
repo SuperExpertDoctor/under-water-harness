@@ -5,11 +5,11 @@ import pytest
 
 from uuv_game.runtime import MissionRuntime, MissionError
 from uuv_game.config import algorithm_settings
-from uuv_game.lifecycle import exit_route, replacement_pose, prepare_exits
+from uuv_game.capabilities.lifecycle import exit_route, replacement_pose, prepare_exits
 from uuv_game.algorithms.control import TIMES
 from uuv_game.algorithms.motion import integrate
 from uuv_game.algorithms.planning import path_safe
-from uuv_game.observations import initialize
+from uuv_game.capabilities.observations import initialize
 
 
 @pytest.fixture
@@ -82,7 +82,7 @@ def test_turnover_exits_to_nearest_boundary_and_reenters_at_that_point(runtime, 
     runtime.standing_policy["energy_rotation"] = True
     runtime.standing_policy["plan_id"] = "authorized-rotation"
     runtime.active[boat["id"]] = {"kind": "search", "generation": 1}
-    monkeypatch.setattr("uuv_game.lifecycle.repair_search", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr("uuv_game.capabilities.lifecycle.repair_search", lambda *_args, **_kwargs: True)
     boat["remaining_range_m"] = 1701
     assert prepare_exits(runtime)
     assert runtime.active[boat["id"]]["kind"] == "search"
@@ -106,7 +106,7 @@ def test_exit_crossing_replaces_boat_on_same_boundary_in_one_tick(runtime, monke
     runtime.active[boat["id"]] = {"kind": "exit", "phase": "exiting", "plan_id": "authorized-rotation",
         "generation": 1, "exit_point": [0, 2000], "points": [[1, 2000, math.pi], [-30, 2000, math.pi]],
         "index": 0, "execution_domain": [-100, -100, 4100, 4100]}
-    monkeypatch.setattr("uuv_game.lifecycle.repair_search", lambda *_args, **_kwargs: True)
+    monkeypatch.setattr("uuv_game.capabilities.lifecycle.repair_search", lambda *_args, **_kwargs: True)
     points = [integrate(boat["pose"], 4, 0, t) for t in TIMES]
     assert path_safe(points, runtime.obstacles, [-100, -100, 4100, 4100], margin=10), points
     runtime.start()
@@ -138,7 +138,7 @@ def test_close_exit_crossings_stagger_replacements_instead_of_deadlocking(runtim
                 "index": 0, "execution_domain": [-100, -100, 4100, 4100]}
         return True
 
-    monkeypatch.setattr("uuv_game.lifecycle.repair_search", fake_repair)
+    monkeypatch.setattr("uuv_game.capabilities.lifecycle.repair_search", fake_repair)
     runtime.start()
     for _ in range(300):
         runtime.tick()

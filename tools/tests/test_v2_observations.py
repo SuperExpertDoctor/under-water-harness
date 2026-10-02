@@ -3,7 +3,7 @@ import random
 
 import numpy as np
 
-from uuv_game import observations
+from uuv_game.capabilities import observations
 
 
 def test_passive_measurement_never_contains_target_position_or_range():

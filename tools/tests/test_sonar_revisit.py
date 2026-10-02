@@ -4,7 +4,7 @@ import math
 
 from uuv_game.config import Config
 from uuv_game.runtime import MissionRuntime
-from uuv_game import sensing
+from uuv_game.capabilities import sensing
 from uuv_game.algorithms.partition import partition_regions
 
 

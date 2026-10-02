@@ -5,7 +5,7 @@ import copy
 import pytest
 
 from test_v2_handover import runtime as handover_runtime
-from uuv_game.handover import prepare_handover
+from uuv_game.capabilities.handover import prepare_handover
 from uuv_game.runtime import MissionRuntime
 
 

@@ -9,7 +9,7 @@ import pytest
 
 from uuv_game.api import create_app
 from uuv_game.config import Config
-from uuv_game.observations import initialize, predict
+from uuv_game.capabilities.observations import initialize, predict
 from uuv_game.runtime import MissionRuntime
 
 

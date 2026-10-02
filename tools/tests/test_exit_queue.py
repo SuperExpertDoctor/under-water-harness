@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from uuv_game.lifecycle import prepare_exits
+from uuv_game.capabilities.lifecycle import prepare_exits
 from uuv_game.runtime import MissionRuntime
 
 
@@ -13,7 +13,7 @@ def runtime(tmp_path, monkeypatch):
     instance = MissionRuntime(tmp_path / "queue.sqlite")
     instance.obstacles = []
     instance.standing_policy.update(energy_rotation=True, local_repair=True, plan_id="authorized-rotation")
-    monkeypatch.setattr("uuv_game.lifecycle.repair_search", lambda *args, **kwargs: True)
+    monkeypatch.setattr("uuv_game.capabilities.lifecycle.repair_search", lambda *args, **kwargs: True)
     yield instance
     instance.close()
 

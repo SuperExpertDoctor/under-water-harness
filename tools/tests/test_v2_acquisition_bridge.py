@@ -10,9 +10,9 @@ import uuv_game.runtime as runtime_module
 from uuv_game.config import Config
 from uuv_game.algorithms import tracking
 from uuv_game.algorithms.tracking import tracking_plan
-from uuv_game.observations import initialize
+from uuv_game.capabilities.observations import initialize
 from uuv_game.runtime import MissionRuntime
-from uuv_game.sensing import observe, sensor_mode, sensor_roles, side_scan_contains
+from uuv_game.capabilities.sensing import observe, sensor_mode, sensor_roles, side_scan_contains
 
 
 def test_tracking_entry_pose_faces_predicted_contact_inside_active_cone():

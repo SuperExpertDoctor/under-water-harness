@@ -5,7 +5,7 @@ import copy
 import pytest
 
 from uuv_game.algorithms.partition import _components
-from uuv_game.lifecycle import repair_search
+from uuv_game.capabilities.lifecycle import repair_search
 from uuv_game.runtime import MissionRuntime
 
 

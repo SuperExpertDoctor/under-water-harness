@@ -34,7 +34,7 @@ def runtime(tmp_path):
 
 
 def handover_module():
-    spec = importlib.util.find_spec("uuv_game.handover")
+    spec = importlib.util.find_spec("uuv_game.capabilities.handover")
     assert spec is not None, "bounded standing-policy handover module must exist"
     return importlib.import_module(spec.name)
 

@@ -165,7 +165,7 @@ def test_partition_evidence_does_not_inflate_energy_cost():
 
 
 def test_target_evidence_field_excludes_tracked_contacts():
-    from uuv_game.information import target_evidence_field
+    from uuv_game.capabilities.information import target_evidence_field
     from uuv_game.config import Config
     scan = [[-1.0] * 40 for _ in range(40)]
     config = Config()

@@ -129,7 +129,7 @@ class AdversaryTests(unittest.TestCase):
         self.assertNotIn('legacy-scene', json.dumps(restored.frame()))
 
     def test_expired_parameters_use_safe_default(self):
-        from uuv_game.adversary import control
+        from uuv_game.capabilities.adversary import control
         game = self.game
         pose, speed, curvature = control([2000, 2000, 0], [],
             {'speed_mps': 4, 'turn_bias': 1, 'expires_at_s': 5}, [], game.config, 6)
@@ -148,7 +148,7 @@ class AdversaryTests(unittest.TestCase):
         self.assertEqual(game.targets[0]['pose'], initial)
 
     def test_boundary_and_obstacle_avoidance(self):
-        from uuv_game.adversary import control
+        from uuv_game.capabilities.adversary import control
         from uuv_game.algorithms.planning import path_safe
         game = self.game
         for initial in ([3970, 2000, 0], [2300, 2300, 0], [40, 2000, math.pi]):

@@ -18,13 +18,13 @@ from .algorithms.allocation import allocate_tasks
 from .algorithms.tracking import acquisition_control, tracking_control, follow_path, tracking_plan
 from .algorithms.partition import partition_regions
 from .algorithms.control import choose_controls
-from .mission_planning import search_bundle, explicit_regions
-from .lifecycle import prepare_exits, replacement_pose, apply_replacements, repair_search, navigation_pose, exit_route
-from .handover import prepare_handover, finish_handover
-from .sensing import observe, sensor_mode, sensor_roles
-from .information import information_fields, target_evidence_field
-from .plugins import PLUGIN_SPECS, frame_activity as plugin_frame_activity
-from . import adversary as enemy
+from .capabilities.mission_planning import search_bundle, explicit_regions
+from .capabilities.lifecycle import prepare_exits, replacement_pose, apply_replacements, repair_search, navigation_pose, exit_route
+from .capabilities.handover import prepare_handover, finish_handover
+from .capabilities.sensing import observe, sensor_mode, sensor_roles
+from .capabilities.information import information_fields, target_evidence_field
+from .plugins import PLUGIN_SPECS, frame_activity as plugin_frame_activity, stage_owners, custom_stages, merge_stages
+from .capabilities import adversary as enemy
 
 
 CHECKPOINT_FIELDS = tuple(("episode sim_time frame_id revision policy_version mode session_grants status uuvs fleet_entry targets obstacles active results plans contacts observations obstacle_observations events cursor scan_times intents vessels tasks messages agent_jobs agent last_periodic sensor_enabled contact_mapping contact_counter last_observation_time regions standing_policy metrics region_revision observation_cursor adversary").split())
@@ -74,18 +74,20 @@ class MissionRuntime:
         # when every owning plugin is disabled (core plugins cannot be
         # disabled, so today every stage always runs).
         self.plugin_states = {spec["id"]: True for spec in PLUGIN_SPECS}
-        self._tick_stages = (
-            (("coop-tracking",), self._stage_provisional_leases),
-            (("reacquire", "region-partition"), self._stage_contact_repairs),
-            (("coop-tracking",), self._stage_handover_prepare),
-            (("energy-lifecycle",), self._stage_exit_prepare),
-            (("coop-tracking", "path-planning", "coverage-search", "reacquire",
-              "energy-lifecycle", "uuv-control"), self._stage_motion),
-            (("sensor-fusion", "coop-tracking"), self._stage_observations),
-            (None, self._stage_scene),
-            (("task-allocation",), self._stage_plan_lifecycle),
-            (("region-partition", "coverage-search"), self._stage_coverage_review),
-        )
+        # Ordered builtin slots; each slot's owner plugins come from the
+        # registry (PLUGIN["owns_stages"]). Custom plugins may insert extra
+        # stages after a named slot via their tick_stages() hook.
+        self._tick_stages = merge_stages((
+            ("track_leases", self._stage_provisional_leases),
+            ("contact_repairs", self._stage_contact_repairs),
+            ("handover_prep", self._stage_handover_prepare),
+            ("exit_prep", self._stage_exit_prepare),
+            ("motion", self._stage_motion),
+            ("observations", self._stage_observations),
+            ("scene", self._stage_scene),
+            ("plan_lifecycle", self._stage_plan_lifecycle),
+            ("coverage_review", self._stage_coverage_review),
+        ), custom_stages(self))
         saved = self.store.load()
         if saved:
             for key, value in saved.items():
@@ -904,8 +906,9 @@ class MissionRuntime:
             self.clear_target_maneuver("机动参数到期，恢复默认控制")
         # Registry-driven pipeline: a stage is skipped only when every owning
         # plugin is disabled; a stage returning False aborts the tick (pause).
-        for plugins, stage in self._tick_stages:
-            if plugins and not all(self.plugin_enabled(pid) for pid in plugins):
+        for slot, stage in self._tick_stages:
+            owners = stage_owners(slot)
+            if owners and not all(self.plugin_enabled(pid) for pid in owners):
                 continue
             if stage() is False:
                 return

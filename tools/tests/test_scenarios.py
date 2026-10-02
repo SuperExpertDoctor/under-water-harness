@@ -4,8 +4,8 @@ import pytest
 
 from uuv_game.runtime import MissionRuntime
 from uuv_game.config import Config
-from uuv_game.observations import initialize
-from uuv_game.sensing import sensor_mode
+from uuv_game.capabilities.observations import initialize
+from uuv_game.capabilities.sensing import sensor_mode
 
 
 def deploy_fleet(runtime):

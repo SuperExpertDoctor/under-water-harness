@@ -182,7 +182,7 @@ def test_fuel_shortage_engages_energy_exit_lifecycle(client):
 
 
 def test_energy_exit_proceeds_when_repair_infeasible(client, monkeypatch):
-    import uuv_game.lifecycle as lifecycle
+    import uuv_game.capabilities.lifecycle as lifecycle
     runtime = client.app.state.runtime
     runtime.set_mode("full")
     fleet = runtime.calculate("plan_search", {"standing_policy": True})

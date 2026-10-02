@@ -76,24 +76,36 @@ Optional module hooks:
         Exposes agent-callable tools on this plugin — the plugin-side half
         of pi's ToolDefinition. Every spec dict requires:
 
-            description   model-facing description
-            parameters    JSON-schema dict for the tool arguments
-            execute       fn(runtime, params, worker=False) -> dict,
-                          always run under runtime.lock
+            description           model-facing description
+            snippet               one-line Available-tools entry
+            guidelines            non-empty list of usage rules
+            parameters            JSON-schema dict for the tool arguments
+            constrained_sampling  {"type": "json_schema",
+                                   "strict": "prefer"|"require"}
+            execution_mode        must be "sequential" — plugin tools run
+                                  under runtime.lock, shared mission
+                                  state is queued not raced
+            execute               fn(runtime, params, worker=False) -> dict,
+                                  always run under runtime.lock
 
-        and mirrors the optional ToolDefinition fields:
-
-            snippet, guidelines, constrained_sampling
-            (default {"type": "json_schema", "strict": "prefer"}),
-            execution_mode ("parallel" default / "sequential")
+        Optional: calls_model (True => result must carry "usage"),
+        errors (documented failure codes). See _template.py for a full
+        example.
 
         Tool names MUST start with "<plugin_id>__" (plugin id with '-'
-        replaced by '_') so a plugin can never shadow a builtin tool —
-        validated at install time. Dropping the file in registers the
-        tools in agent_tools.catalog() and makes them callable through
-        /internal/tools/<name>; the PI worker's adapter turns each entry
-        into a full registerTool() definition, so no TS change is needed
-        for the agent to call it.
+        replaced by '_') so a plugin can never shadow a builtin tool.
+
+        Install-time review (agent_tools/review.py) gates registration —
+        the spec only reaches the catalog when it passes the production
+        bar: raising on invalid input (with required params, execute({})
+        must raise, not return), explicit execution_mode, json_schema
+        sampling constraint, and usage accounting when calls_model is
+        set. Failed installs raise ValueError listing every issue.
+
+        Once installed the tools land in agent_tools.catalog() and are
+        callable through /internal/tools/<name>; the PI worker's adapter
+        turns each entry into a full registerTool() definition, so no TS
+        change is needed for the agent to call it.
 
 Runtime surface available to plugin code (the "port" between plugins and
 the simulator; plugins must not import MissionRuntime itself):

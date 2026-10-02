@@ -34,6 +34,8 @@ TOOL = {
                                           "approval. Not an approval "
                                           "itself."}}),
     "mode": "calculate",
+    "execution_mode": "parallel",
+    "constrained_sampling": {"type": "json_schema", "strict": "prefer"},
 }
 
 

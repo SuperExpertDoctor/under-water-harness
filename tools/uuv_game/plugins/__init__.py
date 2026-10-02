@@ -162,7 +162,13 @@ def install_plugin(source):
 
 
 def _validate_tools(tools, plugin_id):
-    """Install-time check for a plugin's TOOLS map (see contract.py)."""
+    """Install-time review for a plugin's TOOLS map (see contract.py).
+
+    Every spec must pass agent_tools.review — the same production bar the
+    builtins are held to (failure expression, explicit parallelism,
+    shared-state queueing, usage accounting, schema sanity).
+    """
+    from ..agent_tools.review import review  # late import: plugins <-> agent_tools cycle
     if not isinstance(tools, dict):
         raise ValueError("TOOLS must be a dict of tool specs")
     prefix = f"{plugin_id.replace('-', '_')}__"
@@ -170,15 +176,11 @@ def _validate_tools(tools, plugin_id):
         if not isinstance(name, str) or not name.startswith(prefix):
             raise ValueError(
                 f"tool name must start with '{prefix}': {name!r}")
-        if not isinstance(entry, dict):
-            raise ValueError(f"tool spec must be a dict: {name}")
-        for key in ("description", "parameters", "execute"):
-            if key not in entry:
-                raise ValueError(f"tool {name} missing required key: {key}")
-        if not callable(entry["execute"]):
-            raise ValueError(f"tool {name} execute must be callable")
-        if not isinstance(entry["parameters"], dict):
-            raise ValueError(f"tool {name} parameters must be a JSON-schema dict")
+        issues = review(name, entry, plugin_tool=True)
+        if issues:
+            raise ValueError(
+                f"tool {name} failed registration review: "
+                + "; ".join(issues))
 
 
 def plugin_tool_specs():

@@ -28,6 +28,8 @@ TOOL = {
                            }, required=("id", "center", "size", "priority")),
                        }}),
     "mode": "calculate",
+    "execution_mode": "parallel",
+    "constrained_sampling": {"type": "json_schema", "strict": "prefer"},
 }
 
 

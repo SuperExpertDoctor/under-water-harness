@@ -10,16 +10,23 @@ file into ``plugins/`` is enough to hand the agent a new callable tool.
 import importlib
 import pkgutil
 
+from .review import accounting_wrapper, review
+
 _MODULES = {}
 
 
 def _load():
     for info in sorted(pkgutil.iter_modules(__path__), key=lambda i: i.name):
-        if info.name.startswith("_") or info.name == "contract":
+        if info.name.startswith("_") or info.name in ("contract", "review"):
             continue
         module = importlib.import_module(f"{__name__}.{info.name}")
         spec = getattr(module, "TOOL", None)
         if isinstance(spec, dict) and spec.get("name"):
+            issues = review(spec["name"], spec, execute=module.execute
+                            if callable(getattr(module, "execute", None)) else None)
+            if issues:
+                raise ValueError(
+                    f"builtin tool failed review: {'; '.join(issues)}")
             _MODULES[spec["name"]] = module
 
 
@@ -55,10 +62,12 @@ def resolve(name):
     """
     module = _MODULES.get(name)
     if module is not None:
-        return module.TOOL.get("mode", "lock"), module.execute
+        return (module.TOOL.get("mode", "lock"),
+                accounting_wrapper(module.execute, module.TOOL.get("calls_model", False)))
     entry = _plugin_specs().get(name)
     if entry is not None:
-        return "lock", entry["execute"]
+        return ("lock", accounting_wrapper(
+            entry["execute"], entry.get("calls_model", False)))
     return None, None
 
 

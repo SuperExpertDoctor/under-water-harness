@@ -23,6 +23,8 @@ TOOL = {
                                 "description": "[x_m,y_m,heading_rad]."}},
                       required=("members", "goal")),
     "mode": "calculate",
+    "execution_mode": "parallel",
+    "constrained_sampling": {"type": "json_schema", "strict": "prefer"},
 }
 
 

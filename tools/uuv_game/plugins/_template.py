@@ -63,7 +63,11 @@ def tick_stages(runtime):
 def _probe(runtime, params, worker=False):
     """Tool body: runs under runtime.lock. Params arrive as a plain dict —
     validate defensively. Raise MissionError(code, status) for domain
-    errors; anything else becomes a generic tool failure."""
+    errors; anything else becomes a generic tool failure. Registration
+    review requires execute() to raise on missing required params —
+    returning normally is treated as silently accepting invalid input."""
+    if not params.get("uuv_id"):
+        raise ValueError("uuv_id_required")
     return {"uuv_id": params.get("uuv_id"), "status": "ok"}
 
 
@@ -84,11 +88,18 @@ TOOLS = {
             "required": ["uuv_id"],
             "additionalProperties": False,
         },
-        # optional, defaults: {"type": "json_schema", "strict": "prefer"}
+        # required: {"type": "json_schema", "strict": "prefer"|"require"}
         "constrained_sampling": {"type": "json_schema", "strict": "prefer"},
-        # optional, default "parallel"; declare "sequential" when the tool
-        # mutates shared mission state
-        "execution_mode": "parallel",
+        # required and must be "sequential": plugin tools run under the
+        # runtime lock (shared mission state), so parallel declaration is
+        # rejected by review
+        "execution_mode": "sequential",
+        # optional: True when execute internally calls a model — the result
+        # must then include a "usage" key (token accounting) or the call
+        # fails with tool_usage_missing
+        "calls_model": False,
+        # optional: documented failure codes surfaced to operators
+        "errors": ["uuv_id_required"],
         "execute": _probe,
     },
 }

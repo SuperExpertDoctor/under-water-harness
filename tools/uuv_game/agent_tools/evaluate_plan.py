@@ -16,6 +16,8 @@ TOOL = {
         "additionalProperties": False,
     },
     "mode": "lock",
+    "execution_mode": "sequential",
+    "constrained_sampling": {"type": "json_schema", "strict": "prefer"},
 }
 
 

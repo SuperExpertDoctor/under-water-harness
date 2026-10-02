@@ -25,6 +25,8 @@ TOOL = {
                                    "uniqueItems": True}},
                       required=("contact_id",)),
     "mode": "calculate",
+    "execution_mode": "parallel",
+    "constrained_sampling": {"type": "json_schema", "strict": "prefer"},
 }
 
 

@@ -19,6 +19,8 @@ TOOL = {
                        "algorithm_id": algorithm("connected_partition"),
                        "members": FLEET}),
     "mode": "calculate",
+    "execution_mode": "parallel",
+    "constrained_sampling": {"type": "json_schema", "strict": "prefer"},
 }
 
 

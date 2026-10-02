@@ -5,11 +5,11 @@ import { createServer } from "vite";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 
-const server = await createServer({ root: fileURLToPath(new URL("../../", import.meta.url)), server: { middlewareMode: true, hmr: false, ws: false }, appType: "custom" });
+const server = await createServer({ root: fileURLToPath(new URL("../", import.meta.url)), server: { middlewareMode: true, hmr: false, ws: false }, appType: "custom" });
 test.after(() => server.close());
 
 test("permission selector names active approval level and scopes full access to mission plans", async () => {
-  const { default: MissionControl } = await server.ssrLoadModule("/src/view/components/MissionControl.jsx");
+  const { default: MissionControl } = await server.ssrLoadModule("/view/components/MissionControl.jsx");
   const html = renderToStaticMarkup(createElement(MissionControl, {
     mission: { ready: true, busy: false, state: { autonomy_mode: "assisted", agent: { status: "idle" } } },
     frame: { runtime_status: "ready" }, readOnly: false,

@@ -3,7 +3,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { createServer } from "vite";
 
-const server = await createServer({ root: fileURLToPath(new URL("../../../", import.meta.url)), server: { middlewareMode: true, hmr: false, ws: false }, appType: "custom" });
+const server = await createServer({ root: fileURLToPath(new URL("../../", import.meta.url)), server: { middlewareMode: true, hmr: false, ws: false }, appType: "custom" });
 test.after(() => server.close());
 
 function context() {
@@ -18,7 +18,7 @@ function overlaps(a, b) {
 }
 
 test("mobile region and entity labels share nonoverlapping space outside the task header", async () => {
-  const { drawSearchRegions, drawLabels } = await server.ssrLoadModule("/src/view/renderer/layers.js");
+  const { drawSearchRegions, drawLabels } = await server.ssrLoadModule("/view/renderer/layers.js");
   const frame = {
     uavs: Array.from({ length: 8 }, (_, i) => ({ id: `UUV-${i + 1}`, position: [i * 2 + 2, 3 + i], status: "searching" })),
     search_regions: Array.from({ length: 8 }, (_, i) => ({ id: `region-${i}`, assigned_uav_id: `UUV-${i + 1}`, cells: [[i * 5, 0]] })),
@@ -42,7 +42,7 @@ test("mobile region and entity labels share nonoverlapping space outside the tas
 });
 
 test("tracking contact label states tracking rather than classification pending", async () => {
-  const { drawLabels } = await server.ssrLoadModule("/src/view/renderer/layers.js");
+  const { drawLabels } = await server.ssrLoadModule("/view/renderer/layers.js");
   const ctx = context();
   drawLabels(ctx, { contacts: [{ contact_id: "CONTACT-1", estimated_position: [10, 10], state: "tracking" }] },
     10, 0, 0, { x: 0, y: 0, width: 400, height: 400 }, null, "CONTACT-1", null, []);
@@ -51,7 +51,7 @@ test("tracking contact label states tracking rather than classification pending"
 
 for (const cellSize of [5, 12, 40]) {
   test(`labels avoid later team markers at ${cellSize}px cells`, async () => {
-    const { drawLabels } = await server.ssrLoadModule("/src/view/renderer/layers.js");
+    const { drawLabels } = await server.ssrLoadModule("/view/renderer/layers.js");
     const position = (x, y) => [x / cellSize - .5, y / cellSize - .5];
     const frame = {
       uavs: [
@@ -75,7 +75,7 @@ for (const cellSize of [5, 12, 40]) {
 }
 
 test("labels reserve contact, scenario, and base markers before priority placement", async () => {
-  const { drawLabels } = await server.ssrLoadModule("/src/view/renderer/layers.js");
+  const { drawLabels } = await server.ssrLoadModule("/view/renderer/layers.js");
   for (const kind of ["contact", "scenario", "base"]) {
     const frame = { uavs: [{ id: "UUV-1", position: [9.5, 10.5], status: "tracking" }] };
     if (kind === "contact") frame.contacts = [{ contact_id: "CONTACT-1", estimated_position: [12.3, 8.8], state: "confirmed" }];

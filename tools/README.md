@@ -145,7 +145,7 @@ UI 状态和组件测试从 `ui/` 目录运行，包含所有 `state/*.test.js`�
 
 ```sh
 cd ui
-node --test src/state/*.test.js src/view/renderer/*.test.js src/feed/**/*.test.js
+node --test state/*.test.js view/renderer/*.test.js feed/*/*.test.js
 cd ..
 ```
 

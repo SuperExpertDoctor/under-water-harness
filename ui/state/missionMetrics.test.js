@@ -5,11 +5,11 @@ import { createServer } from "vite";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createElement } from "react";
 
-const server = await createServer({ root: fileURLToPath(new URL("../../", import.meta.url)), server: { middlewareMode: true, hmr: false, ws: false }, appType: "custom" });
+const server = await createServer({ root: fileURLToPath(new URL("../", import.meta.url)), server: { middlewareMode: true, hmr: false, ws: false }, appType: "custom" });
 test.after(() => server.close());
 
 test("mission metrics distinguish unknown rates from zero and label their denominators", async () => {
-  const { MetricsTab } = await server.ssrLoadModule("/src/view/components/BottomDrawer.jsx");
+  const { MetricsTab } = await server.ssrLoadModule("/view/components/BottomDrawer.jsx");
   assert.equal(typeof MetricsTab, "function");
   const html = renderToStaticMarkup(createElement(MetricsTab, { frame: { contacts: [{ contact_id: "c1" }], mission_metrics: {
     unscanned_cells: 1584, recent_coverage_pct: 0, revisit_timeliness_pct: null,
@@ -24,7 +24,7 @@ test("mission metrics distinguish unknown rates from zero and label their denomi
 });
 
 test("mission metrics retain genuine zero success and round measured rates", async () => {
-  const { MetricsTab } = await server.ssrLoadModule("/src/view/components/BottomDrawer.jsx");
+  const { MetricsTab } = await server.ssrLoadModule("/view/components/BottomDrawer.jsx");
   assert.equal(typeof MetricsTab, "function");
   const html = renderToStaticMarkup(createElement(MetricsTab, { frame: { contacts: [{ contact_id: "c1" }], mission_metrics: {
     handoff_attempts: 1, handoff_count: 0, single_tracking_seconds: 13.6, current_lost_seconds: null,

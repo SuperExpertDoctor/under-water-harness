@@ -20,6 +20,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .runtime import ALGORITHM_IDS, MissionRuntime, MissionError, identifier
 from .agent_events import session_event
+from .plugins import catalog as plugin_catalog
 from .recording import RecordingError, RecordingManager
 
 
@@ -422,6 +423,10 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
     @app.get("/api/algorithm/status")
     async def algorithm_status():
         return {"status": "ready", "algorithms": list(ALGORITHM_IDS.values()), "tools": TOOL_NAMES}
+
+    @app.get("/api/plugins")
+    async def plugins():
+        return plugin_catalog()
 
     @app.post("/api/algorithm/task-plan")
     @app.post("/api/algorithm/decision")

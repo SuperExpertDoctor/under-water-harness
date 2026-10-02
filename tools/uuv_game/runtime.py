@@ -23,6 +23,7 @@ from .lifecycle import prepare_exits, replacement_pose, apply_replacements, repa
 from .handover import prepare_handover, finish_handover
 from .sensing import observe, sensor_mode, sensor_roles
 from .information import information_fields, target_evidence_field
+from .plugins import frame_activity as plugin_frame_activity
 from . import adversary as enemy
 
 
@@ -1216,6 +1217,7 @@ class MissionRuntime:
             "cycle": self.agent["cycle"], "runtime_status": self.status, "mission_revision": self.revision, "autonomy_mode": self.mode,
             "agent_status": copy.deepcopy(self.agent), "event_cursor": self.cursor, "information_source": "backend", "information_version": self.frame_id,
             "task_area": {"width_km": width/1000, "height_km": height/1000, "cell_size_km": cell/1000}, **information,
+            "plugin_activity": plugin_frame_activity(self),
             "fleet_entry": {**self.fleet_entry, "position": self.cells(self.fleet_entry["position"])} if self.fleet_entry else None,
             "value_matrix": copy.deepcopy(information["target_info_matrix"]), "searchable_cells": len(searchable), "coverage_pct": coverage,
             "coverage_metrics": {"schema_version": "persistent-coverage/v1", "status": "ok", "as_of_min": self.sim_time/60,

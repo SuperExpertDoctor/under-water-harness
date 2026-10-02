@@ -93,9 +93,20 @@ function eventSubject(data = {}) {
     || data.departing || data.members?.[0] || data.owner || null;
 }
 
-// Derive which plugins are active in this frame, who they are acting on, and
-// which edges are carrying subjects.
+// Live frames carry `plugin_activity` — the runtime's own invocation trace
+// (real subjects + sim step per plugin). Replay files and the demo frame lack
+// it, so the same shape is derived locally from frame state as a fallback.
 export function derivePluginGraph(frame, liveEvents = []) {
+  const sim = {
+    simMin: frame?.sim_time_min ?? null,
+    frameId: frame?.frame_id ?? null,
+    cycle: frame?.cycle ?? null,
+    mode: frame?.autonomy_mode ?? null,
+  };
+  const trace = frame?.plugin_activity;
+  if (trace?.nodes && trace?.edges) {
+    return { nodes: trace.nodes, edges: trace.edges, sim, source: "runtime" };
+  }
   const uavs = frame?.uavs || [];
   const contacts = frame?.contacts || [];
   const plans = frame?.plans || [];
@@ -189,16 +200,7 @@ export function derivePluginGraph(frame, liveEvents = []) {
     return { key, from, to, active, subjects };
   });
 
-  return {
-    nodes,
-    edges,
-    sim: {
-      simMin: frame?.sim_time_min ?? null,
-      frameId: frame?.frame_id ?? null,
-      cycle: frame?.cycle ?? null,
-      mode: frame?.autonomy_mode ?? null,
-    },
-  };
+  return { nodes, edges, sim, source: "derived" };
 }
 
 export const PORT_LABEL = { none: "无", one: "单输入", many: "多输入" };

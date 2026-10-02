@@ -27,10 +27,25 @@ export default function PluginPanel({ frame, events }) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState({ name: "", desc: "" });
   const [pinned, setPinned] = useState(null);
+  const [catalog, setCatalog] = useState(null);
   const areaRef = useRef(null);
   const [size, setSize] = useState({ w: 900, h: 560 });
 
-  const defs = useMemo(() => [...PLUGIN_DEFS, ...library.custom], [library.custom]);
+  // Plugin specs come from the backend registry so the panel renders whatever
+  // the control stack declares; bundled defs remain the offline fallback.
+  useEffect(() => {
+    let disposed = false;
+    fetch("/api/plugins")
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => { if (!disposed && data?.plugins?.length) setCatalog(data); })
+      .catch(() => {});
+    return () => { disposed = true; };
+  }, []);
+
+  const coreDefs = catalog?.plugins || PLUGIN_DEFS;
+  const edgeDefs = catalog?.edges || PLUGIN_EDGES;
+  const edgeKey = (edge) => edge.key || `${edge.from}>${edge.to}`;
+  const defs = useMemo(() => [...coreDefs, ...library.custom], [coreDefs, library.custom]);
   const graph = useMemo(() => derivePluginGraph(frame, events), [frame, events]);
   const visibleDefs = defs.filter((d) => !library.disabled.includes(d.id));
 
@@ -206,16 +221,17 @@ export default function PluginPanel({ frame, events }) {
               <path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" />
             </marker>
           </defs>
-          {PLUGIN_EDGES.map((edge) => {
+          {edgeDefs.map((edge) => {
             if (!positions.get(edge.from) || !positions.get(edge.to)) return null;
             const geo = edgeGeometry(edge);
             if (!geo) return null;
-            const live = graph.edges.find((e) => e.key === edge.key);
+            const key = edgeKey(edge);
+            const live = graph.edges.find((e) => e.key === key);
             const active = live?.active;
             const highlight = pinned && (edge.from === pinned || edge.to === pinned);
             const color = active ? "#0f766e" : highlight ? "#1d4ed8" : "#94a3b8";
             return (
-              <g key={edge.key} style={{ color }} className={active ? "edge-live" : ""}>
+              <g key={key} style={{ color }} className={active ? "edge-live" : ""}>
                 <path d={geo.path} fill="none" stroke="currentColor" strokeWidth={active ? 2.4 : 1.4}
                   strokeDasharray={active ? "7 5" : "4 5"} markerEnd="url(#plugin-arrow)" opacity={active ? 0.95 : 0.45} />
                 {active && live.subjects.length > 0 && (
@@ -270,7 +286,7 @@ export default function PluginPanel({ frame, events }) {
           {graph.sim.frameId != null && <span>frame #{graph.sim.frameId}</span>}
           {graph.sim.cycle != null && <span>cycle {graph.sim.cycle}</span>}
           {graph.sim.mode && <span>权限 {graph.sim.mode}</span>}
-          <span className="plugin-hint">逻辑视图 · 由实时状态推导</span>
+          <span className="plugin-hint">{graph.source === "runtime" ? "实时调用 · 由运行时生成" : "逻辑视图 · 由实时状态推导"}</span>
         </footer>
       </section>
     </div>

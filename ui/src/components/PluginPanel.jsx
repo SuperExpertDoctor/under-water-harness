@@ -28,7 +28,11 @@ export default function PluginPanel({ frame, events }) {
   const [draft, setDraft] = useState({ name: "", desc: "" });
   const [pinned, setPinned] = useState(null);
   const [catalog, setCatalog] = useState(null);
+  const [drags, setDrags] = useState({});
+  const [dragging, setDragging] = useState(null);
+  const dragRef = useRef(null);
   const areaRef = useRef(null);
+  const innerRef = useRef(null);
   const [size, setSize] = useState({ w: 900, h: 560 });
 
   // Plugin specs come from the backend registry so the panel renders whatever
@@ -90,8 +94,11 @@ export default function PluginPanel({ frame, events }) {
         map.set(def.id, { x, y });
       });
     }
+    for (const [id, pos] of Object.entries(drags)) {
+      if (map.has(id)) map.set(id, pos);
+    }
     return { positions: map, canvasW, canvasH };
-  }, [visibleDefs, size]);
+  }, [visibleDefs, size, drags]);
   const positions = layout.positions;
 
   const edgeGeometry = (edge) => {
@@ -109,6 +116,41 @@ export default function PluginPanel({ frame, events }) {
       head: { x: x2, y: y2 },
     };
   };
+
+  // Node dragging: positions live in canvas space, pointer events in client
+  // space — the inner canvas rect converts between them. A sub-3px press is a
+  // click (pin toggle); a real drag persists until double-click resets it.
+  const onNodePointerDown = (event, def) => {
+    if (event.button !== 0 || !innerRef.current) return;
+    const pos = positions.get(def.id);
+    if (!pos) return;
+    const rect = innerRef.current.getBoundingClientRect();
+    dragRef.current = { id: def.id, ox: event.clientX - rect.left - pos.x, oy: event.clientY - rect.top - pos.y, moved: false };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const onNodePointerMove = (event, def) => {
+    const drag = dragRef.current;
+    if (!drag || drag.id !== def.id) return;
+    const rect = innerRef.current.getBoundingClientRect();
+    const nx = Math.min(Math.max(event.clientX - rect.left - drag.ox, NODE_W / 2), layout.canvasW - NODE_W / 2);
+    const ny = Math.min(Math.max(event.clientY - rect.top - drag.oy, NODE_H / 2), layout.canvasH - NODE_H / 2);
+    if (!drag.moved && Math.hypot(nx - positions.get(def.id).x, ny - positions.get(def.id).y) < 3) return;
+    drag.moved = true;
+    setDragging(def.id);
+    setDrags((prev) => ({ ...prev, [def.id]: { x: nx, y: ny } }));
+  };
+  const onNodePointerUp = (event, def) => {
+    const drag = dragRef.current;
+    dragRef.current = null;
+    setDragging(null);
+    if (drag?.moved) return;
+    setPinned((p) => (p === def.id ? null : def.id));
+  };
+  const resetDrag = (id) => setDrags((prev) => {
+    const next = { ...prev };
+    delete next[id];
+    return next;
+  });
 
   const togglePlugin = (id) => {
     setLibrary((lib) => ({
@@ -214,7 +256,7 @@ export default function PluginPanel({ frame, events }) {
 
       <section className="plugin-graph" ref={areaRef} aria-label="插件连接关系">
         <div className="plugin-graph-scroll">
-        <div className="plugin-graph-inner" style={{ width: layout.canvasW, height: layout.canvasH }}>
+        <div className="plugin-graph-inner" ref={innerRef} style={{ width: layout.canvasW, height: layout.canvasH }}>
         <svg className="plugin-edges" width={layout.canvasW} height={layout.canvasH} aria-hidden="true">
           <defs>
             <marker id="plugin-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -231,7 +273,7 @@ export default function PluginPanel({ frame, events }) {
             const highlight = pinned && (edge.from === pinned || edge.to === pinned);
             const color = active ? "#0f766e" : highlight ? "#1d4ed8" : "#94a3b8";
             return (
-              <g key={key} style={{ color }} className={active ? "edge-live" : ""}>
+              <g key={key} style={{ color }} className={`${active ? "edge-live" : ""} ${highlight ? "edge-hot" : ""}`}>
                 <path d={geo.path} fill="none" stroke="currentColor" strokeWidth={active ? 2.4 : 1.4}
                   strokeDasharray={active ? "7 5" : "4 5"} markerEnd="url(#plugin-arrow)" opacity={active ? 0.95 : 0.45} />
                 {active && live.subjects.length > 0 && (
@@ -253,13 +295,16 @@ export default function PluginPanel({ frame, events }) {
           return (
             <div
               key={def.id}
-              className={`plugin-node ${node.active ? "live" : ""} ${pinned === def.id ? "pinned" : ""}`}
+              className={`plugin-node ${node.active ? "live" : ""} ${pinned === def.id ? "pinned" : ""} ${dragging === def.id ? "dragging" : ""}`}
               style={{ left: pos.x - NODE_W / 2, top: pos.y - NODE_H / 2, width: NODE_W, minHeight: NODE_H, borderColor: node.active ? def.color : undefined }}
-              onClick={() => setPinned((p) => (p === def.id ? null : def.id))}
+              onPointerDown={(e) => onNodePointerDown(e, def)}
+              onPointerMove={(e) => onNodePointerMove(e, def)}
+              onPointerUp={(e) => onNodePointerUp(e, def)}
+              onDoubleClick={() => resetDrag(def.id)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setPinned((p) => (p === def.id ? null : def.id)); }}
-              title={def.desc}
+              title={`${def.desc} — 拖拽移动 · 双击复位`}
             >
               <span className="plugin-ports in" aria-hidden="true">
                 {Array.from({ length: pins }, (_, i) => <i key={i} style={{ background: def.color }} />)}
@@ -286,7 +331,7 @@ export default function PluginPanel({ frame, events }) {
           {graph.sim.frameId != null && <span>frame #{graph.sim.frameId}</span>}
           {graph.sim.cycle != null && <span>cycle {graph.sim.cycle}</span>}
           {graph.sim.mode && <span>权限 {graph.sim.mode}</span>}
-          <span className="plugin-hint">{graph.source === "runtime" ? "实时调用 · 由运行时生成" : "逻辑视图 · 由实时状态推导"}</span>
+          <span className="plugin-hint">{graph.source === "runtime" ? "实时调用 · 由运行时生成" : "逻辑视图 · 由实时状态推导"} · 拖拽移动节点 · 双击复位</span>
         </footer>
       </section>
     </div>

@@ -327,10 +327,11 @@
 .plugin-card-foot em { color: #0f766e; font-style: normal; font-weight: 600; }
 .plugin-graph { position: relative; flex: 1; min-width: 0; overflow: hidden; }
 .plugin-edges { position: absolute; inset: 0; }
-.edge-live path { animation: edge-flow 1.1s linear infinite; }
+.edge-live path, .edge-hot path { animation: edge-flow 1.1s linear infinite; }
 @keyframes edge-flow { to { stroke-dashoffset: -12; } }
 .edge-label { fill: #0f766e; font: 600 10px Consolas, monospace; paint-order: stroke; stroke: var(--ink); stroke-width: 3px; }
-.plugin-node { position: absolute; box-sizing: border-box; padding: 8px 12px; border: 1.5px solid var(--line-strong); border-radius: 8px; background: var(--panel); box-shadow: 0 1px 3px #0f172a14; cursor: pointer; transition: border-color .2s, box-shadow .2s, opacity .2s; user-select: none; }
+.plugin-node { position: absolute; box-sizing: border-box; padding: 8px 12px; border: 1.5px solid var(--line-strong); border-radius: 8px; background: var(--panel); box-shadow: 0 1px 3px #0f172a14; cursor: grab; transition: border-color .2s, box-shadow .2s, opacity .2s; user-select: none; touch-action: none; }
+.plugin-node.dragging { cursor: grabbing; z-index: 5; box-shadow: 0 6px 18px #0f172a26; }
 .plugin-node.live { box-shadow: 0 0 0 3px #0f766e22, 0 2px 8px #0f172a1f; }
 .plugin-node.pinned { outline: 2px solid #178B9D; }
 .plugin-node header { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #203C4D; }

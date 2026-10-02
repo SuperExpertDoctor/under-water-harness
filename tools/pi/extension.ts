@@ -37,16 +37,74 @@ const descriptions: Record<string, string> = {
   get_action_status: "Query candidate, plan or run by action_id. Accepted is not completed; pending approval means humans must decide.",
 };
 
+// System-prompt contribution per tool (mirrors the built-in tool contract:
+// snippet = one-line entry in the Available tools section, guidelines = the
+// usage rules appended to the Guidelines section while the tool is active).
+const snippets: Record<string, string> = {
+  get_mission_state: "Read the observed mission snapshot",
+  get_observations: "Read generated detection/bearing records",
+  partition_search_area: "Compute a candidate search-area partition",
+  compute_task_allocation: "Compute a candidate member/task allocation",
+  plan_path: "Compute an oriented path for one member",
+  plan_search: "Compute a candidate coverage-search plan",
+  plan_tracking: "Compute a candidate cooperative-tracking plan",
+  evaluate_plan: "Validate a plan candidate",
+  submit_mission_plan: "Submit a validated plan for execution",
+  get_action_status: "Query the status of an action, plan or run",
+};
+
+const guidelines: Record<string, string[]> = {
+  get_mission_state: [
+    "Call get_mission_state before planning or submitting; reuse its episode_id and mission_revision.",
+  ],
+  get_observations: [
+    "Paginate get_observations with cursor and limit; reading never generates new measurements.",
+    "Passive bearing records carry no range or target position — infer position only from multi-boat geometry.",
+  ],
+  partition_search_area: [
+    "partition_search_area returns a candidate only — it never moves UUVs or assigns tasks.",
+  ],
+  compute_task_allocation: [
+    "compute_task_allocation returns a candidate only; check feasibility, energy and coverage cost before planning.",
+  ],
+  plan_path: [
+    "plan_path is geometry-only for exactly one member; use plan_search for executable looping missions.",
+  ],
+  plan_search: [
+    "For automatic whole-area coverage omit both members and bbox; never pass bbox=[0,0,4000,4000] as a fallback.",
+    "Every candidate must pass evaluate_plan before submit_mission_plan.",
+  ],
+  plan_tracking: [
+    "Omit members in plan_tracking to auto-select a feasible team; accepted or transit is not effective tracking.",
+  ],
+  evaluate_plan: [
+    "Run evaluate_plan on the result_id immediately before every submit_mission_plan.",
+  ],
+  submit_mission_plan: [
+    "submit_mission_plan is the only execution entry; retry with the same result_id and episode_id but a fresh command_id.",
+    "pending_approval means a human must decide — do not resubmit while pending.",
+  ],
+  get_action_status: [
+    "accepted is not completed; check get_action_status before declaring a plan or run finished.",
+  ],
+};
+
 export function missionExtension(call: (name: string, params: Record<string, unknown>, signal?: AbortSignal) => Promise<unknown>) {
   return (pi: ExtensionAPI) => {
     pi.on("before_provider_request", (event) => ({ ...event.payload as Record<string, unknown>, max_tokens: 4096, thinking: { type: "disabled" } }));
     for (const name of TOOL_NAMES) {
       pi.registerTool({
         name, label: name, description: descriptions[name],
+        promptSnippet: snippets[name],
+        promptGuidelines: guidelines[name],
         parameters: schemas[name],
+        constrainedSampling: { type: "json_schema", strict: "prefer" },
+        // The mutating entry point shares runtime state — declare it
+        // sequential; candidates and reads stay parallel (the default).
+        ...(name === "submit_mission_plan" ? { executionMode: "sequential" as const } : {}),
         execute: async (_id, parameters, signal) => {
           const result = await call(name, parameters as Record<string, unknown>, signal);
-          return { content: [{ type: "text", text: JSON.stringify(result) }], details: {} };
+          return { content: [{ type: "text", text: JSON.stringify(result) }], details: undefined };
         },
       });
     }

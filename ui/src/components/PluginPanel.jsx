@@ -265,8 +265,9 @@ export default function PluginPanel({ frame, events }) {
             const enabled = def.enabled !== false && !uiDisabled(def);
             const custom = !def.core;
             const node = graph.nodes[def.id];
+            const tip = (def.guidelines || []).join("\n");
             return (
-              <li key={def.id} className={`plugin-card ${enabled ? "" : "off"}`}>
+              <li key={def.id} className={`plugin-card ${enabled ? "" : "off"}`} title={tip || undefined}>
                 <div className="plugin-card-top">
                   <span className="plugin-dot" style={{ background: def.color }} />
                   <strong>{def.name}</strong>
@@ -297,7 +298,7 @@ export default function PluginPanel({ frame, events }) {
                     </button>
                   )}
                 </div>
-                <p>{def.desc}</p>
+                <p>{def.snippet || def.desc}</p>
                 <div className="plugin-card-foot">
                   <span>{portText(def)}</span>
                   {enabled && node?.active && <em>运行中</em>}

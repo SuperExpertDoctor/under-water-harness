@@ -18,6 +18,10 @@ PLUGIN = {
     "core": False,                # core plugins cannot be disabled
 
     # ---- optional ----
+    # one-line card summary (falls back to desc); the promptSnippet analog
+    "snippet": "短句说明，显示在插件卡片上",
+    # usage notes shown on the card tooltip; the promptGuidelines analog
+    "guidelines": ["什么时候依赖这个插件", "使用时需要注意的约束"],
     # outgoing graph edges; "always_active" keeps an edge lit without subjects
     "edges": [("task-allocation", "my-plugin"), ("my-plugin", "uuv-control")],
     # pipeline slots this plugin owns (all owners disabled => slot skipped)

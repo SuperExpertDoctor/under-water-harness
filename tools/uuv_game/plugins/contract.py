@@ -5,6 +5,15 @@ The loader imports every module whose name does not start with ``_`` and
 registers it when the module defines a ``PLUGIN`` dict. Copy
 ``plugins/_template.py`` as a starting point.
 
+The contract mirrors the pi tool definition (prompt contribution + parameter
+contract + sampling/validation constraint + execute body), split the same way:
+
+    model/operator needs to know   -> id, name, desc, snippet, guidelines
+    what may connect               -> inputs, outputs (validated enum)
+    registration constraint        -> install-time validation (install_plugin),
+                                      not free-form acceptance
+    does the work                  -> activity(), STAGES, tick_stages()
+
 Required ``PLUGIN`` keys:
     id        unique plugin id (kebab-case), also the file's registry key
     name      display name shown in the plugin library / connection graph
@@ -16,11 +25,26 @@ Required ``PLUGIN`` keys:
     core      True for base control algorithms (never disableable)
 
 Optional ``PLUGIN`` keys:
+    snippet     one-line summary shown on the library card (falls back to
+                ``desc`` when omitted) — the promptSnippet analog
+    guidelines  list of usage-note strings shown on the card's tooltip —
+                the promptGuidelines analog
     edges       outgoing connections; each entry is ``("from_id", "to_id")``
                 or ``{"from": ..., "to": ..., "always_active": True}``
     owns_stages pipeline slot names this plugin owns. The runtime skips a
                 slot only when *every* owning plugin is disabled (core
                 plugins cannot be disabled). See STAGE_SLOTS below.
+
+Failure rules (mirroring the pi tool rules — throwing is the only failure):
+
+    - An exception raised inside ``activity()`` or a custom ``tick_stages``
+      fn marks *that* invocation failed: it is recorded as a
+      ``plugin_hook_error`` event and execution continues. A custom plugin
+      bug can never crash the frame or abort the tick.
+    - Returning False from a custom stage fn is the declarative way to
+      abort the tick (safety pause); do not use it to signal plugin bugs.
+    - Builtin core stages propagate exceptions normally — a core algorithm
+      fault is a sim fault and stays loud.
 
 Optional module hooks:
 

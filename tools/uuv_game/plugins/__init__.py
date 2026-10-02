@@ -116,6 +116,7 @@ def _rebuild():
 
 
 _REQUIRED_KEYS = ("id", "name", "layer", "color", "desc", "inputs", "outputs")
+_PORT_KINDS = {"none", "one", "many"}
 
 
 def install_plugin(source):
@@ -142,6 +143,9 @@ def install_plugin(source):
         raise ValueError(f"plugin id already registered: {pid}")
     if spec.get("core"):
         raise ValueError("custom plugins cannot claim core status")
+    for key in ("inputs", "outputs"):
+        if spec[key] not in _PORT_KINDS:
+            raise ValueError(f"PLUGIN {key} must be one of {sorted(_PORT_KINDS)}")
     for slot in spec.get("owns_stages", ()):
         if slot not in STAGE_SLOTS:
             raise ValueError(f"unknown pipeline slot: {slot}")
@@ -189,7 +193,21 @@ def stage_owners(slot):
 
 
 def custom_stages(runtime):
-    """Stage entries contributed by non-core plugins (see contract)."""
+    """Stage entries contributed by non-core plugins (see contract).
+
+    A custom stage that raises is a failed plugin invocation, not a sim
+    failure: it is recorded as a plugin_hook_error event and the pipeline
+    continues (returning False is the only way to abort a tick)."""
+
+    def guard(fn, pid):
+        def wrapped(rt):
+            try:
+                return fn(rt)
+            except Exception as exc:
+                rt.event("plugin_hook_error", {"plugin": pid, "hook": "tick_stage", "error": str(exc)})
+                return None
+        return wrapped
+
     extra = []
     for module in _MODULES.values():
         if module.PLUGIN.get("core"):
@@ -197,9 +215,10 @@ def custom_stages(runtime):
         hook = getattr(module, "tick_stages", None)
         if hook is None:
             continue
+        pid = module.PLUGIN["id"]
         for entry in hook(runtime) or []:
-            extra.append({"after": entry.get("after"), "fn": entry["fn"],
-                          "plugin": module.PLUGIN["id"]})
+            extra.append({"after": entry.get("after"), "fn": guard(entry["fn"], pid),
+                          "plugin": pid})
     return extra
 
 
@@ -285,7 +304,11 @@ def frame_activity(runtime):
             continue
         hook = getattr(_MODULES[spec["id"]], "activity", None)
         if hook is not None:
-            hook(runtime, _FrameCtx(spec["id"], nodes[spec["id"]], lists))
+            try:
+                hook(runtime, _FrameCtx(spec["id"], nodes[spec["id"]], lists))
+            except Exception as exc:
+                runtime.event("plugin_hook_error",
+                              {"plugin": spec["id"], "hook": "activity", "error": str(exc)})
 
     edges = []
     for edge in PLUGIN_EDGES:

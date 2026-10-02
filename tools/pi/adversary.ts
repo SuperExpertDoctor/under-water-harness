@@ -48,18 +48,24 @@ export async function createAdversarySession(
     extensionFactories: [(pi) => {
       pi.on("before_provider_request", (event) => ({ ...event.payload as Record<string, unknown>, max_tokens: 1024, thinking: { type: "disabled" } }));
       pi.registerTool({ name: ADVERSARY_TOOLS[0], label: "Enemy observation", description: "Read own state, known map and already sampled noisy detections/history within 700m. No opponent truth or fleet state.",
+        promptSnippet: "Read own state and noisy in-range detections",
+        promptGuidelines: ["Detections are noisy and capped at 700m; never invent an opponent position, identity, energy or task."],
         parameters: Type.Object({}, { additionalProperties: false }),
+        constrainedSampling: { type: "json_schema", strict: "prefer" },
         execute: async (_id, params, signal) => {
           budget.tool();
-          return { content: [{ type: "text", text: JSON.stringify(await call("observation", params as Record<string, unknown>, signal)) }], details: {} };
+          return { content: [{ type: "text", text: JSON.stringify(await call("observation", params as Record<string, unknown>, signal)) }], details: undefined };
         },
       });
       pi.registerTool({ name: ADVERSARY_TOOLS[1], label: "Evasion parameters", description: "Set bounded speed, turn bias and expiry duration. Cannot set a position, destination or opponent state.",
+        promptSnippet: "Set bounded evasion speed, turn bias and expiry",
+        promptGuidelines: ["Parameters set bounds only, never a position or destination, and expire — re-issue them to keep evading.", "Provide a short public reason grounded in actual detections with every parameter change."],
         parameters: Type.Object({ speed_mps: Type.Number({ minimum: 0, maximum: 3 }), turn_bias: Type.Number({ minimum: -1, maximum: 1 }), duration_s: Type.Number({ minimum: 1, maximum: 60 }), reason: Type.String({ minLength: 1, maxLength: 500, description: "Short public maneuver reason based only on actual noisy detections or own state." }) }, { additionalProperties: false }),
+        constrainedSampling: { type: "json_schema", strict: "prefer" },
         execute: async (_id, params, signal) => {
           budget.tool();
           if (!params.reason.trim()) throw new Error("adversary_reason_required");
-          return { content: [{ type: "text", text: JSON.stringify(await call("parameters", params, signal)) }], details: {} };
+          return { content: [{ type: "text", text: JSON.stringify(await call("parameters", params, signal)) }], details: undefined };
         },
       });
     }],

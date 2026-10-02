@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Circle, Focus, Grid3X3, History, PanelBottom, PanelRight, Radio, Route, Square, Wind, Workflow } from "lucide-react";
+import { Circle, Focus, Grid3X3, History, PanelBottom, PanelRight, Radio, Route, Square, Wind } from "lucide-react";
 
+import ActivityBar from "./components/ActivityBar";
 import BottomDrawer from "./components/BottomDrawer";
 import CanvasMap from "./components/CanvasMap";
 import PlaybackBar from "./components/PlaybackBar";
@@ -18,7 +19,7 @@ import { applyInformationField } from "./state/informationField";
 
 export default function App() {
   const [mode, setMode] = useState("live");
-  const [pluginView, setPluginView] = useState(false);
+  const [activeView, setActiveView] = useState("map");
   const [selectedUavId, setSelectedUavId] = useState(null);
   const [drawerVisible, setDrawerVisible] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(
@@ -249,7 +250,7 @@ export default function App() {
     ? (live.status === "connected" ? connectionLabel : mission.connection === "reconnecting" ? "数据已过期 · 正在重连" : "HTTP 轮询 · 正在重连") : "本地演示 · 等待后端";
 
   return (
-    <main className={`app-layout mission-v2 ${mode === "replay" ? "replay-active" : ""} ${sidebarOpen ? "" : "sidebar-hidden"} ${pluginView ? "plugin-view" : ""}`}>
+    <main className={`app-layout mission-v2 view-${activeView} ${mode === "replay" ? "replay-active" : ""} ${sidebarOpen ? "" : "sidebar-hidden"}`}>
       <header className="top-bar">
         <div className="product-mark" aria-label="多 UUV 协同任务控制台">
           <span className="mark-index">MC</span>
@@ -348,9 +349,6 @@ export default function App() {
           >
             <Focus size={17} />
           </button>
-          <button className={pluginView ? "icon-btn active" : "icon-btn"} onClick={() => setPluginView((value) => !value)} title="插件视图" aria-label="切换插件视图" aria-pressed={pluginView}>
-            <Workflow size={17} />
-          </button>
           <button className={sidebarOpen ? "icon-btn active" : "icon-btn"} onClick={() => setSidebarOpen((value) => !value)} title="任务工作区侧边栏" aria-label="切换任务工作区侧边栏" aria-pressed={sidebarOpen}>
             <PanelRight size={17} />
           </button>
@@ -360,6 +358,7 @@ export default function App() {
           recordingState={recordingView.alert ? "unavailable" : recording.status.status} />
       </header>
 
+      <ActivityBar activeView={activeView} onSelect={setActiveView} />
       <CanvasMap
         ref={mapExporterRef}
         frame={displayFrame}

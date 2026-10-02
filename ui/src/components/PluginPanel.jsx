@@ -159,15 +159,27 @@ export default function PluginPanel({ frame, events }) {
                 <div className="plugin-card-top">
                   <span className="plugin-dot" style={{ background: def.color }} />
                   <strong>{def.name}</strong>
-                  <button
-                    type="button"
-                    className={`plugin-power ${enabled ? "on" : ""}`}
-                    title={enabled ? "关闭插件（仅影响显示）" : "启用插件"}
-                    aria-pressed={enabled}
-                    onClick={() => togglePlugin(def.id)}
-                  >
-                    <Power size={13} />
-                  </button>
+                  {def.custom ? (
+                    <button
+                      type="button"
+                      className={`plugin-power ${enabled ? "on" : ""}`}
+                      title={enabled ? "关闭插件（仅影响显示）" : "启用插件"}
+                      aria-pressed={enabled}
+                      onClick={() => togglePlugin(def.id)}
+                    >
+                      <Power size={13} />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="plugin-power locked"
+                      title="基础控制算法插件，不可关闭"
+                      aria-label={`${def.name} 不可关闭`}
+                      disabled
+                    >
+                      <Power size={13} />
+                    </button>
+                  )}
                   {def.custom && (
                     <button type="button" className="plugin-remove" title="删除插件" aria-label={`删除 ${def.name}`} onClick={() => removePlugin(def.id)}>
                       <Trash2 size={13} />

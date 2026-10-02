@@ -75,7 +75,7 @@ button {
 }
 
 .app-layout.sidebar-hidden {
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: var(--activity-width, 46px) minmax(0, 1fr);
 }
 
 .app-layout.sidebar-hidden .sidebar {
@@ -2304,14 +2304,17 @@ button {
 
   .app-layout,
   .app-layout.replay-active {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: var(--activity-width, 40px) minmax(0, 1fr);
   }
 
   .top-bar,
-  .canvas-area,
   .bottom-drawer,
   .playback-bar {
-    grid-column: 1;
+    grid-column: 1 / -1;
+  }
+
+  .canvas-area {
+    grid-column: 2;
   }
 
   .sidebar {

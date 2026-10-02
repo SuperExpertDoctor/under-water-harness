@@ -6,16 +6,6 @@
 
 export const PLUGIN_DEFS = [
   {
-    id: "pi-agent", name: "PI AGENT 决策", layer: 0, color: "#7c3aed",
-    desc: "LLM 推理：生成任务计划、批复建议与语义解释",
-    inputs: "none", outputs: "many",
-  },
-  {
-    id: "approval-gate", name: "审批权限门", layer: 0, color: "#b45309",
-    desc: "按权限模式闸控计划下发：人工审批 / AI 辅助 / 完全自主",
-    inputs: "many", outputs: "one",
-  },
-  {
     id: "energy-lifecycle", name: "能源轮换", layer: 0, color: "#0f766e",
     desc: "油量监视、低油量返航、替补艇生成与跟踪交接",
     inputs: "many", outputs: "many",
@@ -65,8 +55,6 @@ export const PLUGIN_DEFS = [
 // Static topology: every edge the algorithm can exercise. `route` maps the
 // edge to the frame feature that says it is carrying subjects this frame.
 const EDGES = [
-  { from: "pi-agent", to: "approval-gate" },
-  { from: "approval-gate", to: "task-allocation" },
   { from: "energy-lifecycle", to: "task-allocation" },
   { from: "energy-lifecycle", to: "path-planning" },
   { from: "energy-lifecycle", to: "region-partition" },
@@ -90,16 +78,12 @@ const EDGES = [
 export const PLUGIN_EDGES = EDGES;
 
 const EVENT_PLUGIN = {
-  approval_decided: "approval-gate",
-  approval_requested: "approval-gate",
-  permission_changed: "approval-gate",
   tracking_handoff_started: "energy-lifecycle",
   tracking_handoff_completed: "energy-lifecycle",
   debug_fuel_shortage: "energy-lifecycle",
   uuv_exit: "energy-lifecycle",
   uuv_entered: "task-allocation",
   region_repair: "region-partition",
-  plan_submitted: "pi-agent",
   contact_lost: "reacquire",
   contact_found: "reacquire",
 };
@@ -115,7 +99,6 @@ export function derivePluginGraph(frame, liveEvents = []) {
   const uavs = frame?.uavs || [];
   const contacts = frame?.contacts || [];
   const plans = frame?.plans || [];
-  const pending = frame?.pending_approvals || [];
   const regions = frame?.search_regions || [];
   const events = (frame?.events || []).concat(liveEvents || []).slice(-12);
 
@@ -123,7 +106,6 @@ export function derivePluginGraph(frame, liveEvents = []) {
   for (const def of PLUGIN_DEFS) {
     nodes[def.id] = { active: false, subjects: [], meta: null };
   }
-  const seen = { };
 
   const transitToTrack = uavs.filter((u) => u.status === "transit" && u.target_group_id);
   const transitToRegion = uavs.filter((u) => u.status === "transit" && !u.target_group_id);
@@ -166,15 +148,6 @@ export function derivePluginGraph(frame, liveEvents = []) {
   nodes["task-allocation"].subjects = [...new Set(activePlans.flatMap((p) => p.active_members || p.members || []))];
   nodes["task-allocation"].meta = activePlans.length ? `${activePlans.length} 个活跃计划` : null;
 
-  nodes["approval-gate"].active = pending.length > 0;
-  nodes["approval-gate"].subjects = pending.map((p) => p.kind || "plan");
-  nodes["approval-gate"].meta = pending.length ? `${pending.length} 计划待批` : `模式: ${frame?.autonomy_mode || "—"}`;
-
-  const agent = frame?.agent_status;
-  nodes["pi-agent"].active = pending.length > 0 || agent?.status === "busy" || agent?.status === "thinking";
-  nodes["pi-agent"].subjects = pending.map((p) => p.kind || "plan");
-  nodes["pi-agent"].meta = agent?.cycle != null ? `cycle ${agent.cycle}` : null;
-
   nodes["energy-lifecycle"].active = returning.length > 0 || lowFuel.length > 0;
   nodes["energy-lifecycle"].subjects = [...new Set([...returning, ...lowFuel].map((u) => u.id))];
   nodes["energy-lifecycle"].meta = nodes["energy-lifecycle"].subjects.length
@@ -211,8 +184,6 @@ export function derivePluginGraph(frame, liveEvents = []) {
     else if (key === "coop-tracking>reacquire") subjects = lostContacts.map((c) => c.contact_id);
     else if (key === "reacquire>coop-tracking") subjects = trackedContacts.map((c) => c.contact_id);
     else if (key === "region-partition>task-allocation") subjects = regions.map((r) => r.assigned_uav_id).filter(Boolean);
-    else if (key === "pi-agent>approval-gate") subjects = pending.map((p) => p.kind || "plan");
-    else if (key === "approval-gate>task-allocation") subjects = activePlans.map((p) => p.kind || "plan");
     else if (to === "uuv-control") subjects = moving.map((u) => u.id);
     const active = nodes[from].active && nodes[to].active && (subjects.length > 0 || ["energy-lifecycle>region-partition"].includes(key));
     return { key, from, to, active, subjects };

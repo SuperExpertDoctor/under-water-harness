@@ -15,15 +15,24 @@ Public surface (kept import-compatible with the old plugins.py module):
 
 import importlib
 import pkgutil
+import re
+import sys
+import types
+from pathlib import Path
 
 from .contract import STAGE_SLOTS
 
+_PACKAGE_DIR = Path(__file__).parent
 _MODULES = {}
+
+
+def _registrable(info):
+    return not info.name.startswith("_") and info.name != "contract"
 
 
 def _load():
     for info in sorted(pkgutil.iter_modules(__path__), key=lambda i: i.name):
-        if info.name.startswith("_") or info.name == "contract":
+        if not _registrable(info):
             continue
         module = importlib.import_module(f"{__name__}.{info.name}")
         spec = getattr(module, "PLUGIN", None)
@@ -49,8 +58,122 @@ PLUGIN_EDGES = [_edge_dict(e) for m in _MODULES.values()
                 for e in m.PLUGIN.get("edges", ())]
 
 _EDGE_SUBJECT_FNS = {}
+_BUILTIN_STAGE_FNS = {}
 for _module in _MODULES.values():
     _EDGE_SUBJECT_FNS.update(getattr(_module, "EDGE_SUBJECTS", {}) or {})
+    if _module.PLUGIN.get("core"):
+        _BUILTIN_STAGE_FNS.update(getattr(_module, "STAGES", {}) or {})
+
+
+def reload_plugins():
+    """Re-scan this directory: pick up added/edited/deleted plugin files."""
+    for pid, module in list(_MODULES.items()):
+        name = module.__name__.rsplit(".", 1)[-1]
+        if not (_PACKAGE_DIR / f"{name}.py").exists():
+            _MODULES.pop(pid)
+            sys.modules.pop(module.__name__, None)
+    for info in sorted(pkgutil.iter_modules(__path__), key=lambda i: i.name):
+        if not _registrable(info):
+            continue
+        existing = next((m for m in _MODULES.values()
+                        if m.__name__ == f"{__name__}.{info.name}"), None)
+        if existing is not None:
+            try:
+                module = importlib.reload(existing)
+            except Exception:
+                module = existing  # broken edit: keep the last good module
+        else:
+            module = importlib.import_module(f"{__name__}.{info.name}")
+        spec = getattr(module, "PLUGIN", None)
+        if isinstance(spec, dict) and spec.get("id"):
+            _MODULES[spec["id"]] = module
+    stale = [pid for pid, m in _MODULES.items()
+             if m.__name__ not in sys.modules or m.PLUGIN.get("id") != pid]
+    for pid in stale:
+        _MODULES.pop(pid)
+    _rebuild()
+    return [m.PLUGIN["id"] for m in _MODULES.values()]
+
+
+def _rebuild():
+    # Mutate in place: modules that imported PLUGIN_SPECS/PLUGIN_EDGES keep a
+    # live view across reloads.
+    PLUGIN_SPECS[:] = sorted(
+        ({**m.PLUGIN, "edges": [_edge_dict(e) for e in m.PLUGIN.get("edges", ())]}
+         for m in _MODULES.values()),
+        key=lambda s: (s.get("layer", 99), s["id"]),
+    )
+    PLUGIN_EDGES[:] = [_edge_dict(e) for m in _MODULES.values()
+                       for e in m.PLUGIN.get("edges", ())]
+    _EDGE_SUBJECT_FNS.clear()
+    _BUILTIN_STAGE_FNS.clear()
+    for m in _MODULES.values():
+        _EDGE_SUBJECT_FNS.update(getattr(m, "EDGE_SUBJECTS", {}) or {})
+        # Only core plugins may provide named-slot implementations; custom
+        # plugins insert positioned stages via tick_stages() instead.
+        if m.PLUGIN.get("core"):
+            _BUILTIN_STAGE_FNS.update(getattr(m, "STAGES", {}) or {})
+
+
+_REQUIRED_KEYS = ("id", "name", "layer", "color", "desc", "inputs", "outputs")
+
+
+def install_plugin(source):
+    """Validate a plugin source file and drop it into this directory.
+
+    Returns the registered spec dict. Raises ValueError on any contract
+    violation; the file is only written after validation succeeds.
+    """
+    probe = types.ModuleType("uuv_game_plugin_probe")
+    try:
+        exec(compile(source, "<plugin>", "exec"), probe.__dict__)
+    except Exception as exc:
+        raise ValueError(f"plugin source failed to load: {exc}") from exc
+    spec = getattr(probe, "PLUGIN", None)
+    if not isinstance(spec, dict):
+        raise ValueError("module must define a PLUGIN dict")
+    missing = [key for key in _REQUIRED_KEYS if key not in spec]
+    if missing:
+        raise ValueError(f"PLUGIN missing required keys: {', '.join(missing)}")
+    pid = spec["id"]
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", pid):
+        raise ValueError("PLUGIN id must be kebab-case [a-z0-9-]")
+    if pid in _MODULES:
+        raise ValueError(f"plugin id already registered: {pid}")
+    if spec.get("core"):
+        raise ValueError("custom plugins cannot claim core status")
+    for slot in spec.get("owns_stages", ()):
+        if slot not in STAGE_SLOTS:
+            raise ValueError(f"unknown pipeline slot: {slot}")
+    filename = pid.replace("-", "_")
+    path = _PACKAGE_DIR / f"{filename}.py"
+    if path.exists():
+        raise ValueError(f"plugin file already exists: {path.name}")
+    path.write_text(source, encoding="utf-8")
+    reload_plugins()
+    return next(s for s in PLUGIN_SPECS if s["id"] == pid)
+
+
+def uninstall_plugin(plugin_id):
+    """Remove a non-core plugin's file and unregister it."""
+    module = _MODULES.get(plugin_id)
+    if module is None:
+        return False
+    if module.PLUGIN.get("core"):
+        raise ValueError("core plugins cannot be removed")
+    name = module.__name__.rsplit(".", 1)[-1]
+    path = _PACKAGE_DIR / f"{name}.py"
+    if path.exists():
+        path.unlink()
+    _MODULES.pop(plugin_id)
+    sys.modules.pop(module.__name__, None)
+    _rebuild()
+    return True
+
+
+def stage_impl(slot):
+    """Stage implementation fn(rt) provided by a builtin plugin, if any."""
+    return _BUILTIN_STAGE_FNS.get(slot)
 
 
 def catalog(enabled=None):

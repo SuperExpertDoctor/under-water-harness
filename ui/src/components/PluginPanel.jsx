@@ -22,6 +22,30 @@ function portCount(kind) {
   return kind === "none" ? 0 : kind === "one" ? 1 : 3;
 }
 
+// Generates a drop-in plugin file conforming to plugins/contract.py; the
+// backend validates and installs it into tools/uuv_game/plugins/.
+function pluginSource(plugin) {
+  return `"""Custom plugin installed from the plugin panel."""
+
+PLUGIN = {
+    "id": ${JSON.stringify(plugin.id)},
+    "name": ${JSON.stringify(plugin.name)},
+    "layer": ${plugin.layer},
+    "color": ${JSON.stringify(plugin.color)},
+    "desc": ${JSON.stringify(plugin.desc)},
+    "inputs": ${JSON.stringify(plugin.inputs)},
+    "outputs": ${JSON.stringify(plugin.outputs)},
+    "core": False,
+    "edges": [],
+    "owns_stages": [],
+}
+
+
+def activity(runtime, ctx):
+    ctx.meta("自定义插件已注册")
+`;
+}
+
 export default function PluginPanel({ frame, events }) {
   const [library, setLibrary] = useState(loadLibrary);
   const [adding, setAdding] = useState(false);
@@ -38,21 +62,35 @@ export default function PluginPanel({ frame, events }) {
 
   // Plugin specs come from the backend registry so the panel renders whatever
   // the control stack declares; bundled defs remain the offline fallback.
-  useEffect(() => {
-    let disposed = false;
+  const fetchCatalog = () => {
     fetch("/api/plugins")
       .then((response) => (response.ok ? response.json() : null))
-      .then((data) => { if (!disposed && data?.plugins?.length) setCatalog(data); })
+      .then((data) => { if (data?.plugins?.length) setCatalog(data); })
       .catch(() => {});
-    return () => { disposed = true; };
+  };
+  useEffect(fetchCatalog, []);
+
+  // One-time migration: plugins previously stored as display-only
+  // localStorage entries are registered on the backend, then cleared.
+  useEffect(() => {
+    if (!library.custom.length) return;
+    Promise.all(library.custom.map((plugin) => fetch("/api/plugins", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source: pluginSource(plugin) }),
+    }).catch(() => null))).then(() => {
+      setLibrary((lib) => ({ ...lib, custom: [] }));
+      fetchCatalog();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const coreDefs = catalog?.plugins || PLUGIN_DEFS;
+  const defs = catalog?.plugins || PLUGIN_DEFS;
   const edgeDefs = catalog?.edges || PLUGIN_EDGES;
   const edgeKey = (edge) => edge.key || `${edge.from}>${edge.to}`;
-  const defs = useMemo(() => [...coreDefs, ...library.custom], [coreDefs, library.custom]);
   const graph = useMemo(() => derivePluginGraph(frame, events), [frame, events]);
-  const visibleDefs = defs.filter((d) => !library.disabled.includes(d.id));
+  const uiDisabled = (def) => !def.core && library.disabled.includes(def.id);
+  const visibleDefs = defs.filter((d) => d.enabled !== false && !uiDisabled(d));
 
   useEffect(() => {
     try { globalThis.localStorage?.setItem(STORAGE_KEY, JSON.stringify(library)); } catch { /* storage optional */ }
@@ -163,28 +201,32 @@ export default function PluginPanel({ frame, events }) {
     return next;
   });
 
-  const togglePlugin = (id) => {
-    setLibrary((lib) => ({
-      ...lib,
-      disabled: lib.disabled.includes(id) ? lib.disabled.filter((x) => x !== id) : [...lib.disabled, id],
-    }));
+  const togglePlugin = (id, enabled) => {
+    fetch(`/api/plugins/${id}/enabled`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled: !enabled }),
+    }).then(() => fetchCatalog()).catch(() => {});
     if (pinned === id) setPinned(null);
   };
   const removePlugin = (id) => {
-    setLibrary((lib) => ({ disabled: lib.disabled.filter((x) => x !== id), custom: lib.custom.filter((p) => p.id !== id) }));
+    fetch(`/api/plugins/${id}`, { method: "DELETE" })
+      .then(() => fetchCatalog()).catch(() => {});
     if (pinned === id) setPinned(null);
   };
   const addPlugin = () => {
     const name = draft.name.trim();
     if (!name) return;
     const id = `custom-${Date.now().toString(36)}`;
-    setLibrary((lib) => ({
-      ...lib,
-      custom: [...lib.custom, {
-        id, name, desc: draft.desc.trim() || "自定义插件", layer: 4, color: "#6d28d9",
-        inputs: "many", outputs: "many", custom: true,
-      }],
-    }));
+    const source = pluginSource({
+      id, name, desc: draft.desc.trim() || "自定义插件", layer: 4, color: "#6d28d9",
+      inputs: "many", outputs: "many",
+    });
+    fetch("/api/plugins", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ source }),
+    }).then((response) => { if (response.ok) fetchCatalog(); }).catch(() => {});
     setDraft({ name: "", desc: "" });
     setAdding(false);
   };
@@ -220,20 +262,21 @@ export default function PluginPanel({ frame, events }) {
         )}
         <ul className="plugin-list">
           {defs.map((def) => {
-            const enabled = !library.disabled.includes(def.id);
+            const enabled = def.enabled !== false && !uiDisabled(def);
+            const custom = !def.core;
             const node = graph.nodes[def.id];
             return (
               <li key={def.id} className={`plugin-card ${enabled ? "" : "off"}`}>
                 <div className="plugin-card-top">
                   <span className="plugin-dot" style={{ background: def.color }} />
                   <strong>{def.name}</strong>
-                  {def.custom ? (
+                  {custom ? (
                     <button
                       type="button"
                       className={`plugin-power ${enabled ? "on" : ""}`}
-                      title={enabled ? "关闭插件（仅影响显示）" : "启用插件"}
+                      title={enabled ? "关闭插件（停止参与调度与显示）" : "启用插件"}
                       aria-pressed={enabled}
-                      onClick={() => togglePlugin(def.id)}
+                      onClick={() => togglePlugin(def.id, enabled)}
                     >
                       <Power size={13} />
                     </button>
@@ -248,7 +291,7 @@ export default function PluginPanel({ frame, events }) {
                       <Power size={13} />
                     </button>
                   )}
-                  {def.custom && (
+                  {custom && (
                     <button type="button" className="plugin-remove" title="删除插件" aria-label={`删除 ${def.name}`} onClick={() => removePlugin(def.id)}>
                       <Trash2 size={13} />
                     </button>

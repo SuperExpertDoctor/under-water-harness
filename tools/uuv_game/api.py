@@ -20,7 +20,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .runtime import ALGORITHM_IDS, MissionRuntime, MissionError, identifier
 from .agent_events import session_event
-from .plugins import catalog as plugin_catalog
+from .plugins import catalog as plugin_catalog, install_plugin, uninstall_plugin
 from .recording import RecordingError, RecordingManager
 
 
@@ -427,6 +427,30 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
     @app.get("/api/plugins")
     async def plugins():
         return plugin_catalog(runtime.plugin_states)
+
+    @app.post("/api/plugins")
+    async def plugin_install(request: Request):
+        data = await payload(request, episode=False)
+        source = data.get("source", "")
+        if not isinstance(source, str) or not source.strip():
+            raise MissionError("plugin_source_required", 422)
+        spec = install_plugin(source)
+        runtime.refresh_plugins()
+        return {"plugin": spec}
+
+    @app.delete("/api/plugins/{plugin_id}")
+    async def plugin_uninstall(plugin_id: str):
+        if not uninstall_plugin(plugin_id):
+            raise MissionError("plugin_not_found", 404)
+        runtime.refresh_plugins()
+        return {"removed": plugin_id}
+
+    @app.post("/api/plugins/{plugin_id}/enabled")
+    async def plugin_enabled(plugin_id: str, request: Request):
+        data = await payload(request, episode=False)
+        if not runtime.set_plugin_enabled(plugin_id, bool(data.get("enabled", True))):
+            raise MissionError("plugin_not_toggleable", 409)
+        return {"plugin": plugin_id, "enabled": runtime.plugin_enabled(plugin_id)}
 
     @app.post("/api/algorithm/task-plan")
     @app.post("/api/algorithm/decision")

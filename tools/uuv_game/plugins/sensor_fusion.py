@@ -1,4 +1,12 @@
-"""Builtin plugin: multi-UUV bearing fusion (EKF contact estimation)."""
+"""Builtin plugin: multi-UUV bearing fusion (EKF contact estimation).
+
+Owns the observation pipeline stage.
+"""
+
+from ..capabilities.handover import finish_handover
+from ..config import algorithm_settings
+
+_RUNTIME = algorithm_settings("runtime")
 
 PLUGIN = {
     "id": "sensor-fusion", "name": "多艇方位融合", "layer": 2, "color": "#0e7490",
@@ -21,3 +29,18 @@ def activity(runtime, ctx):
 EDGE_SUBJECTS = {
     "sensor-fusion>coop-tracking": lambda L: L["observers"],
 }
+
+
+def stage_observations(rt):
+    if rt.frame_id % _RUNTIME["observation_frames"] == 0:
+        rt._observe()
+        finish_handover(rt)
+        for key, contact in rt.contacts.items():
+            if contact.get("auto_track_requested"):
+                rt._auto_track(key)
+        for u in rt.uuvs:
+            u["trail"] = (u["trail"]+[u["pose"][:2]])[-_RUNTIME["max_trail_points"]:]
+    return True
+
+
+STAGES = {"observations": stage_observations}

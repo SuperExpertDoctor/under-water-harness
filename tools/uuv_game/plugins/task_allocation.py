@@ -1,4 +1,7 @@
-"""Builtin plugin: task allocation (approved plan members -> UUVs)."""
+"""Builtin plugin: task allocation (approved plan members -> UUVs).
+
+Owns the plan-lifecycle pipeline stage.
+"""
 
 PLUGIN = {
     "id": "task-allocation", "name": "任务分配", "layer": 1, "color": "#1d4ed8",
@@ -27,3 +30,18 @@ EDGE_SUBJECTS = {
     "task-allocation>coop-tracking": lambda L: L["tracking"],
     "task-allocation>reacquire": lambda L: L["reacquire_members"],
 }
+
+
+def stage_plan_lifecycle(rt):
+    for plan in rt.plans.values():
+        if plan["status"] == "pending_approval" and rt.sim_time > plan["expires_at_s"]:
+            plan["status"] = "expired"
+            rt._requeue_auto_track(plan)
+            rt.event("approval_expired", {"plan_id": plan["plan_id"]})
+    for intent in rt.intents:
+        if intent["lifecycle"] == "active" and rt.sim_time/60 >= intent["expires_at_min"]:
+            intent["lifecycle"] = "expired"
+    return True
+
+
+STAGES = {"plan_lifecycle": stage_plan_lifecycle}

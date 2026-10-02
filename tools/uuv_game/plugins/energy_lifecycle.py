@@ -1,4 +1,9 @@
-"""Builtin plugin: energy lifecycle (fuel watch, exits, replacements)."""
+"""Builtin plugin: energy lifecycle (fuel watch, exits, replacements).
+
+Owns the exit-preparation pipeline stage.
+"""
+
+from ..capabilities.lifecycle import prepare_exits
 
 PLUGIN = {
     "id": "energy-lifecycle", "name": "能源轮换", "layer": 0, "color": "#0f766e",
@@ -24,3 +29,10 @@ EDGE_SUBJECTS = {
     "energy-lifecycle>path-planning": lambda L: L["exiting"],
     "energy-lifecycle>task-allocation": lambda L: L["relief"] + L["low_fuel"],
 }
+
+
+def stage_exit_prep(rt):
+    return prepare_exits(rt)
+
+
+STAGES = {"exit_prep": stage_exit_prep}

@@ -47,6 +47,24 @@ Optional module hooks:
         fn returns False to abort the tick (same semantics as a safety
         pause); any other return value continues. ``after`` names a
         STAGE_SLOTS entry; unknown names append at pipeline end.
+
+Runtime surface available to plugin code (the "port" between plugins and
+the simulator; plugins must not import MissionRuntime itself):
+
+    state     rt.uuvs, rt.targets, rt.obstacles, rt.contacts, rt.active,
+              rt.plans, rt.intents, rt.regions, rt.scan_times,
+              rt.vessels, rt.sim_time, rt.frame_id, rt.status,
+              rt.standing_policy, rt.config, rt.plugin_states
+    actions   rt.event(type, payload)   append a mission event
+              rt.queue_agent(text, kind)  enqueue PI-agent input
+              rt.pause(reason)          safety-pause the simulation
+              rt.tick()                 re-entrant tick (RLock)
+              rt.set_plugin_enabled(id, enabled) / rt.plugin_enabled(id)
+              rt.plugin_states          enabled map per plugin id
+
+Capability libraries live under ``tools/uuv_game/capabilities/`` and pure
+planners under ``tools/uuv_game/algorithms/``; plugin files import them
+with relative imports (``from ..capabilities.lifecycle import ...``).
 """
 
 STAGE_SLOTS = (

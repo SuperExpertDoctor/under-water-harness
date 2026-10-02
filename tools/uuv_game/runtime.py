@@ -11,19 +11,17 @@ from contextlib import contextmanager
 
 from .config import Config, algorithm_settings
 from .store import Store, ReceiptLedger
-from .algorithms.motion import integrate
 from .algorithms.planning import plan_path, path_safe
 from .algorithms.coverage import plan_search
 from .algorithms.allocation import allocate_tasks
-from .algorithms.tracking import acquisition_control, tracking_control, follow_path, tracking_plan
+from .algorithms.tracking import tracking_plan
 from .algorithms.partition import partition_regions
-from .algorithms.control import choose_controls
 from .capabilities.mission_planning import search_bundle, explicit_regions
-from .capabilities.lifecycle import prepare_exits, replacement_pose, apply_replacements, repair_search, navigation_pose, exit_route
-from .capabilities.handover import prepare_handover, finish_handover
+from .capabilities.lifecycle import repair_search, navigation_pose, exit_route
 from .capabilities.sensing import observe, sensor_mode, sensor_roles
 from .capabilities.information import information_fields, target_evidence_field
-from .plugins import PLUGIN_SPECS, frame_activity as plugin_frame_activity, stage_owners, custom_stages, merge_stages
+from .plugins import (PLUGIN_SPECS, frame_activity as plugin_frame_activity,
+                      stage_owners, stage_impl, custom_stages, merge_stages)
 from .capabilities import adversary as enemy
 
 
@@ -69,25 +67,13 @@ class MissionRuntime:
         self.rng = random.Random(self.config.seed)
         self.last_heartbeat = 0.0
         self._initial()
-        # Tick stages run through the plugin registry: each stage belongs to
-        # the control plugins that own it, and the loop skips a stage only
-        # when every owning plugin is disabled (core plugins cannot be
-        # disabled, so today every stage always runs).
+        # Tick stages run through the plugin registry: each slot's
+        # implementation lives in the plugin file that owns it (STAGES map),
+        # and the loop skips a stage only when every owning plugin is
+        # disabled (core plugins cannot be disabled). Custom plugins may
+        # insert extra stages after a named slot via tick_stages().
         self.plugin_states = {spec["id"]: True for spec in PLUGIN_SPECS}
-        # Ordered builtin slots; each slot's owner plugins come from the
-        # registry (PLUGIN["owns_stages"]). Custom plugins may insert extra
-        # stages after a named slot via their tick_stages() hook.
-        self._tick_stages = merge_stages((
-            ("track_leases", self._stage_provisional_leases),
-            ("contact_repairs", self._stage_contact_repairs),
-            ("handover_prep", self._stage_handover_prepare),
-            ("exit_prep", self._stage_exit_prepare),
-            ("motion", self._stage_motion),
-            ("observations", self._stage_observations),
-            ("scene", self._stage_scene),
-            ("plan_lifecycle", self._stage_plan_lifecycle),
-            ("coverage_review", self._stage_coverage_review),
-        ), custom_stages(self))
+        self._tick_stages = self._build_pipeline()
         saved = self.store.load()
         if saved:
             for key, value in saved.items():
@@ -893,6 +879,27 @@ class MissionRuntime:
         self.plugin_states[plugin_id] = bool(enabled)
         return True
 
+    _TICK_SLOTS = ("track_leases", "contact_repairs", "handover_prep", "exit_prep",
+                   "motion", "observations", "scene", "plan_lifecycle", "coverage_review")
+
+    def _build_pipeline(self):
+        builtin = []
+        for slot in self._TICK_SLOTS:
+            # Implementations live in the owning plugin's file (its STAGES
+            # map); the unowned 'scene' slot keeps a runtime implementation.
+            impl = stage_impl(slot) or ((lambda rt: rt._stage_scene()) if slot == "scene" else None)
+            builtin.append((slot, impl))
+        return merge_stages(builtin, custom_stages(self))
+
+    def refresh_plugins(self):
+        """Re-sync plugin states and the pipeline after a registry reload."""
+        known = {spec["id"] for spec in PLUGIN_SPECS}
+        for pid in known:
+            self.plugin_states.setdefault(pid, True)
+        for stale in [pid for pid in self.plugin_states if pid not in known]:
+            del self.plugin_states[stale]
+        self._tick_stages = self._build_pipeline()
+
     @synchronized
     def tick(self):
         if self.status != "running":
@@ -906,237 +913,17 @@ class MissionRuntime:
             self.clear_target_maneuver("机动参数到期，恢复默认控制")
         # Registry-driven pipeline: a stage is skipped only when every owning
         # plugin is disabled; a stage returning False aborts the tick (pause).
+        # Custom-plugin stages ("plugin:<id>") are owned by that plugin.
         for slot, stage in self._tick_stages:
+            if stage is None:
+                continue
             owners = stage_owners(slot)
+            if slot.startswith("plugin:"):
+                owners = [slot.split(":", 1)[1]]
             if owners and not all(self.plugin_enabled(pid) for pid in owners):
                 continue
-            if stage() is False:
+            if stage(self) is False:
                 return
-
-    def _stage_provisional_leases(self):
-        for member, action in list(self.active.items()):
-            if action.get("provisional") and self.sim_time >= action["expires_at_s"]:
-                if not self._end_provisional_contact(member, "lease_expired"):
-                    return False
-        return True
-
-    def _stage_contact_repairs(self):
-        stale_contacts = {action["contact_id"] for action in self.active.values()
-            if action.get("kind") == "track" and not action.get("provisional") and action.get("contact_id") in self.contacts
-            and self.contacts[action["contact_id"]]["state"] == "lost"
-            and self.sim_time-self.contacts[action["contact_id"]]["last_seen"] >= _RUNTIME["reacquisition_max_unobserved_s"]
-            and not any(other.get("kind") == "track" and other.get("contact_id") == action["contact_id"]
-                and other.get("phase") == "transit" for other in self.active.values())
-            and all(self.sim_time-other.get("acquisition_started_at_s", self.contacts[action["contact_id"]]["last_seen"])
-                >= _RUNTIME["reacquisition_max_unobserved_s"] for other in self.active.values()
-                if other.get("kind") == "track" and other.get("contact_id") == action["contact_id"])}
-        for contact_id in stale_contacts:
-            members = [member for member, action in self.active.items()
-                if action.get("kind") == "track" and action.get("contact_id") == contact_id]
-            if not self.standing_policy.get("local_repair"):
-                self.pause("safety_stale_contact_repair_authorization_required")
-                return False
-            for member in members:
-                self.active.pop(member)
-            if repair_search(self, add=members, required=False):
-                self.event("stale_contact_search_resumed", {"contact_id": contact_id, "members": members,
-                    "last_seen_s": self.contacts[contact_id]["last_seen"]})
-            self.queue_agent(f"Contact {contact_id} has no fresh observation. Coverage search resumed; plan new tracking only after a measured reacquisition.", "target_lost")
-        # Boats dropped by an infeasible repair (coverage_gap_accepted) would
-        # otherwise idle forever; retry the repartition as positions evolve.
-        pending = [member for member in self.repair_pending if member not in self.active]
-        if pending and self.standing_policy["local_repair"]:
-            repair_search(self, add=pending, required=False)
-        self.repair_pending.difference_update(self.active)
-        return True
-
-    def _stage_handover_prepare(self):
-        if self.frame_id % _RUNTIME["safety_review_frames"] == 0:
-            prepare_handover(self)
-        return True
-
-    def _stage_exit_prepare(self):
-        return prepare_exits(self)
-
-    def _stage_motion(self):
-        next_poses = {}
-        controls = {}
-        for u in self.uuvs:
-            action = self.active.get(u["id"])
-            if not action:
-                next_poses[u["id"]] = u["pose"]
-                continue
-            if action.get("generation", u["generation"]) != u["generation"]:
-                self.pause("safety_stale_generation")
-                return False
-            pose = u["pose"]
-            if action["kind"] == "track":
-                estimate = self.contacts.get(action.get("contact_id"))
-                if not estimate or (estimate["state"] == "lost" and not self.standing_policy["lost_reacquire"]):
-                    self.pause("safety_tracking_contact_lost")
-                    return False
-                if estimate["state"] == "lost":
-                    if action.get("phase") != "transit":
-                        action["phase"] = "reacquiring"
-                    action["acquisition_mode"] = "active"
-                elif (action.get("phase") == "tracking" and self.standing_policy.get("lost_reacquire")
-                      and self.sim_time-estimate["last_seen"] >= _RUNTIME["reacquisition_trigger_s"]):
-                    action["phase"] = "reacquiring"
-                    action["acquisition_mode"] = "active"
-                    self.event("tracking_reacquisition_started", {"uuv_id": u["id"], "contact_id": action["contact_id"],
-                        "last_seen_s": estimate["last_seen"]})
-                teammates = [b for b in sorted(self.uuvs, key=lambda b: (self.active.get(b["id"], {}).get("slot", 0), b["id"]))
-                    if self.active.get(b["id"], {}).get("kind") == "track" and self.active[b["id"]].get("contact_id") == action["contact_id"]
-                    and (action.get("phase") == "transit" or self.active[b["id"]].get("phase") != "transit")]
-                slot = next(i for i, b in enumerate(teammates) if b["id"] == u["id"])
-                preferred = (acquisition_control(pose, estimate, reacquiring=action.get("phase") == "reacquiring") if action.get("acquisition_mode") == "active" and action.get("phase") in ("provisional", "acquiring", "reacquiring")
-                    else tracking_control(pose, estimate, slot=slot, team=[b["pose"] for b in teammates] if len(teammates) >= 2 else None))
-                if action.get("phase") == "transit" and action.get("points"):
-                    points = action["points"]
-                    nearest = min(range(action["index"], min(len(points), action["index"]+_RUNTIME["nearest_waypoint_span"])), key=lambda n: math.dist(pose[:2], points[n][:2]))
-                    action["index"] = nearest
-                    if nearest >= len(points)-_RUNTIME["arrival_waypoint_tolerance"] or (math.dist(pose[:2], points[-1][:2]) < _RUNTIME["arrival_distance_m"] and abs(math.remainder(pose[2]-points[-1][2], 2*math.pi)) < _RUNTIME["arrival_heading_rad"]):
-                        action["phase"] = "acquiring"
-                        action["acquisition_started_at_s"] = self.sim_time
-                        self.event("tracking_position_reached", {"uuv_id": u["id"], "contact_id": action["contact_id"]})
-                    else:
-                        preferred = follow_path(pose, points[nearest:nearest+_RUNTIME["lookahead_points"]])
-            elif action.get("points"):
-                points = action["points"]
-                index = action["index"]
-                end = min(len(points), index+_RUNTIME["nearest_waypoint_span"])
-                nearest = min(range(index, end), key=lambda n: math.dist(pose[:2], points[n][:2]))
-                action["index"] = nearest
-                if nearest >= len(points)-_RUNTIME["cycle_end_waypoint_tolerance"]:
-                    if action["kind"] == "exit":
-                        preferred = 0
-                    elif math.dist(points[action.get("cycle_start_index", 0)][:2], points[-1][:2]) > _RUNTIME["closed_route_tolerance_m"]:
-                        self.pause("safety_no_authorized_continuation")
-                        return False
-                    else:
-                        action["index"] = action.get("cycle_start_index", 0)
-                        preferred = follow_path(pose, points[action["index"]:action["index"]+_RUNTIME["lookahead_points"]])
-                        if action["kind"] in ("search", "reacquire"):
-                            self.event("search_complete", {"uav_id": u["id"], "plan_id": action["plan_id"]})
-                        if action.get("requires_replan_after_cycle"):
-                            self.queue_agent("Coverage gap or overdue revisit detected; review available search assignments.", "search_gap")
-                else:
-                    preferred = follow_path(pose, points[nearest:nearest+_RUNTIME["lookahead_points"]])
-            else:
-                self.pause("safety_no_authorized_continuation")
-                return False
-            domain = action.get("execution_domain", [0, 0, self.config.width, self.config.height])
-            if action["kind"] != "exit" and min(pose[0], pose[1], self.config.width-pose[0], self.config.height-pose[1]) < _CONTROL["obstacle_margin_m"]:
-                pad = _CONTROL["obstacle_margin_m"]
-                domain = [-pad, -pad, self.config.width+pad, self.config.height+pad]
-            controls[u["id"]] = {"preferred": preferred, "execution_domain": domain}
-        control_diagnostics = {}
-        selected = choose_controls(self.uuvs, controls, self.contacts, self.obstacles, separation=self.config.separation,
-            diagnostics=control_diagnostics, recovery_domain=[0, 0, self.config.width, self.config.height])
-        if selected is None:
-            self.event("control_infeasible", {"algorithm": "joint-dubins-beam", "controls": controls, "diagnostics": control_diagnostics,
-                "boats": [{"id": u["id"], "pose": u["pose"], "curvature": u["curvature"]} for u in self.uuvs]})
-            provisional = next((member for member, action in self.active.items() if action.get("provisional")), None)
-            if provisional and self._end_provisional_contact(provisional, "unsafe_joint_control"):
-                self.tick()
-                return False
-            self.pause("safety_infeasible")
-            return False
-        if control_diagnostics.get("held_boats"):
-            self.event("boats_held", {"uuv_ids": control_diagnostics["held_boats"]})
-        for u in self.uuvs:
-            if u["id"] in selected:
-                u["curvature"] = selected[u["id"]]
-                next_poses[u["id"]] = integrate(u["pose"], self.config.speed, selected[u["id"]], self.config.dt)
-            else:
-                next_poses[u["id"]] = u["pose"]
-        # A common tick validates all proposed movements before committing any pose.
-        # Pairs already inside the separation line (congestion that slipped in
-        # via boundary turnover) must keep opening up; only worsening is a pause.
-        for index, first in enumerate(self.uuvs):
-            for second in self.uuvs[index+1:]:
-                next_dist = math.dist(next_poses[first["id"]][:2], next_poses[second["id"]][:2])
-                if next_dist < self.config.separation and next_dist < math.dist(first["pose"][:2], second["pose"][:2]):
-                    self.pause("safety_infeasible")
-                    return False
-        target_poses = {}
-        for target in self.targets:
-            enemy.sample(self.adversary, target["pose"], self.uuvs, self.obstacles,
-                         self.config.enemy_sensor_range, self.sim_time, self.config.seed+self.frame_id)
-            pose, speed, curvature = enemy.control(target["pose"], self.adversary["detections"],
-                self.adversary["parameters"], self.obstacles, self.config, self.sim_time)
-            target_poses[target["id"]] = pose
-            # Radiated noise gates passive detection: only a moving target is
-            # loud enough to hold a passive track; sprinting is fast but
-            # audible, going quiet is stealthy but nearly static.
-            target.update(speed=speed, curvature=curvature,
-                          passive_signal=speed >= _OBS["passive_signal_min_speed_mps"])
-        # Truth is used only by this simulator interlock, never to choose a control.
-        collisions = [(u["id"], target["id"]) for u in self.uuvs for target in self.targets
-                      if math.dist(next_poses[u["id"]][:2], target_poses[target["id"]][:2]) < self.config.separation]
-        if collisions:
-            # Hold the boats that would collide and let the quarry keep
-            # maneuvering; the tick proceeds so separation opens up over
-            # successive ticks instead of pause-looping on frozen geometry.
-            for target in self.targets:
-                target["pose"] = target_poses[target["id"]]
-            held = {c[0] for c in collisions}
-            for u in self.uuvs:
-                if u["id"] in held or any(math.dist(next_poses[u["id"]][:2], t["pose"][:2]) < self.config.separation for t in self.targets):
-                    next_poses[u["id"]] = u["pose"]
-                    held.add(u["id"])
-            # Freezing boats can pull a moving boat's committed pose inside
-            # separation of a now-stationary one; freeze worsening pairs too.
-            stable = False
-            while not stable:
-                stable = True
-                for index, first in enumerate(self.uuvs):
-                    for second in self.uuvs[index+1:]:
-                        next_dist = math.dist(next_poses[first["id"]][:2], next_poses[second["id"]][:2])
-                        if next_dist < self.config.separation and next_dist < math.dist(first["pose"][:2], second["pose"][:2]):
-                            next_poses[first["id"]] = first["pose"]
-                            next_poses[second["id"]] = second["pose"]
-                            held.update((first["id"], second["id"]))
-                            stable = False
-            self.event("target_collision_hold", {"collisions": collisions, "held": sorted(held)})
-        replacements = {}
-        for u in self.uuvs:
-            x, y = next_poses[u["id"]][:2]
-            if not 0 <= x <= self.config.width or not 0 <= y <= self.config.height:
-                if self.active.get(u["id"], {}).get("kind") != "exit":
-                    self.pause("safety_boundary_violation")
-                    return False
-                exiting = {key for key, action in self.active.items()
-                    if action.get("kind") == "exit" and key not in replacements}
-                replacement = replacement_pose(self, u, {**next_poses, **replacements}, ignore=exiting)
-                if replacement is None or any(math.dist(replacement[:2], p[:2]) < _LIFECYCLE["replacement_separation_m"] for p in target_poses.values()):
-                    # Hold the crossing boat at the boundary for one tick
-                    # instead of freezing the whole sim: other boats and
-                    # targets keep moving, so the entry slot can clear.
-                    self.event("exit_entry_blocked", {"uuv_id": u["id"], "pose": u["pose"]})
-                    next_poses[u["id"]] = u["pose"]
-                    continue
-                replacements[u["id"]] = replacement
-        for u in self.uuvs:
-            u["remaining_range_m"] = max(0, u["remaining_range_m"]-math.dist(u["pose"][:2], next_poses[u["id"]][:2]))
-            u["pose"] = next_poses[u["id"]]
-        apply_replacements(self, replacements)
-        for target in self.targets:
-            target["pose"] = target_poses[target["id"]]
-        self.sim_time = round(self.sim_time+self.config.dt, 6)
-        self.frame_id += 1
-        return True
-
-    def _stage_observations(self):
-        if self.frame_id % _RUNTIME["observation_frames"] == 0:
-            self._observe()
-            finish_handover(self)
-            for key, contact in self.contacts.items():
-                if contact.get("auto_track_requested"):
-                    self._auto_track(key)
-            for u in self.uuvs:
-                u["trail"] = (u["trail"]+[u["pose"][:2]])[-_RUNTIME["max_trail_points"]:]
-        return True
 
     def _stage_scene(self):
         for vessel in self.vessels:
@@ -1145,38 +932,6 @@ class MissionRuntime:
                 contact = self.contacts.get(self.contact_mapping.get(target["id"]), {})
                 vessel.update(position=self.cells(target["pose"]), heading_deg=-math.degrees(target["pose"][2]),
                     surveillance_stage={"tentative": "detected", "confirmed": "probing", "tracking": "tracking"}.get(contact.get("state"), "undetected"))
-        return True
-
-    def _stage_plan_lifecycle(self):
-        for plan in self.plans.values():
-            if plan["status"] == "pending_approval" and self.sim_time > plan["expires_at_s"]:
-                plan["status"] = "expired"
-                self._requeue_auto_track(plan)
-                self.event("approval_expired", {"plan_id": plan["plan_id"]})
-        for intent in self.intents:
-            if intent["lifecycle"] == "active" and self.sim_time/60 >= intent["expires_at_min"]:
-                intent["lifecycle"] = "expired"
-        return True
-
-    def _stage_coverage_review(self):
-        if self.sim_time-self.last_periodic >= _RUNTIME["periodic_review_s"]:
-            self.last_periodic = self.sim_time
-            if self._search_gap():
-                self.queue_agent("Coverage gap or overdue revisit detected; preserve valid plans.", "coverage_gap")
-        # Region routes sweep only the cells that were due when the last
-        # partition ran; owned cells that expire inside the coverage window
-        # would otherwise wait for an external trigger and silently decay.
-        # A throttled local repair refreshes the due set and its routes.
-        if (self.standing_policy["local_repair"]
-                and self.sim_time-self.last_coverage_replan >= _RUNTIME["coverage_replan_s"]):
-            self.last_coverage_replan = self.sim_time
-            window_s = self.config.coverage_window_min*60
-            due = any(0 <= cell[0] < len(self.scan_times) and 0 <= cell[1] < len(self.scan_times[cell[0]])
-                      and (self.scan_times[cell[0]][cell[1]] < 0
-                           or self.sim_time-self.scan_times[cell[0]][cell[1]] > window_s)
-                      for region in self.regions for cell in region["cells"])
-            if due:
-                repair_search(self, required=False)
         return True
 
     def _requeue_auto_track(self, plan):

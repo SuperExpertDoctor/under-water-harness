@@ -148,10 +148,14 @@ export default function ConversationPanel({ mission, frame, readOnly, selectedMe
         <LoaderCircle size={14} className="spin" aria-hidden="true" /><span>{job.status === "queued" ? "排队中" : "Working…"}<small>{job.text}</small></span>
         <button className="icon-btn" title="停止生成" aria-label="停止生成" disabled={disabled} onClick={() => mission.act("停止生成", `/api/pi-agent/task-assignment/${encodeURIComponent(job.run_id)}/cancel`)}><Square size={14} /></button>
       </div>)}
-      {approvals.unlinked.length > 0 && <div className="unlinked-approvals" role="group" aria-label="未关联到对话回合的审批">
-        <span className="unlinked-label">未关联到对话回合</span>
-        {approvals.unlinked.map((plan) => <ApprovalRequestItem key={plan.plan_id} plan={plan} mission={mission} frame={frame} disabled={disabled} />)}
-      </div>}
+      {(() => {
+        const simNowS = (frame?.sim_time_min ?? mission.state?.sim_time_min ?? 0) * 60;
+        const pinned = approvals.unlinked.filter((plan) => plan.status === "pending_approval" || !Number.isFinite(plan.created_at_s) || simNowS - plan.created_at_s < 300);
+        return pinned.length > 0 && <div className="unlinked-approvals" role="group" aria-label="未关联到对话回合的审批">
+          <span className="unlinked-label">未关联到对话回合</span>
+          {pinned.map((plan) => <ApprovalRequestItem key={plan.plan_id} plan={plan} mission={mission} frame={frame} disabled={disabled} />)}
+        </div>;
+      })()}
     </div>
     {!following && !currentApproval && <button className="follow-latest" onClick={() => setFollowing(true)}><ArrowDown size={14} />最新消息</button>}
     {!readOnly && mission.state.agent?.error && <p className="panel-error" role="alert">{mission.state.agent.error}</p>}

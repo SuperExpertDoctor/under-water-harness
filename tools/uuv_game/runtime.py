@@ -648,9 +648,11 @@ class MissionRuntime:
             decision = "approve_once"
         elif decision is False:
             decision = "reject"
-        if decision not in ("approve_once", "approve_session", "reject"):
+        if decision not in ("approve_once", "approve_session", "reject", "adjust"):
             raise MissionError("invalid_decision", 422)
         if comment is not None and (not isinstance(comment, str) or not 1 <= len(comment.strip()) <= 500):
+            raise MissionError("invalid_approval_comment", 422)
+        if decision == "adjust" and not (isinstance(comment, str) and comment.strip()):
             raise MissionError("invalid_approval_comment", 422)
         plan = self.plans.get(plan_id)
         if not plan:
@@ -662,7 +664,7 @@ class MissionRuntime:
             self._requeue_auto_track(plan)
             self.save()
             raise MissionError("approval_expired")
-        if decision != "reject":
+        if decision in ("approve_once", "approve_session"):
             assessment = self._assessment(plan)
             if not assessment["valid"]:
                 plan["status"] = "expired"
@@ -682,6 +684,22 @@ class MissionRuntime:
             plan["approval_comment"] = comment.strip()
         self.event("approval_decided", {"plan_id": plan_id, "status": plan["status"], "decision": decision,
             "comment": plan.get("approval_comment")})
+        if plan["status"] == "rejected":
+            # A rejection must wake the agent: plan adjustment never stops, so the
+            # operator's decision (with any revision note) becomes an explicit
+            # replanning job instead of waiting for the next routine review.
+            kind_label = {"search": "search", "track": "tracking", "reacquire": "reacquisition"}.get(plan["kind"], plan["kind"])
+            verdict = "returned for adjustment" if decision == "adjust" else "rejected"
+            instruction = (f"Operator {verdict} the {kind_label} plan {plan_id}"
+                + (f" with the comment: '{plan['approval_comment']}'." if plan.get("approval_comment") else ".")
+                + " Revise the mission plan to address this decision and submit a new plan; "
+                + "never resubmit the rejected plan unchanged. If every feasible revision is worse than the current assignments, explain why in one line.")
+            try:
+                self.queue_agent(instruction, "human",
+                    display_text=f"审批批复：{'退回调整' if decision == 'adjust' else '拒绝'} {kind_label}方案 {plan_id}"
+                        + (f"——{plan['approval_comment']}" if plan.get("approval_comment") else ""))
+            except MissionError as exc:
+                self.event("agent_wakeup_failed", {"plan_id": plan_id, "reason": str(exc)})
         self.save()
         return self.summary(plan)
 

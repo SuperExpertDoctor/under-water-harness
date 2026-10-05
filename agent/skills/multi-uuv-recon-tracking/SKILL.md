@@ -16,6 +16,7 @@ This Skill is workflow knowledge, not an algorithm or authority grant. Python to
 5. For a lost contact, use the last estimated position and uncertainty to call `plan_search` with `mode: reacquire`. Never request hidden target coordinates. Ensure the selected search rectangle is large enough for forward turns.
 6. Call `evaluate_plan` for a successful candidate, then `submit_mission_plan` with its `result_id`, current `episode_id`, and a unique `command_id` formed as `episode_id:result_id`. Keep that ID for retries. Do not submit failed calculations or allocation results as executable plans.
 7. Inspect returned status. Query `get_action_status` when necessary. Report approved/active/pending/rejected accurately; submission is not task completion.
+8. A rejected or operator-returned (调整) plan is a required revision: read the operator's comment, generate a new candidate that addresses it, and submit it. Never resubmit a rejected plan unchanged. If every feasible revision is worse than the current assignments, explain that in one line instead. Plan adjustment is a continuous duty and never waits for the next periodic review.
 
 ## Geometry and Time
 

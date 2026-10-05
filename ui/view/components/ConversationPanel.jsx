@@ -191,8 +191,10 @@ function ActivityIcon({ state }) {
 
 function ApprovalRequestItem({ plan, mission, frame, disabled }) {
   const [choice, setChoice] = useState("approve_once");
+  const [comment, setComment] = useState("");
   const pending = plan.status === "pending_approval";
-  const status = pending ? "需要你的批准" : plan.status === "rejected" ? "已拒绝" : plan.status === "expired" ? "已过期" : plan.approval_scope === "approve_session" ? "本会话同类操作已授权" : "仅本次已批准";
+  const adjusting = pending && comment.trim().length > 0;
+  const status = pending ? "需要你的批准" : plan.status === "rejected" ? (plan.approval_scope === "adjust" ? "已退回调整" : "已拒绝") : plan.status === "expired" ? "已过期" : plan.approval_scope === "approve_session" ? "本会话同类操作已授权" : "仅本次已批准";
   const type = { search: "区域搜索", track: "协同跟踪", reacquire: "重新搜索" }[plan.kind] || "任务计划";
   const reason = { human_required: "请求模式", risk_threshold: "风险达到审批阈值" }[plan.reason] || "审批原因未记录";
   const remaining = Number.isFinite(plan.expires_at_s) ? Math.max(0, Math.ceil(plan.expires_at_s - (frame?.sim_time_min || 0) * 60)) : null;
@@ -201,6 +203,7 @@ function ApprovalRequestItem({ plan, mission, frame, disabled }) {
     {pending && <p className="approval-question">是否允许 Agent 执行以下调度？</p>}
     <div className="approval-operation"><strong>{type} · {plan.members?.length ? plan.members.join("、") : "成员未记录"}</strong><span>执行范围（含转场）：{plan.execution_domain?.length === 4 ? `${plan.execution_domain.map((value) => Number(value).toFixed(0)).join("、")} m` : "未记录"}</span></div>
     {plan.decision_reason && <p className="approval-rationale">原因：{plan.decision_reason}</p>}
+    {plan.approval_comment && <p className="approval-rationale">批注：{plan.approval_comment}</p>}
     <details className="approval-details"><summary>授权范围和计划详情</summary><dl>
       <div><dt>审批原因</dt><dd>{reason}</dd></div>
       <div><dt>会话授权</dt><dd>仅限当前任务、{type}、该范围内{plan.contact_id ? `、接触 ${plan.contact_id}` : ""}且同一策略；切换权限模式后失效</dd></div>
@@ -211,15 +214,21 @@ function ApprovalRequestItem({ plan, mission, frame, disabled }) {
     </dl></details>
     {pending && <form className="approval-form" onSubmit={(event) => {
       event.preventDefault();
-      mission.act("提交审批决定", `/api/approvals/${encodeURIComponent(plan.plan_id)}/decision`, { decision: choice });
+      mission.act("提交审批决定", `/api/approvals/${encodeURIComponent(plan.plan_id)}/decision`, {
+        decision: choice === "reject" && adjusting ? "adjust" : choice,
+        ...(comment.trim() ? { comment: comment.trim() } : {}),
+      });
     }}>
       <fieldset className="approval-options" disabled={disabled}><legend className="sr-only">审批选项</legend>
-        {[["approve_once", "仅允许本次", "只执行当前计划"], ["approve_session", "本会话允许同类操作", "同类型、同范围与同一策略"], ["reject", "拒绝", "当前计划不会执行"]].map(([value, label, detail], index) =>
+        {[["approve_once", "仅允许本次", "只执行当前计划"], ["approve_session", "本会话允许同类操作", "同类型、同范围与同一策略"], ["reject", adjusting ? "调整" : "拒绝", adjusting ? "退回方案并附修改意见，Agent 修订后重新提交" : "当前计划不会执行"]].map(([value, label, detail], index) =>
           <label className={`approval-option ${choice === value ? "selected" : ""}`} key={value}>
             <input type="radio" name={`approval-${plan.plan_id}`} value={value} checked={choice === value} onChange={() => setChoice(value)} />
             <span className="approval-option-number">{index + 1}.</span><span><strong>{label}</strong><small>{detail}</small></span>
           </label>)}
       </fieldset>
+      <textarea className="approval-comment" rows={2} maxLength={500} disabled={disabled} value={comment}
+        placeholder="可填写批复意见；填写后“拒绝”变为“调整”，退回方案要求 Agent 修订"
+        onChange={(event) => setComment(event.target.value)} />
       <div className="approval-submit-row"><button type="button" className="approval-preview" onClick={() => mission.preview(plan.plan_id)}><Eye size={14} />地图预览</button><span>{remaining !== null ? `剩余 ${remaining} s` : "等待你的决定"}</span><button className="approval-submit" type="submit" disabled={disabled}>提交<CornerDownRight size={14} /></button></div>
     </form>}
     {pending && <small className="approval-paused">新计划等待审批；已授权任务继续执行</small>}

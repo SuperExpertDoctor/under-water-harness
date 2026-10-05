@@ -123,6 +123,9 @@
 .approval-option-number { color: var(--text-muted); font: 11px Consolas, monospace; }
 .approval-option strong { display: block; color: var(--text); font-size: 12px; font-weight: 600; }
 .approval-option small { display: block; margin-top: 2px; color: var(--text-muted); font-size: 10px; }
+.approval-comment { display: block; width: 100%; margin-top: 8px; padding: 6px 8px; border: 1px solid var(--line-soft); border-radius: 4px; background: var(--panel); color: var(--text); font: 11px/1.5 inherit; resize: vertical; }
+.approval-comment:focus { outline: 2px solid var(--teal); outline-offset: 1px; }
+.approval-comment::placeholder { color: var(--text-muted); }
 .approval-submit-row { display: flex; align-items: center; gap: 7px; margin-top: 8px; }
 .approval-submit-row > span { margin-left: auto; color: var(--text-muted); font-size: 10px; white-space: nowrap; }
 .approval-submit-row button { display: inline-flex; align-items: center; justify-content: center; gap: 4px; min-height: 36px; border-radius: 4px; cursor: pointer; font-size: 11px; }

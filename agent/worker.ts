@@ -159,7 +159,7 @@ while (running) {
     startDeadline();
     try {
       await withRunHeartbeat(async () => {
-        await runWithReasonRetry(turnSession, `Episode ${job.episode_id}. Trigger: ${job.source}. ${job.text}\nFirst read the multi-uuv-recon-tracking Skill using read, then get_mission_state. Preserve existing plans unless a change is needed. If no new plan is submitted, finish with one line 决策原因： followed by the actual public reason for maintaining existing plans.`, reasonState);
+        await runWithReasonRetry(turnSession, `Episode ${job.episode_id}. Trigger: ${job.source}. ${job.text}\nFirst read the multi-uuv-recon-tracking Skill using read, then get_mission_state. Plan adjustment never stops: preserve existing plans only while they still fit the observed situation, and whenever fresh observations, coverage drift, rotations or operator decisions reveal a better option, revise and submit a new plan. A rejected or returned plan must be replaced by a revised plan, never resubmitted unchanged. If no new plan is submitted, finish with one line 决策原因： followed by the actual public reason for maintaining existing plans.`, reasonState);
         if (!planSubmitted && !publicDecisionReason(turnSession.getLastAssistantText() || "")) {
           await runUntilSettled(turnSession, "本轮没有提交新计划，缺少公开决策原因。请基于真实观测，用一行“决策原因：...”说明为什么维持现有计划。");
           if (!planSubmitted && !publicDecisionReason(turnSession.getLastAssistantText() || "")) throw new Error("decision_reason_missing_after_retry");

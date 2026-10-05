@@ -554,7 +554,7 @@ def create_app(db_path=None, worker_token=None, ticking=True, adversary_token=No
     @app.post("/api/approvals/{plan_id}/decision")
     async def decide(plan_id, request: Request):
         data = await payload(request)
-        if data.get("decision") not in ("approve_once", "approve_session", "reject"):
+        if data.get("decision") not in ("approve_once", "approve_session", "reject", "adjust"):
             raise MissionError("invalid_decision", 422)
         return runtime.decide(plan_id, data["decision"], comment=data.get("comment"))
 

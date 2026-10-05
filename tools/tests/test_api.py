@@ -147,6 +147,44 @@ def test_approval_comment_is_recorded(client):
     assert event["data"]["comment"] == "同意，注意航迹间距"
 
 
+def test_adjust_rejects_plan_and_wakes_agent(client):
+    runtime = client.app.state.runtime
+    runtime.set_mode("request")
+    candidate = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
+    pending = client.post("/api/algorithm/commands", json={"episode_id": runtime.episode,
+        "result_id": candidate["result_id"], "command_id": "adjust-test", "decision_reason": "覆盖北部空白"}).json()
+    assert pending["status"] == "pending_approval"
+    assert client.post(f"/api/approvals/{pending['plan_id']}/decision", json={"episode_id": runtime.episode,
+        "decision": "adjust"}).status_code == 422
+    adjusted = client.post(f"/api/approvals/{pending['plan_id']}/decision", json={"episode_id": runtime.episode,
+        "decision": "adjust", "comment": "搜索范围向东偏移，避开障碍区"}).json()
+    assert adjusted["status"] == "rejected"
+    assert adjusted["approval_scope"] == "adjust"
+    assert adjusted["approval_comment"] == "搜索范围向东偏移，避开障碍区"
+    assert not runtime.active
+    job = next(job for job in runtime.agent_jobs if job["status"] == "queued")
+    assert job["source"] == "human"
+    assert "搜索范围向东偏移，避开障碍区" in job["text"]
+    assert "never resubmit" in job["text"]
+    message = next(m for m in runtime.messages if m["run_id"] == job["run_id"])
+    assert "退回调整" in message["text"]
+
+
+def test_plain_reject_wakes_agent_for_replan(client):
+    runtime = client.app.state.runtime
+    runtime.set_mode("request")
+    candidate = runtime.calculate("plan_search", {"members": ["UUV-1"], "bbox": [300, 300, 1700, 1700]})
+    pending = client.post("/api/algorithm/commands", json={"episode_id": runtime.episode,
+        "result_id": candidate["result_id"], "command_id": "reject-test", "decision_reason": "覆盖北部空白"}).json()
+    rejected = client.post(f"/api/approvals/{pending['plan_id']}/decision", json={"episode_id": runtime.episode,
+        "decision": "reject"}).json()
+    assert rejected["status"] == "rejected"
+    assert rejected["approval_scope"] == "reject"
+    job = next(job for job in runtime.agent_jobs if job["status"] == "queued")
+    assert job["source"] == "human"
+    assert "rejected" in job["text"]
+
+
 def test_fuel_shortage_engages_energy_exit_lifecycle(client):
     runtime = client.app.state.runtime
     episode = client.get("/api/state").json()["episode_id"]

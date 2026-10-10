@@ -1,0 +1,9 @@
+{
+ "prior_calls": 40,
+ "prior_valid_pct": 100.0,
+ "prior_hotspots_mean": 2.675,
+ "prior_conf_mean": 0.66225,
+ "intent_calls": 40,
+ "intent_valid_pct": 100.0,
+ "intent_clamp_pct": 0.0
+}

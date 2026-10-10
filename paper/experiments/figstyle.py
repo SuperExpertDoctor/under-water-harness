@@ -62,6 +62,16 @@ def med_iqr(s):
     return np.median(s), np.percentile(s, 25), np.percentile(s, 75)
 
 
+def med_mad(s):
+    """Median and median absolute deviation (scaled by 1.4826 so it is a
+    consistent robust scatter estimate). Symmetric whiskers centred on
+    the median — used for bar/marker error bars so the whisker midpoint
+    coincides with the point estimate."""
+    s = np.asarray(s, float)
+    m = np.median(s)
+    return m, 1.4826 * np.median(np.abs(s - m))
+
+
 def n_nonconv(d, case):
     """Reps that exhausted MAX_ITERS without meeting the eps criterion.
     Uses the runner-reported `converged` flag (batch size varies under
@@ -76,3 +86,9 @@ def iqr_yerr(s):
     whiskers."""
     m, q1, q3 = med_iqr(s)
     return m, np.array([[m - q1], [q3 - m]])
+
+
+def mad_yerr(s):
+    """Symmetric error-bar scalar for matplotlib: median +/- 1.4826*MAD."""
+    m, mad = med_mad(s)
+    return m, mad

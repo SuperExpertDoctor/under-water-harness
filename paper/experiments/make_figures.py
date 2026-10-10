@@ -191,7 +191,7 @@ def _convergence_panels(curves, case, fname, axb_methods):
 
 
 def fig_ablation(df):
-    """Grouped bars: median + IQR whiskers of calls / rel_err / IoU for
+    """Grouped bars: median + MAD whiskers of calls / rel_err / IoU for
     the ablation configs in both cases. Reps hitting the iteration cap
     (non-converged) are marked with a black triangle."""
     names = ABL_ORDER
@@ -210,39 +210,46 @@ def fig_ablation(df):
         ax.set_ylabel(ylabels[col])
         for i, case in enumerate(cases):
             d = df[(df.case == case)]
-            med, lo, hi = [], [], []
+            med, err = [], []
             for n in names:
-                m, q1, q3 = figstyle.med_iqr(
+                m, mad = figstyle.med_mad(
                     d[d.method == n][col].to_numpy())
                 med.append(m)
-                lo.append(m - q1)
-                hi.append(q3 - m)
+                err.append(mad)
             xpos = x + (i - 0.5) * w
-            bars = ax.bar(xpos, med, w, yerr=[lo, hi], capsize=2,
+            bars = ax.bar(xpos, med, w, yerr=err, capsize=2,
                           color=CASE_COLORS[case], label=case,
                           error_kw=dict(lw=0.8, capthick=0.8))
-            for b, v, top, n in zip(bars, med, hi, names):
-                ax.text(b.get_x() + b.get_width() / 2, v + top,
-                        fmt % v, ha="center", va="bottom", fontsize=6.2,
-                        rotation=90)
+            for b, v, e, n in zip(bars, med, err, names):
+                if col == "calls":  # 数值标签仅保留在 (a)，其余见表5
+                    ax.text(b.get_x() + b.get_width() / 2, v + e,
+                            fmt % v, ha="center", va="bottom",
+                            fontsize=6.2)
                 if col == "calls":
                     nc = figstyle.n_nonconv(d[d.method == n], case)
                     if nc:
                         cap_handle = ax.scatter(
                             b.get_x() + b.get_width() / 2,
-                            v + top + 24, marker="^", s=12, c="k",
+                            v + e + 24, marker="^", s=12, c="k",
                             zorder=5)
                         ax.text(b.get_x() + b.get_width() / 2,
-                                v + top + 30, f"$\\times${nc}",
+                                v + e + 30, f"$\\times${nc}",
                                 ha="center", va="bottom", fontsize=5.5)
         ax.set_xticks(x)
-        ax.set_xticklabels([_d(n) for n in names])
+        ax.set_xticklabels([_d(n) for n in names], rotation=22,
+                           ha="right", rotation_mode="anchor")
         ax.text(-0.04, 1.04, title, transform=ax.transAxes,
                 fontweight="bold", fontsize=10, va="top")
         ax.tick_params(axis="x", labelsize=7)
-    axes[0].set_ylim(0, 620)
-    axes[1].set_ylim(0, 40)
-    axes[2].set_ylim(0, 0.5)
+    for ax, (col, title, fmt) in zip(axes, metrics):
+        vals = []
+        for case in cases:
+            d = df[(df.case == case)]
+            for n in names:
+                m, mad = figstyle.med_mad(
+                    d[d.method == n][col].to_numpy())
+                vals.append(m + mad)
+        ax.set_ylim(0, max(vals) * 1.22)
     handles, labels = axes[0].get_legend_handles_labels()
     if cap_handle is not None:
         handles.append(cap_handle)

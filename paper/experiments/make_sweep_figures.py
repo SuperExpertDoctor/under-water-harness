@@ -39,15 +39,14 @@ def fig_delta():
     df["delta"] = df.method.str.extract(r"([\d.]+)").astype(float)
     rows = []
     for d, g_ in df.groupby("delta"):
-        cm, c1, c3 = figstyle.med_iqr(g_.calls)
-        im, i1, i3 = figstyle.med_iqr(g_.iou)
-        rows.append({"delta": d, "calls_m": cm, "calls_lo": cm - c1,
-                     "calls_hi": c3 - cm, "iou_m": im,
-                     "iou_lo": im - i1, "iou_hi": i3 - im,
+        cm, cmad = figstyle.med_mad(g_.calls)
+        im, imad = figstyle.med_mad(g_.iou)
+        rows.append({"delta": d, "calls_m": cm, "calls_err": cmad,
+                     "iou_m": im, "iou_err": imad,
                      "err_m": g_.rel_err.mean()})
     g = pd.DataFrame(rows).sort_values("delta")
     fig, ax = plt.subplots(figsize=(3.3, 2.3), constrained_layout=True)
-    ax.errorbar(g.delta, g.calls_m, yerr=[g.calls_lo, g.calls_hi], fmt="o-",
+    ax.errorbar(g.delta, g.calls_m, yerr=g.calls_err, fmt="o-",
                 lw=1.2, ms=3.5, capsize=2.5, color="#D55E00",
                 label="探测次数")
     ax.set_xlabel(r"证据老化权重阈值 $\Delta$")
@@ -55,7 +54,7 @@ def fig_delta():
     ax.set_ylim(0, 80)
     ax2 = ax.twinx()
     ax2.grid(False)
-    ax2.errorbar(g.delta, g.iou_m, yerr=[g.iou_lo, g.iou_hi], fmt="s--",
+    ax2.errorbar(g.delta, g.iou_m, yerr=g.iou_err, fmt="s--",
                  lw=1.0, ms=3, capsize=2.5, color="#0072B2",
                  label="边界 IoU")
     ax2.set_ylabel("边界 IoU")
@@ -79,29 +78,28 @@ def fig_prior():
     rows = []
     for m in order:
         g_ = df[df.method == m]
-        cm, c1, c3 = figstyle.med_iqr(g_.calls)
-        rows.append({"method": m, "calls_m": cm, "calls_lo": cm - c1,
-                     "calls_hi": c3 - cm, "calls_mean": g_.calls.mean(),
+        cm, cmad = figstyle.med_mad(g_.calls)
+        rows.append({"method": m, "calls_m": cm, "calls_err": cmad,
+                     "calls_mean": g_.calls.mean(),
                      "calls_std": g_.calls.std(), "iou_m": g_.iou.mean(),
                      "err_m": g_.rel_err.mean()})
     g = pd.DataFrame(rows)
     fig, ax = plt.subplots(figsize=(3.3, 2.4), constrained_layout=True)
     x = np.arange(len(g))
     cols = ["#D55E00" if m == "正确先验" else "#9E9E9E" for m in g.method]
-    bars = ax.bar(x, g.calls_m, 0.62,
-                  yerr=[g.calls_lo, g.calls_hi], capsize=2.5,
+    bars = ax.bar(x, g.calls_m, 0.62, yerr=g.calls_err, capsize=2.5,
                   color=cols, error_kw=dict(lw=0.8, capthick=0.8))
-    for b, v, top in zip(bars, g.calls_m, g.calls_hi):
-        ax.text(b.get_x() + b.get_width() / 2, v + top, f"{v:.0f}",
-                ha="center", va="bottom", fontsize=6.5, rotation=90)
+    for b, v, e in zip(bars, g.calls_m, g.calls_err):
+        ax.text(b.get_x() + b.get_width() / 2, v + e, f"{v:.0f}",
+                ha="center", va="bottom", fontsize=6.5)
     base = float(g.loc[g.method == "均匀(无先验)", "calls_m"].iloc[0])
     ax.axhline(base, ls="--", c="k", lw=0.8)
-    ax.text(len(g) - 0.4, base + 3, "无先验基线（中位数）",
-            fontsize=6, ha="right", va="bottom")
+    ax.text(0.15, base + 3, "无先验基线（中位数）",
+            fontsize=6, ha="left", va="bottom")
     ax.set_xticks(x)
     ax.set_xticklabels(g.method, rotation=28, ha="right", fontsize=7)
     ax.set_ylabel(r"探测次数 $N_\mathrm{call}$")
-    ax.set_ylim(0, (g.calls_m + g.calls_hi).max() * 1.35)
+    ax.set_ylim(0, (g.calls_m + g.calls_err).max() * 1.32)
     save(fig, "fig_prior_robustness")
     g.to_csv(os.path.join(CSV, "fig_prior_robustness.csv"), index=False)
 
@@ -111,9 +109,9 @@ def fig_scale():
     df["n"] = df.case.str.extract(r"(\d+)").astype(int)
     rows = []
     for (c_, m_), g_ in df.groupby(["case", "method"]):
-        cm, c1, c3 = figstyle.med_iqr(g_.calls)
+        cm, cmad = figstyle.med_mad(g_.calls)
         rows.append({"case": c_, "method": m_, "calls_m": cm,
-                     "calls_lo": cm - c1, "calls_hi": c3 - cm,
+                     "calls_err": cmad,
                      "calls_mean": g_.calls.mean(),
                      "calls_std": g_.calls.std()})
     g = pd.DataFrame(rows)
@@ -122,10 +120,17 @@ def fig_scale():
     fig, ax = plt.subplots(figsize=(3.3, 2.4), constrained_layout=True)
     for m, c in [("本方法", "#D55E00"), ("全覆盖扫描", "#000000")]:
         d = g[g.method == m].sort_values("N")
-        ax.errorbar(d.N, d.calls_m, yerr=[d.calls_lo, d.calls_hi],
+        ax.errorbar(d.N, d.calls_m, yerr=d.calls_err,
                     fmt="o-", lw=1.2, ms=3.5, capsize=2.5, color=c,
                     label=m)
     ax.plot(g.N.unique(), g.N.unique(), "k:", lw=0.9, label="$N$（参考斜率）")
+    dc = g[g.method == "全覆盖扫描"].sort_values("N")
+    if len(dc) and dc.calls_m.iloc[-1] < dc.calls_m.iloc[-2]:
+        ax.annotate("$\\varepsilon$ 判据提前误停",
+                    xy=(dc.N.iloc[-1], dc.calls_m.iloc[-1]),
+                    xytext=(0.50, 0.52), textcoords="axes fraction",
+                    fontsize=6.5,
+                    arrowprops=dict(arrowstyle="->", lw=0.7))
     ax.set_xscale("log")
     ax.set_yscale("log")
     ns = sorted(g.N.unique())

@@ -76,8 +76,7 @@ def fig_delta():
     h2, l2 = ax2.get_legend_handles_labels()
     ax.legend(h1 + h2, l1 + l2, loc="upper left", framealpha=0.95,
               edgecolor="0.5", borderpad=0.3, fontsize=6.5)
-    ax.text(-0.16, 1.04, "(a)", transform=ax.transAxes, fontsize=8,
-            fontweight="bold")
+    ax.set_title("(a)", loc="left", fontweight="bold", fontsize=8, pad=3)
     # mechanism-activity panel: re-verification genuinely engages only for
     # larger Delta — explains why the cost curve stays flat at small Delta
     axr.bar(g.delta, g.rev_m, width=0.045, yerr=g.rev_err, capsize=2,
@@ -87,8 +86,7 @@ def fig_delta():
     axr.set_ylabel("复验单元格数（均值）")
     axr.set_xlim(0, 0.85)
     axr.set_xticks([0.05, 0.20, 0.30, 0.45, 0.60, 0.80])
-    axr.text(-0.16, 1.04, "(b)", transform=axr.transAxes, fontsize=8,
-             fontweight="bold")
+    axr.set_title("(b)", loc="left", fontweight="bold", fontsize=8, pad=3)
     save(fig, "fig_delta_sensitivity")
     g.to_csv(os.path.join(CSV, "fig_delta_sensitivity.csv"), index=False)
 

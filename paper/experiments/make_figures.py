@@ -238,8 +238,8 @@ def fig_ablation(df):
         ax.set_xticks(x)
         ax.set_xticklabels([_d(n) for n in names], rotation=22,
                            ha="right", rotation_mode="anchor")
-        ax.text(-0.04, 1.04, title, transform=ax.transAxes,
-                fontweight="bold", fontsize=10, va="top")
+        ax.set_title(title, loc="left", fontweight="bold", fontsize=10,
+                     pad=3)
         ax.tick_params(axis="x", labelsize=7)
     for ax, (col, title, fmt) in zip(axes, metrics):
         vals = []

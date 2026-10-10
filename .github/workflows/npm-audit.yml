@@ -25,7 +25,38 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Audit production vulnerabilities
-        run: npm audit --omit=dev --audit-level=moderate
+        run: |
+          npm audit --omit=dev --audit-level=moderate --json > audit-report.json || true
+          npm audit --omit=dev --audit-level=moderate || true
+          node -e '
+            const report = require("./audit-report.json");
+            // Exemption: node-forge (all versions) is affected by GHSA-86w9-cpqp-85rv
+            // (RSA PKCS#1 v1.5 signature verification) with no patched release, pulled
+            // in by @earendil-works/gondolin. Exempt this single advisory, including
+            // packages that only depend on it, until upstream ships a fix.
+            const EXEMPT_URL = "GHSA-86w9-cpqp-85rv";
+            const vulns = report.vulnerabilities ?? {};
+            const removed = new Set();
+            for (const [name, v] of Object.entries(vulns)) {
+              const advs = (v.via ?? []).filter(x => typeof x === "object");
+              if (advs.length > 0 && advs.every(a => (a.url ?? "").includes(EXEMPT_URL))) removed.add(name);
+            }
+            let changed = true;
+            while (changed) {
+              changed = false;
+              for (const [name, v] of Object.entries(vulns)) {
+                if (removed.has(name)) continue;
+                const vias = v.via ?? [];
+                if (vias.length > 0 && vias.every(x => typeof x === "string" && removed.has(x))) { removed.add(name); changed = true; }
+              }
+            }
+            const remaining = Object.keys(vulns).filter(n => !removed.has(n));
+            if (remaining.length) {
+              console.error("Unresolved vulnerabilities:", remaining.join(", "));
+              process.exit(1);
+            }
+            console.log("Audit clean. Exempted advisories only:", [...removed].join(", "));
+          '
 
       - name: Verify registry signatures
         run: npm audit signatures --omit=dev

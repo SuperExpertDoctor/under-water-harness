@@ -1,0 +1,9 @@
+{
+ "p0": 0.3,
+ "p_min": 0.05,
+ "decay": 0.9,
+ "delta": 0.05,
+ "dual_ratio": 0.3,
+ "explore_w": 1.4,
+ "batch": 6
+}

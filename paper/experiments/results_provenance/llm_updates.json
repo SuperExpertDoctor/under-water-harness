@@ -1,0 +1,852 @@
+[
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 0,
+  "iter": 20,
+  "situation": "迭代20，累计探测144次，样本库144点，存在域命中3处，当前存在概率估计0.0398",
+  "raw": {
+   "p0": 0.65,
+   "p_min": 0.08,
+   "decay": 0.75,
+   "delta": 0.12,
+   "dual_ratio": 0.65,
+   "explore_w": 1.3,
+   "batch": 6
+  },
+  "clamped": {
+   "p0": 0.65,
+   "p_min": 0.08,
+   "decay": 0.75,
+   "delta": 0.12,
+   "dual_ratio": 0.65,
+   "explore_w": 1.3,
+   "batch": 6
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "单侧采样",
+  "rep": 0,
+  "iter": 20,
+  "situation": "迭代20，累计探测144次，样本库144点，存在域命中3处，当前存在概率估计0.0524",
+  "raw": {
+   "p0": 0.4,
+   "p_min": 0.05,
+   "decay": 0.7,
+   "delta": 0.05,
+   "dual_ratio": 0.3,
+   "explore_w": 1.5,
+   "batch": 8
+  },
+  "clamped": {
+   "p0": 0.4,
+   "p_min": 0.05,
+   "decay": 0.7,
+   "delta": 0.05,
+   "dual_ratio": 0.3,
+   "explore_w": 1.5,
+   "batch": 8
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 1,
+  "iter": 20,
+  "situation": "迭代20，累计探测184次，样本库184点，存在域命中5处，当前存在概率估计0.0460",
+  "raw": {
+   "p0": 0.6,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.1,
+   "dual_ratio": 0.6,
+   "explore_w": 1.2,
+   "batch": 6
+  },
+  "clamped": {
+   "p0": 0.6,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.1,
+   "dual_ratio": 0.6,
+   "explore_w": 1.2,
+   "batch": 6
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 1,
+  "iter": 40,
+  "situation": "迭代40，累计探测304次，样本库304点，存在域命中8处，当前存在概率估计0.0505",
+  "raw": {
+   "p0": 0.65,
+   "p_min": 0.18,
+   "decay": 0.7,
+   "delta": 0.12,
+   "dual_ratio": 0.55,
+   "explore_w": 1.3,
+   "batch": 7
+  },
+  "clamped": {
+   "p0": 0.65,
+   "p_min": 0.18,
+   "decay": 0.7,
+   "delta": 0.12,
+   "dual_ratio": 0.55,
+   "explore_w": 1.3,
+   "batch": 7
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 1,
+  "iter": 60,
+  "situation": "迭代60，累计探测444次，样本库444点，存在域命中10处，当前存在概率估计0.0377",
+  "raw": {
+   "p0": 0.5,
+   "p_min": 0.08,
+   "decay": 0.7,
+   "delta": 0.15,
+   "dual_ratio": 0.65,
+   "explore_w": 1.3,
+   "batch": 7
+  },
+  "clamped": {
+   "p0": 0.5,
+   "p_min": 0.08,
+   "decay": 0.7,
+   "delta": 0.15,
+   "dual_ratio": 0.65,
+   "explore_w": 1.3,
+   "batch": 7
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 1,
+  "iter": 80,
+  "situation": "迭代80，累计探测584次，样本库584点，存在域命中14处，当前存在概率估计0.0500",
+  "raw": {
+   "p0": 0.3,
+   "p_min": 0.1,
+   "decay": 0.9,
+   "delta": 0.1,
+   "dual_ratio": 0.3,
+   "explore_w": 1.5,
+   "batch": 8
+  },
+  "clamped": {
+   "p0": 0.3,
+   "p_min": 0.1,
+   "decay": 0.9,
+   "delta": 0.1,
+   "dual_ratio": 0.3,
+   "explore_w": 1.5,
+   "batch": 8
+  }
+ },
+ {
+  "case": "静态目标",
+  "method": "无先验",
+  "rep": 2,
+  "iter": 20,
+  "situation": "迭代20，累计探测84次，样本库84点，存在域命中2处，当前存在概率估计0.0298",
+  "raw": {
+   "p0": 0.5,
+   "p_min": 0.1,
+   "decay": 0.75,
+   "delta": 0.05,
+   "dual_ratio": 0.5,
+   "explore_w": 1.3,
+   "batch": 3
+  },
+  "clamped": {
+   "p0": 0.5,
+   "p_min": 0.1,
+   "decay": 0.75,
+   "delta": 0.05,
+   "dual_ratio": 0.5,
+   "explore_w": 1.3,
+   "batch": 3
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "本方法",
+  "rep": 2,
+  "iter": 20,
+  "situation": "迭代20，累计探测184次，样本库184点，存在域命中4处，当前存在概率估计0.1900",
+  "raw": {
+   "p0": 0.65,
+   "p_min": 0.15,
+   "decay": 0.82,
+   "delta": 0.18,
+   "dual_ratio": 0.62,
+   "explore_w": 1.3,
+   "batch": 5
+  },
+  "clamped": {
+   "p0": 0.65,
+   "p_min": 0.15,
+   "decay": 0.82,
+   "delta": 0.18,
+   "dual_ratio": 0.62,
+   "explore_w": 1.3,
+   "batch": 5
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无剔除",
+  "rep": 2,
+  "iter": 20,
+  "situation": "迭代20，累计探测124次，样本库124点，存在域命中4处，当前存在概率估计0.0517",
+  "raw": {
+   "p0": 0.4,
+   "p_min": 0.1,
+   "decay": 0.7,
+   "delta": 0.1,
+   "dual_ratio": 0.4,
+   "explore_w": 1.3,
+   "batch": 6
+  },
+  "clamped": {
+   "p0": 0.4,
+   "p_min": 0.1,
+   "decay": 0.7,
+   "delta": 0.1,
+   "dual_ratio": 0.4,
+   "explore_w": 1.3,
+   "batch": 6
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 2,
+  "iter": 20,
+  "situation": "迭代20，累计探测144次，样本库144点，存在域命中3处，当前存在概率估计0.0471",
+  "raw": {
+   "p0": 0.25,
+   "p_min": 0.05,
+   "decay": 0.65,
+   "delta": 0.05,
+   "dual_ratio": 0.65,
+   "explore_w": 1.4,
+   "batch": 5
+  },
+  "clamped": {
+   "p0": 0.25,
+   "p_min": 0.05,
+   "decay": 0.65,
+   "delta": 0.05,
+   "dual_ratio": 0.65,
+   "explore_w": 1.4,
+   "batch": 5
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 2,
+  "iter": 40,
+  "situation": "迭代40，累计探测244次，样本库244点，存在域命中6处，当前存在概率估计0.0551",
+  "raw": {
+   "p0": 0.3,
+   "p_min": 0.05,
+   "decay": 0.7,
+   "delta": 0.05,
+   "dual_ratio": 0.3,
+   "explore_w": 1.3,
+   "batch": 6
+  },
+  "clamped": {
+   "p0": 0.3,
+   "p_min": 0.05,
+   "decay": 0.7,
+   "delta": 0.05,
+   "dual_ratio": 0.3,
+   "explore_w": 1.3,
+   "batch": 6
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 2,
+  "iter": 60,
+  "situation": "迭代60，累计探测364次，样本库364点，存在域命中8处，当前存在概率估计0.0425",
+  "raw": {
+   "p0": 0.6,
+   "p_min": 0.1,
+   "decay": 0.75,
+   "delta": 0.15,
+   "dual_ratio": 0.6,
+   "explore_w": 1.2,
+   "batch": 6
+  },
+  "clamped": {
+   "p0": 0.6,
+   "p_min": 0.1,
+   "decay": 0.75,
+   "delta": 0.15,
+   "dual_ratio": 0.6,
+   "explore_w": 1.2,
+   "batch": 6
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 2,
+  "iter": 80,
+  "situation": "迭代80，累计探测484次，样本库484点，存在域命中8处，当前存在概率估计0.0309",
+  "raw": {
+   "p0": 0.8,
+   "p_min": 0.3,
+   "decay": 0.6,
+   "delta": 0.3,
+   "dual_ratio": 0.3,
+   "explore_w": 1.5,
+   "batch": 8
+  },
+  "clamped": {
+   "p0": 0.8,
+   "p_min": 0.3,
+   "decay": 0.6,
+   "delta": 0.3,
+   "dual_ratio": 0.3,
+   "explore_w": 1.5,
+   "batch": 8
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 2,
+  "iter": 100,
+  "situation": "迭代100，累计探测644次，样本库644点，存在域命中11处，当前存在概率估计0.0213",
+  "raw": {
+   "p0": 0.65,
+   "p_min": 0.12,
+   "decay": 0.75,
+   "delta": 0.12,
+   "dual_ratio": 0.55,
+   "explore_w": 1.4,
+   "batch": 7
+  },
+  "clamped": {
+   "p0": 0.65,
+   "p_min": 0.12,
+   "decay": 0.75,
+   "delta": 0.12,
+   "dual_ratio": 0.55,
+   "explore_w": 1.4,
+   "batch": 7
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 2,
+  "iter": 120,
+  "situation": "迭代120，累计探测784次，样本库784点，存在域命中14处，当前存在概率估计0.0262",
+  "raw": {
+   "p0": 0.7,
+   "p_min": 0.1,
+   "decay": 0.7,
+   "delta": 0.05,
+   "dual_ratio": 0.4,
+   "explore_w": 1.2,
+   "batch": 7
+  },
+  "clamped": {
+   "p0": 0.7,
+   "p_min": 0.1,
+   "decay": 0.7,
+   "delta": 0.05,
+   "dual_ratio": 0.4,
+   "explore_w": 1.2,
+   "batch": 7
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 2,
+  "iter": 140,
+  "situation": "迭代140，累计探测924次，样本库924点，存在域命中15处，当前存在概率估计0.0281",
+  "raw": {
+   "p0": 0.6,
+   "p_min": 0.2,
+   "decay": 0.75,
+   "delta": 0.05,
+   "dual_ratio": 0.4,
+   "explore_w": 1.3,
+   "batch": 6
+  },
+  "clamped": {
+   "p0": 0.6,
+   "p_min": 0.2,
+   "decay": 0.75,
+   "delta": 0.05,
+   "dual_ratio": 0.4,
+   "explore_w": 1.3,
+   "batch": 6
+  }
+ },
+ {
+  "case": "静态目标",
+  "method": "无先验",
+  "rep": 3,
+  "iter": 20,
+  "situation": "迭代20，累计探测84次，样本库84点，存在域命中1处，当前存在概率估计0.0432",
+  "raw": {
+   "p0": 0.65,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.15,
+   "dual_ratio": 0.4,
+   "explore_w": 1.2,
+   "batch": 3
+  },
+  "clamped": {
+   "p0": 0.65,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.15,
+   "dual_ratio": 0.4,
+   "explore_w": 1.2,
+   "batch": 3
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 3,
+  "iter": 20,
+  "situation": "迭代20，累计探测144次，样本库144点，存在域命中4处，当前存在概率估计0.0585",
+  "raw": {
+   "p0": 0.4,
+   "p_min": 0.1,
+   "decay": 0.75,
+   "delta": 0.1,
+   "dual_ratio": 0.6,
+   "explore_w": 1.2,
+   "batch": 6
+  },
+  "clamped": {
+   "p0": 0.4,
+   "p_min": 0.1,
+   "decay": 0.75,
+   "delta": 0.1,
+   "dual_ratio": 0.6,
+   "explore_w": 1.2,
+   "batch": 6
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 4,
+  "iter": 20,
+  "situation": "迭代20，累计探测144次，样本库144点，存在域命中4处，当前存在概率估计0.0457",
+  "raw": {
+   "p0": 0.4,
+   "p_min": 0.08,
+   "decay": 0.7,
+   "delta": 0.08,
+   "dual_ratio": 0.6,
+   "explore_w": 1.2,
+   "batch": 6
+  },
+  "clamped": {
+   "p0": 0.4,
+   "p_min": 0.08,
+   "decay": 0.7,
+   "delta": 0.08,
+   "dual_ratio": 0.6,
+   "explore_w": 1.2,
+   "batch": 6
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 4,
+  "iter": 40,
+  "situation": "迭代40，累计探测264次，样本库264点，存在域命中5处，当前存在概率估计0.0474",
+  "raw": {
+   "p0": 0.4,
+   "p_min": 0.25,
+   "decay": 0.85,
+   "delta": 0.05,
+   "dual_ratio": 0.6,
+   "explore_w": 1.4,
+   "batch": 7
+  },
+  "clamped": {
+   "p0": 0.4,
+   "p_min": 0.25,
+   "decay": 0.85,
+   "delta": 0.05,
+   "dual_ratio": 0.6,
+   "explore_w": 1.4,
+   "batch": 7
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 5,
+  "iter": 20,
+  "situation": "迭代20，累计探测164次，样本库164点，存在域命中3处，当前存在概率估计0.0252",
+  "raw": {
+   "p0": 0.7,
+   "p_min": 0.15,
+   "decay": 0.9,
+   "delta": 0.05,
+   "dual_ratio": 0.35,
+   "explore_w": 1.4,
+   "batch": 7
+  },
+  "clamped": {
+   "p0": 0.7,
+   "p_min": 0.15,
+   "decay": 0.9,
+   "delta": 0.05,
+   "dual_ratio": 0.35,
+   "explore_w": 1.4,
+   "batch": 7
+  }
+ },
+ {
+  "case": "静态目标",
+  "method": "无先验",
+  "rep": 6,
+  "iter": 20,
+  "situation": "迭代20，累计探测84次，样本库84点，存在域命中1处，当前存在概率估计0.0198",
+  "raw": {
+   "p0": 0.5,
+   "p_min": 0.1,
+   "decay": 0.8,
+   "delta": 0.1,
+   "dual_ratio": 0.6,
+   "explore_w": 0.8,
+   "batch": 3
+  },
+  "clamped": {
+   "p0": 0.5,
+   "p_min": 0.1,
+   "decay": 0.8,
+   "delta": 0.1,
+   "dual_ratio": 0.6,
+   "explore_w": 0.8,
+   "batch": 3
+  }
+ },
+ {
+  "case": "静态目标",
+  "method": "无先验",
+  "rep": 6,
+  "iter": 40,
+  "situation": "迭代40，累计探测144次，样本库144点，存在域命中3处，当前存在概率估计0.0518",
+  "raw": {
+   "p0": 0.5,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.15,
+   "dual_ratio": 0.5,
+   "explore_w": 1.2,
+   "batch": 6
+  },
+  "clamped": {
+   "p0": 0.5,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.15,
+   "dual_ratio": 0.5,
+   "explore_w": 1.2,
+   "batch": 6
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 6,
+  "iter": 20,
+  "situation": "迭代20，累计探测164次，样本库164点，存在域命中5处，当前存在概率估计0.0456",
+  "raw": {
+   "p0": 0.6,
+   "p_min": 0.1,
+   "decay": 0.8,
+   "delta": 0.1,
+   "dual_ratio": 0.5,
+   "explore_w": 1.2,
+   "batch": 5
+  },
+  "clamped": {
+   "p0": 0.6,
+   "p_min": 0.1,
+   "decay": 0.8,
+   "delta": 0.1,
+   "dual_ratio": 0.5,
+   "explore_w": 1.2,
+   "batch": 5
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "单侧采样",
+  "rep": 6,
+  "iter": 20,
+  "situation": "迭代20，累计探测124次，样本库124点，存在域命中5处，当前存在概率估计0.0931",
+  "raw": {
+   "p0": 0.3,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.1,
+   "dual_ratio": 0.6,
+   "explore_w": 1.3,
+   "batch": 5
+  },
+  "clamped": {
+   "p0": 0.3,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.1,
+   "dual_ratio": 0.6,
+   "explore_w": 1.3,
+   "batch": 5
+  }
+ },
+ {
+  "case": "静态目标",
+  "method": "无先验",
+  "rep": 7,
+  "iter": 20,
+  "situation": "迭代20，累计探测144次，样本库144点，存在域命中3处，当前存在概率估计0.0500",
+  "raw": {
+   "p0": 0.6,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.1,
+   "dual_ratio": 0.6,
+   "explore_w": 0.7,
+   "batch": 4
+  },
+  "clamped": {
+   "p0": 0.6,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.1,
+   "dual_ratio": 0.6,
+   "explore_w": 0.7,
+   "batch": 4
+  }
+ },
+ {
+  "case": "静态目标",
+  "method": "单侧采样",
+  "rep": 7,
+  "iter": 20,
+  "situation": "迭代20，累计探测104次，样本库104点，存在域命中3处，当前存在概率估计0.0698",
+  "raw": {
+   "p0": 0.55,
+   "p_min": 0.08,
+   "decay": 0.85,
+   "delta": 0.12,
+   "dual_ratio": 0.45,
+   "explore_w": 1.1,
+   "batch": 3
+  },
+  "clamped": {
+   "p0": 0.55,
+   "p_min": 0.08,
+   "decay": 0.85,
+   "delta": 0.12,
+   "dual_ratio": 0.45,
+   "explore_w": 1.1,
+   "batch": 3
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 7,
+  "iter": 20,
+  "situation": "迭代20，累计探测124次，样本库124点，存在域命中4处，当前存在概率估计0.0394",
+  "raw": {
+   "p0": 0.65,
+   "p_min": 0.08,
+   "decay": 0.75,
+   "delta": 0.12,
+   "dual_ratio": 0.35,
+   "explore_w": 1.3,
+   "batch": 5
+  },
+  "clamped": {
+   "p0": 0.65,
+   "p_min": 0.08,
+   "decay": 0.75,
+   "delta": 0.12,
+   "dual_ratio": 0.35,
+   "explore_w": 1.3,
+   "batch": 5
+  }
+ },
+ {
+  "case": "静态目标",
+  "method": "本方法",
+  "rep": 8,
+  "iter": 20,
+  "situation": "迭代20，累计探测84次，样本库84点，存在域命中2处，当前存在概率估计0.0619",
+  "raw": {
+   "p0": 0.45,
+   "p_min": 0.05,
+   "decay": 0.7,
+   "delta": 0.04,
+   "dual_ratio": 0.55,
+   "explore_w": 1.1,
+   "batch": 2
+  },
+  "clamped": {
+   "p0": 0.45,
+   "p_min": 0.05,
+   "decay": 0.7,
+   "delta": 0.04,
+   "dual_ratio": 0.55,
+   "explore_w": 1.1,
+   "batch": 2
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 8,
+  "iter": 20,
+  "situation": "迭代20，累计探测124次，样本库124点，存在域命中4处，当前存在概率估计0.0373",
+  "raw": {
+   "p0": 0.3,
+   "p_min": 0.15,
+   "decay": 0.65,
+   "delta": 0.05,
+   "dual_ratio": 0.65,
+   "explore_w": 1.4,
+   "batch": 7
+  },
+  "clamped": {
+   "p0": 0.3,
+   "p_min": 0.15,
+   "decay": 0.65,
+   "delta": 0.05,
+   "dual_ratio": 0.65,
+   "explore_w": 1.4,
+   "batch": 7
+  }
+ },
+ {
+  "case": "静态目标",
+  "method": "本方法",
+  "rep": 9,
+  "iter": 20,
+  "situation": "迭代20，累计探测64次，样本库64点，存在域命中2处，当前存在概率估计0.0435",
+  "raw": {
+   "p0": 0.5,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.1,
+   "dual_ratio": 0.5,
+   "explore_w": 1.2,
+   "batch": 4
+  },
+  "clamped": {
+   "p0": 0.5,
+   "p_min": 0.05,
+   "decay": 0.85,
+   "delta": 0.1,
+   "dual_ratio": 0.5,
+   "explore_w": 1.2,
+   "batch": 4
+  }
+ },
+ {
+  "case": "静态目标",
+  "method": "无先验",
+  "rep": 9,
+  "iter": 20,
+  "situation": "迭代20，累计探测104次，样本库104点，存在域命中2处，当前存在概率估计0.0421",
+  "raw": {
+   "p0": 0.65,
+   "p_min": 0.08,
+   "decay": 0.75,
+   "delta": 0.08,
+   "dual_ratio": 0.45,
+   "explore_w": 1.2,
+   "batch": 4
+  },
+  "clamped": {
+   "p0": 0.65,
+   "p_min": 0.08,
+   "decay": 0.75,
+   "delta": 0.08,
+   "dual_ratio": 0.45,
+   "explore_w": 1.2,
+   "batch": 4
+  }
+ },
+ {
+  "case": "静态目标",
+  "method": "无先验",
+  "rep": 9,
+  "iter": 40,
+  "situation": "迭代40，累计探测184次，样本库184点，存在域命中3处，当前存在概率估计0.0434",
+  "raw": {
+   "p0": 0.55,
+   "p_min": 0.12,
+   "decay": 0.75,
+   "delta": 0.08,
+   "dual_ratio": 0.55,
+   "explore_w": 0.85,
+   "batch": 4
+  },
+  "clamped": {
+   "p0": 0.55,
+   "p_min": 0.12,
+   "decay": 0.75,
+   "delta": 0.08,
+   "dual_ratio": 0.55,
+   "explore_w": 0.85,
+   "batch": 4
+  }
+ },
+ {
+  "case": "机动目标",
+  "method": "无先验",
+  "rep": 9,
+  "iter": 20,
+  "situation": "迭代20，累计探测164次，样本库164点，存在域命中3处，当前存在概率估计0.0410",
+  "raw": {
+   "p0": 0.5,
+   "p_min": 0.08,
+   "decay": 0.75,
+   "delta": 0.08,
+   "dual_ratio": 0.55,
+   "explore_w": 1.2,
+   "batch": 6
+  },
+  "clamped": {
+   "p0": 0.5,
+   "p_min": 0.08,
+   "decay": 0.75,
+   "delta": 0.08,
+   "dual_ratio": 0.55,
+   "explore_w": 1.2,
+   "batch": 6
+  }
+ }
+]

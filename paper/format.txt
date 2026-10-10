@@ -1,0 +1,589 @@
+           中文版排版格式与论文书写要求
+
+请按此模板来修改文章：
+
+  投稿前请仔细阅读以下内容，逐条修改好 Word 版的论文，以附件形式传到学报官网的
+
+投稿平台。注意以下内容黑色字是论文的基本内容，其他颜色的字是我们提出的格式要求。
+
+提交规范的论文通过专家审查的概率大，专家审查主要看论文的创新性。不符合本格式的规
+
+范论文也可投稿。
+
+
+本刊基本版式：
+1． 中文文题：小二号黑体；作者姓名：小四号仿宋；作者单位：小五号宋体。
+
+2． 摘要、关键词、文献标志码、中图分类号：小五号黑体；内容：小五号宋体。
+
+3． 正文：通栏排（左右不分栏），五号宋体；行间距：单倍行距，字间距：标准间距。
+
+4． 正文标题：一级标题小四号黑体；二级标题五号黑体；三级标题五号楷体加粗，空一格
+
+  接排（1.5 倍行距）。
+
+5． 表题、图题：小五号黑体，居中，表注、图注用六号宋体；拉丁学名用斜体表示，命名
+
+  人信息、生物分类中的科及科以上除外，基因和变量用斜体。
+
+6． 论文中图：图中的“字号大小”和“位置”可编辑修改加工，并附带 Excel 数据。
+
+7． 全文英文和数字均为 Times New Roman 字体，题目、摘要、正文的字号及间距同中文；
+
+  冒号字体跟随冒号前内容的字体。
+    排版格式与论文书写要求（小二号黑体/Times New Roman 居中）
+          #          1，2           2
+          张三            ，李四            ，*王小二      1
+                                                   （小四号仿宋/Times New Roman 居中）
+    (1.海南大学 生命科学与药学院/热带生物资源教育部重点实验室，海南 海口 570228 中国；2.中国
+      热带农业科学院 橡胶研究所，海南 儋州 571737 中国)（小五号宋体/Times New Roman 居中）
+
+
+     摘要（小五号黑体）：摘要（约 300 字）是文章主要观点的浓缩，必须简洁明了且全面概括，
+     一般包括研究工作的目的、方法、结果和结论。具体内容包括：（1）研究目的，要解决什么问
+     题；（2）用什么具体方法或技术进行了什么研究；（3）研究取得了哪些结果；（4）研究有何
+     创新点及价值。（ 小五号宋体/Times New Roman）
+     关键词（小五号黑体）：字体；字号；行距；内容；参考文献（ 选用 3～8 个关键词，多个关键
+     词之间以分号“；”隔开，按主次先后排序；小五号宋体/Times New Roman）
+     中图分类号（小五号黑体）：1～2 个（ 小五号宋体/Times New Roman）                                         文献标志码（小
+     五号黑体）：A（ 小五号 Times New Roman）
+  引言：简要介绍研究背景，应特别强调国内外学者在该领域的研究进展，指出目前存在
+的问题和难点，针对这些问题，研究者是如何考虑、设计研究的。
+  为了更好地服务于本刊作者顺利地进行稿件撰写，本刊特地采用范文的方式将排版格式
+规范进行介绍，对文章标题、作者及单位名称、摘要及关键词、中图分类号、文献标志码、
+文章编号、收稿日期、基金项目、作者简介、文中标题、正文、公式、图、表格及图、英文、
+参考文献等部分的字体字号以及撰写要点进行了介绍。（五号宋体/Times New Roman）
+
+
+ Formatting and paper writing requirements（小二号 Times New
+                   Roman 居中，除第一个词和专有名词首字母大写外，其余小写）
+     #
+         Zhang San            , Li Si 2, *Wang Xiaoer
+                           1, 2                            1
+                                                            （小四号 Times New Roman 居中）
+(1.School of Life Science and Pharmacy/ Key Laboratory of Tropical Biological Resources, Ministry of Education,
+    Hainan University, Haikou, Hainan, 570228, China; 2. Institute of Rubber, Chinese Academy of Tropical
+              Agricultural Sciences, Danzhou, Hainan, 571737, China)（小五号 Times New Roman 居中）
+Abstract: The abstract serves as a concise and comprehensive summary of the paper's main arguments. It should
+clearly outline the research objectives, methodologies, findings, and conclusions. Key components include: (1)
+Research purpose and problem-solving objectives; (2) Specific methods and techniques employed; (3)
+Achievements obtained; (4) Innovative aspects and practical value of the study.（ 小五号 Times New Roman）
+Keywords: Font; size; line spacing; content; references（ 小五号 Times New Roman） 
+
+1 稿件编排要求（小四号黑体/Times New Roman）
+
+     收稿日期（小五号黑体，缩进 2 字排版）：2025-01-11（小五号 Times New Roman）              修回日期
+     （小五号黑体）：2025-05-01（小五号 Times New Roman）
+     基金项目（小五号黑体，缩进 2 字排版）：国家自然科学基金项目（项目编号）                （小五号宋体/Times New
+     Roman）
+     #第一作者（小五号黑体/Times New Roman，缩进 2 字排版）：张三（2000—），男，海南大学生命
+     科学与药学院 2020 级博士研究生。E-mail：zhangsan@hainanu.edu.cn；ORCID：0000-0000-0000-0000
+     （小五号宋体/Times New Roman）
+     *通信作者（小五号黑体/Times New Roman，缩进 2 字排版）：王小二（1980—），女，教授，博士
+     生导师。研究方向：海洋药物。E-mail：wangxiaoer@hainanu.edu.cn；ORCID：0000-0000-0000-0000
+     （小五号宋体/Times New Roman）
+1.1 论文层次体例（五号黑体/Times New Roman）
+
+    论文修改稿层次体例为：中文文题、作者姓名、单位及所属部门、单位地址、邮编、中
+文摘要、关键词、中图分类号、作者简介、基金项目（首页下注）、正文（按 1 2 3…；1.1 1.2
+1.3…；1.1.1 1.1.2 1.1.3…）、致谢、参考文献、英文摘要。（五号宋体/Times New Roman）
+
+1.2 字体字号（五号黑体/Times New Roman）
+
+   中文文题：小二号黑体；作者姓名：小四号仿宋；作者单位：小五号宋体。
+   摘要、关键词、文献标志码、中图分类号：小五号黑体；内容：小五号宋体。
+   一级标题：小四号黑体；正文：五号宋体。
+   二级标题：五号黑体；正文：五号宋体。
+   三级标题：五号楷体加粗；正文：五号宋体。
+   表题：小五号黑体；内文：小五号宋体；表注：六号宋体。
+   图题：小五号黑体；图注：六号宋体。
+   致谢：标题小五号黑体，正文：小五号宋体。
+   参考文献：标题小四号黑体，正文：小五号宋体。
+   全文数字之间用短破折号“–”，如 1–6，Ⅰ–Ⅴ。日期用连字符“-”，如 2025-01-01。
+                               （五号宋体/Times New Roman）
+
+1.3 排版格式（五号黑体/Times New Roman）
+
+   版面为 A4。
+   上边空：20 mm ，下边空：20 mm ；左边距：20 mm， 右边距：20 mm。
+                                      （五号宋体/Times New Roman）
+    附加说明：（1）文章标题一般不超过 20 个汉字，必要时可加副标题。（2）作者姓名（小四号仿宋居
+中），不同单位需在作者名字后上标序号，不同作者间用逗号隔开。例：张三 1，李四 2。作者单位填写单
+位全称、所在省市名及邮政编码；单位名称与省市名之间应以逗号“，”分隔，不同单位用分号“；”分
+隔，其余数据以空格分隔。整个文字数据项用圆括号（）括起，置于作者姓名下方居中。（3）摘要（约
+300 字）是文章主要观点的浓缩，必须简洁明了，具有独立性和自含性。摘要不宜出现评论性的语言，如
+“本文（文章）和作者认为……”“我们觉得（认为）……”等。
+
+
+2 正文内容（小四号黑体/Times New Roman）
+
+  说明：一般情况下正文可分作几个段落来写，每个段落需列什么样的标题，没有固定的
+样式，但大体上可以有以上几个部分（以试验研究报告类论文为例）。写作时应注意区别哪
+些是已知的（前人已有），哪些是作者首次提出来的，哪些是经过作者改进的，须交代清楚。
+                          （ 五号宋体/Times New Roman）
+
+2.1 材料与方法（五号黑体/Times New Roman）
+
+  材料主要指对材料的来源、性质和数量，以及材料的选取和处理等事项的阐述。方法主
+要指对实验的仪器、设备，以及实验条件和测试方法等事项的阐述。材料和方法的阐述必须
+具体，真实。如果是采用前人的，只需注明出处；如果是改进前人的，则要交代改进之处；
+如果是自己提出的，则应详细说明，必要时可用示意图、方框图或照片图等配合表述。由于
+科学技术研究成果必须接受检验，介绍清楚这些内容，目的在于使别人能够重复操作。
+  写作要点：实验对象，实验材料的名称、来源、性质、数量、选取方法和处理方法，实
+验目的，使用的仪器、设备（包括型号、名称、量测范围和精度等），实验及测定的方法和
+过程，出现的问题和采取的措施等。（ 五号宋体/Times New Roman）
+2.2 结 果 与 分 析 （ 五号黑体/Times New Roman）
+
+  此部分是论文的价值所在，是论文的关键部分。它包括给出结果，并对结果进行定量或
+定性的分析。给出实验结果时应尽量避免把所有数据和盘托出，而要对数据进行整理，并采
+用合适的表达形式如插图或表格等。在整理数据时，不能只选取符合自己预料的，而随意舍
+去与自己料想不符或相反的数据。有些结果异常，尽管无法解释，也不要轻易舍去，可以加
+以说明；只有找到确凿证据足以说明它们确属错误之后才能剔除。结果分析时，必须从辩证
+唯物主义的认识论出发，以理论为基础，以事实为依据，认真、仔细地推敲结果，既要肯定
+结果的可信度和再现性，又要进行误差分析，并与理论结果做比较（相反，如果论题产生的
+是理论结果，则应由试验结果来验证），说明存在的问题。分析问题要切中要害，不能空泛
+议论。要压缩或删除那些众所周知的一般性道理的叙述，省略那些不必要的中间步骤或推导
+过程，突出精华部分。此外，对实验过程中发现的实验设计、实验方案或执行方法方面的某
+些不足或错误，也应说明，以供读者借鉴。（五号宋体/Times New Roman）
+
+  写作要点：以绘图和（或）列表（必要时）等手段整理实验结果，通过数理统计和误差分析说明结果
+的可靠性、再现性和普遍性，进行实验结果的分析，说明结果的适用对象和范围。
+
+2.3 讨论（五号黑体/Times New Roman）
+
+  对结果进行讨论，目的在于阐述结果的意义，说明与前人所得结果不同的原因，根据研
+究结果继续阐发作者自己的见解。（五号宋体/Times New Roman）
+  写作要点：解释所取得的研究成果，说明成果的意义，指出自己的成果与前人研究成果或观点的异同，
+讨论尚未定论之处和相反的结果，提出研究的方向和问题；分析不符合预见的现象和数据，检验理论分析
+的正确性等。最主要的是突出新发现、新发明，说明研究结果的必然性或偶然性。
+
+2.4 结论（五号黑体/Times New Roman）
+
+  结论又称结束语、结语。它是在理论分析和实验验证的基础上，通过严密的逻辑推理而
+得出的富有创造性、指导性、经验性的结果描述。它又以自身的条理性、明确性、客观性反
+映了论文或研究成果的价值。结论与引言相呼应，同摘要一样，其作用是便于读者阅读和为
+二次文献作者提供依据。结论不是研究结果的简单重复，而是对研究结果更深入一步的认识，
+是从正文部分的全部内容出发，并涉及引言的部分内容，经过判断、归纳、推理等过程，将
+研究结果升华成新的总观点。（五号宋体/Times New Roman）
+   写作要点：（1）本研究结果说明了什么问题，得出了什么规律性的东西，解决了什么理论或实际问题；
+（2）对前人有关本问题的看法作了哪些检验，哪些与本研究结果一致，哪些不一致，作者做了哪些修正、
+补充、发展或否定；（3）本研究的不足之处或遗留问题。对于某一篇论文的“结论”，上述要点（1）是
+必需的，而（2）和（3）视论文的具体内容可以有，也可以没有；如果不可能导出结论，也可以没有结论
+而进行必要的讨论。结论段的格式安排可作如下考虑：如果结论段的内容较多，可以分条来写，并给以编
+号，如（1）（2）（3）等，每条成一段，包括几句话或 1 句话；如果结论段内容较少，可以不分条写，整
+个为一段，几句话。结论里应包括必要的数据，但主要是用文字表达，一般不再用插图和表格。
+
+2.5 致谢（五号黑体/Times New Roman）
+
+  致谢一般单独成段，放在文章的最后面，但它不是论文的必要组成部分。它是对曾经给
+予论文的选题、构思或撰写以指导或建议，对考察或实验过程中作出某种贡献的人员，或给
+予过技术、信息、物质或经费帮助的单位、团体或个人致以谢意。
+                          （五号宋体/Times New Roman）
+
+3 参考文献（小四号黑体/Times New Roman）
+3.1 参考文献著录的原则（五号黑体/Times New Roman）
+
+（1）只著录最必要、最新的文献。（2）只著录公开发表的文献。（3）采用标准化的著录
+格式。
+  [1] 期刊:[序号] 作者. 论文题目[J]. 期刊名, 年, 卷 (期), 起始页码–终止页码.
+
+  [2] 书籍/译著:[序号] 作者. 书名[M]. 版次. 出版地, 出版单位, 出版年, 起始页码–
+  终止页码.
+
+    [序号] 原作者. 译著名[M], 译者译. 出版地, 出版单位, 出版年, 起始页码–终止
+  页码.
+
+  [3] 专著章节:[序号] 章节作者. 文章标题[M]// 专著作者. 专著标题, 出版地, 出版单
+  位, 出版年, 起始页码–终止页码.
+
+  [4] 论文集:[序号] 作者. 论文题目[C]// 全部主编. 论文集名. 出版地, 出版单位, 出
+  版年, 起始页码–终止页码.
+
+  [5] 学位论文:[序号] 作者. 论文题目[D]. 学位授予地址, 学位授予单位, 年份.
+
+  [6] 电子文献/网络文献:[序号] 作者. 文献题目[文献及载体类型标识]. [原文献发表日
+  期]. 文献出处或可获得地址 [引用日期].
+
+  [7] 报纸:[序号] 作者/单位. 题名[N]. 报纸名, 年-月-日 (版次).
+
+  [8] 技术标准:[序号] 标准编号. 标准名称[S]. 出版地, 出版单位, 年份.
+
+  [9] 专利文献：[序号] 专利申请者. 专利名. 专利国别, 专利号[P]. 公告日期.
+
+  [10] 报告：[序号] 作者. 文献题名[R]. 报告地, 报告会主办单位, 年份.
+
+  [11] 各种未定义类型的文献：[序号] 作者. 文献题名[Z]. 出版地, 出版单位, 出版年.
+
+   附加说明：采用顺序编码制时，在文后参考文献表中，各条文献按在论文中的文献序
+号顺序排列，并将序码置于方括号内，视具体情况把序码作为上角标，或者作为语句的组成
+部分，作为组成部分就不用写成角标。参考文献项目应完整，内容应准确，各个项目的次序
+和著录符号应符合规定。论文中参考文献表置于“致谢”段之后，“附录”段之前。根据
+CrossRef 的要求，引用论文若拥有数字对象标识符（DOI）则必须包含 DOI 链接。若未填写
+DOI 信息，本刊工作人员将代为添加，但您的稿件将会延迟。因此我们强烈建议作者为引
+用文献添加 DOI 链接，这将加快出版流程。
+
+4 脚注（小四号黑体/Times New Roman）
+   在首页页脚，在正文下方空一格划线（脚注/尾注分隔线）。
+
+4.1 “收稿日期、修回日期、基金项目、#第一作者、*通信作者”字样（五号黑体/Times New
+Roman）
+
+  采用小五号黑体缩进 2 个字符，后加冒号，冒号后面内容为小五号宋体。
+  例如：基金项目：项目名称（编号）
+
+4.2 作者简介内容
+
+ （1）小五号宋体/Times New Roman；作者后面出生年用“一字线（宋体）”，如：张三
+ （2000—）；
+  （2）第一作者按“姓名（出生年—），性别，单位+学历，E-mail，ORCID”排序；
+  （3）通讯作者按“姓名（出生年—），性别，职称，学历，研究方向，E-mail，ORCID”
+  排序；
+  （4）如有 2 个或 2 个以上作者，则分行排列；
+  （5）为了更好地进行传播，推荐所有作者（第一作者和通信作者）绑定 ORCID 号，以
+  图标“ ”的形式附于作者姓名后面，图标添加超链接内容为其 ORCID 主页的地址。绑
+  定方式可由编辑在排版时添加，但需作者提供正确的 ORCID 号。
+      例如：
+    #
+      第 一 作 者 ： 张 三 （ 2000 — ） ， 男 ， 海 南 大 学 生 命 科 学 与 药 学 院 2020 级 博 士 研 究 生 。 E-mail:
+zhangsan@hainanu.edu.cn；ORCID：0000-0000-0000-0000
+    *
+      通 信 作 者 ： 王 小 二 （ 1980 — ） ， 女 ， 教 授 ， 博 士 生 导 师 。 研 究 方 向 ： 海 洋 药 物 。 E-mail:
+wangxiaoer@hainanu.edu.cn；ORCID：0000-0000-0000-0000
+                参考文献/References（五号黑体/Times New Roman 居中）
+请按以下格式要求修改，包括标点符号。
+ 1) 中文论文参考文献全部中英文对照，标点符号统一使用英文状态符号；小五号宋体/Times New Roman，
+   两端对齐。
+ 2) 多名作者姓名用英文逗号“,”间隔：中文作者超过三人时，最后一位作者前加“等”；英文中作者名“姓
+   大写+名首字母大写”（姓前名后，名缩写不加缩写点），超过三人时用“et al”。
+ 3) 英文题名采用“句子式大小写”（仅句首字母和专有名词大写，其余小写）。
+ 4) 文献类型标识“[ ]”：紧跟中文内容后（无空格）；英文或数字后需加空格。
+ 5) 英文刊名/出版社名称需使用全称，采用“标题式大小写”（实词首字母大写，介词等虚词小写）。
+ 6) 中文文献英文对照需标注“(in Chinese)”，括号后不加句点“.”。
+ 7) 若文献有 DOI，链接需完整写出，以“https://doi.org/”开头。
+
+
+
+[1] 期刊
+
+  [序号] 作者. 论文题目[J]. 期刊名, 年, 卷 (期), 起始页码–终止页码.
+
+  例：刘建刚, 王宏, 石全红, 等. 基于田块尺度的小麦产量差及生产限制因素解析[J]. 中国农业大学学
+    报, 2012, 17 (2), 42–47. https://doi.org/xxxxx
+    LIU J G, WANG H, SHI Q H, et al. Analysis of yield gap and limiting factors for wheat on the farmland
+    [J]. Journal of China Agricultural University, 2012, 17 (2), 42–47. (in Chinese) https://doi.org/xxxxx
+
+[2] 书籍/译著
+
+  [序号] 作者. 书名[M]. 版次. 出版地, 出版单位, 出版年, 起始页码–终止页码.
+
+  例：①李广信, 张丙印, 于玉贞. 土力学[M]. 北京, 清华大学出版社, 2013, 110–136.
+    LI G X, ZHANG B Y, YU Y Z. Soil mechanics [M]. Beijing, Tsinghua University Press, 2013, 110–136.
+    (in Chinese)
+    ②鲁如坤. 土壤农业化学分析方法[M]. 第 2 版. 北京, 中国农业科技出版社, 2000, 110–136.
+    LU R K. Chemical analysis methods of soil agriculture [M]. 2nd ed. Beijing, China Agricultural Science
+    and Technology Press, 2000, 110–136. (in Chinese)
+
+  [序号] 原作者. 译著名[M], 译者译. 出版地, 出版单位, 出版年, 起始页码–终止页码.
+
+  例：③MARACHNER N. 高等植物的矿质营养[M], 李春俭译. 北京, 中国农业出版社, 2001, 110–136.
+    MARACHNER N. Mineral nutrition of higher plants [M], Li C J translated. Beijing, China Agricultural
+    Press, 2001, 110–136. (in Chinese)
+  注：书名除介词外首字母均大写，版次第 1 版不写；尽量标清引用内容所在页码，若多次引用不同位
+  置内容可用“,”间隔。
+
+[3] 专著章节
+
+  [序号] 章节作者. 文章标题[M]// 专著作者. 专著标题, 出版地, 出版单位, 出版年, 起
+始页码–终止页码.
+
+  例：曹定贤, 周其明. 苹果砧木育种[M]// 张宇和. 中国农业百科全书•果树卷. 北京,中国农业出版社,
+    1993, 269–299.
+    CAO D X, ZHOU Q M. Apple rootstock breeding [M]. In: Zhang Y H, ed. Encyclopedia of Chinese
+    agriculture: the volume of fruit trees. Beijing, Chinese Agricultural Press, 1993, 269–299. (in Chinese)
+  注：英文中多名专著作者为 eds。
+
+[4] 论文集
+
+   [序号] 作者. 论文题目[C]// 全部主编. 论文集名. 出版地, 出版单位, 出版年, 起始页
+码–终止页码.
+
+  例：周长吉. 实现大面积连栋温室越夏安全生产的新途径[C]// 何康. 中国农业科技园区十年回顾与展
+    望. 北京, 中国农业科学技术出版社, 2004, 301–308.
+    ZHOU C J. A new way to realize the safety production of large scale greenhouse in summer [C]. In: He K,
+    ed. Review and Prospect of China Agricultural Science and Technology Parks in the Past Decade. Beijing,
+    China Agricultural Science and Technology Press, 2004, 301–308. (in Chinese)
+  注：英文中多名主编为 eds。
+
+[5] 学位论文
+
+  [序号] 作者. 论文题目[D]. 学位授予地址, 学位授予单位, 年份.
+
+  例：张栎. 日光温室扰流风机应用特性及作物行间扰流系统研究[D]. 北京, 中国农业大学, 2017.
+    ZHANG L. Study on application characteristics of air circulator and the inter-row flow disturbance
+    system in solar greenhouse [D]. Beijing, China Agricultural University, 2017. (in Chinese)
+
+[6] 电子/网络文献
+
+   [序号] 作者. 文献题目[文献及载体类型标识]. [原文献发表日期]. 文献出处或可获得地
+址 [引用日期].
+
+  例：新华网. 2021 年中国农业产业发展报告[EB/OL]. [2021-05-25]. http://www.xinhuanet.com
+    [2025-01-01].
+    Xinhuanet. China Agricultural Sector Development Report 2021 [EB/OL]. [2021-05-25]. Available from:
+    http://www.xinhuanet.com [2025-01-01]. (in Chinese)
+  例：McIntosh R A, Devos K M, Dubcovsky J, et al. Catalogue of gene symbols for wheat: 2007 supplement
+    [DB/OL].      [2007-12-06].    Available     from:    http://shigen.lab.nig.ac.jp/wheat/komugi/top/top.jsp
+    [2025-01-01].
+  注：文献出处或可获得地址末尾除自带标点“.”外，与[引用日期]仅有空格；英文的文献出处或可获
+  得地址前加“Available from: ”。
+
+[7] 报纸
+
+  [序号] 作者/单位. 题名[N]. 报纸名, 年-月-日 (版次).
+
+  例：国家林业局. 第四次中国荒漠化和沙化状况公报[N]. 中国绿色时报, 2011-01-05 (2).
+    State Forestry Administration. The Fourth China Desertification and Desertification Status Bulletin [N].
+    China Green Times, 2011-01-05 (2). (in Chinese)
+
+[8] 技术标准
+
+  [序号] 标准编号. 标准名称[S]. 出版地, 出版单位, 年份.
+
+    例：GB 15618—2018. 土壤环境质量 农用地土壤污染风险管控标准[S]. 北京, 中国环境出版集团,
+       2018.
+         GB 15618—2018. Soil environmental quality: Risk control standard for soil contamination of
+      agricultural land [S]. Beijing, China Environment Publishing Group, 2018. (in Chinese)
+
+[9] 专利文献
+
+   [序号] 专利申请者. 专利名. 专利国别, 专利号[P]. 公告日期.
+
+   例：赵艳红, 廖小芳, 周瑞阳, 等. 利用红麻 KN250 的不育细胞质选育雄性不育系的方法. 中国,
+    ZL201310714202.8 [P]. 2015-09-16.
+    ZHAO Y H, LIAO X F, ZHOU R Y, et al. A method of breeding male sterile lines based on the male
+    sterile cytoplasm of KN250 variety. China, ZL201310714202.8 [P]. 2015-09-16. (in Chinese)
+
+[10] 报告
+
+   [序号] 作者. 文献题名[R]. 报告地, 报告会主办单位, 年份.
+
+   例：刘大勇. 成长为一名工程师[R]. 北京, 中国工程院, 2008.
+    LIU D Y. Becoming an engineer [R]. Beijing, Chinese Academy of Engineering, 2008.
+
+[11] 各种未定义类型的文献
+
+   [序号] 作者. 文献题名[Z]. 出版地, 出版单位, 出版年.
+
+说明：文献类型标识
+
+   ① 文献类型标识：M—专著，C—论文集，J—期刊，D—学位论文，R—报告，S—标准，P—专利；
+   ② 电子文献类型标识：BD—数据库，CP—计算机程序，EB—电子公告；
+   ③ 载体类型标识：MT—磁带，DK—磁盘，CD—光盘，OL—联机网络。
+论文中具体的参考文献显示：
+                    参考文献/References（五号黑体/Times New Roman 居中）
+[1] 刘建刚, 王宏, 石全红, 等. 基于田块尺度的小麦产量差及生产限制因素解析[J]. 中国农业大学学报,
+    2012, 17 (2), 42–47. https://doi.org/xxxxx
+     Liu J G, Wang H, Shi Q H, et al. Analysis of yield gap and limiting factors for wheat on the farmland [J].
+     Journal of China Agricultural University, 2012, 17 (2), 42–47. (in Chinese) https://doi.org/xxxxx
+[2] 李广信, 张丙印, 于玉贞. 土力学[M]. 北京, 清华大学出版社, 2013, 110–136.
+     Li G X, Zhang B Y, Yu Y Z. Soil Mechanics [M]. Beijing, Tsinghua University Press, 2013, 110–136. (in
+     Chinese)
+[3] 鲁如坤. 土壤农业化学分析方法[M]. 第 2 版. 北京, 中国农业科技出版社, 2000, 110–136.
+     Lu R K. Chemical Analysis Methods of Soil Agriculture [M]. 2nd ed. Beijing, China Agricultural Science
+     and Technology Press, 2000, 110–136. (in Chinese)
+[4] Marachner N. 高等植物的矿质营养[M], 李春俭译. 北京, 中国农业出版社, 2001, 110–136.
+     Marachner N. Mineral Nutrition of Higher Plants [M], Li C J translated. Beijing, China Agricultural Press,
+     2001, 110–136. (in Chinese)
+[5] 曹定贤, 周其明. 苹果砧木育种[M]// 张宇和. 中国农业百科全书•果树卷. 北京,中国农业出版社, 1993,
+    269–299.
+     Cao D X, Zhou Q M. Apple rootstock breeding [M]. In: Zhang Y H, ed. Encyclopedia of Chinese Agriculture:
+     The Volume of Fruit Trees. Beijing, Chinese Agricultural Press, 1993, 269–299. (in Chinese)
+[6] 周长吉. 实现大面积连栋温室越夏安全生产的新途径[C]// 何康. 中国农业科技园区十年回顾与展望.
+    北京, 中国农业科学技术出版社, 2004, 301–308.
+     Zhou C J. A new way to realize the safety production of large scale greenhouse in summer [C]. In: He K, ed.
+     Review and Prospect of China Agricultural Science and Technology Parks in the Past Decade. Beijing, China
+     Agricultural Science and Technology Press, 2004, 301–308. (in Chinese)
+[7] 张栎. 日光温室扰流风机应用特性及作物行间扰流系统研究[D]. 北京, 中国农业大学, 2017.
+     Zhang L. Study on application characteristics of air circulator and the inter-row flow disturbance system in
+     solar greenhouse [D]. Beijing, China Agricultural University, 2017. (in Chinese)
+
+[8] 新华网. 2021 年中国农业产业发展报告[EB/OL]. [2021-05-25]. http://www.xinhuanet.com [2025-01-01].
+     Xinhuanet. China Agricultural Sector Development Report 2021 [EB/OL]. [2021-05-25]. Available from:
+
+     http://www.xinhuanet.com [2025-01-01]. (in Chinese)
+[9] McIntosh R A, Devos K M, Dubcovsky J, et al. Catalogue of gene symbols for wheat: 2007 supplement
+
+    [DB/OL]. [2007-12-06]. Available from: http://shigen.lab.nig.ac.jp/wheat/komugi/top/top.jsp [2025-01-01].
+[10] 国家林业局. 第四次中国荒漠化和沙化状况公报[N]. 中国绿色时报, 2011-01-05 (2).
+     State Forestry Administration. The Fourth China Desertification and Desertification Status Bulletin [N].
+     China Green Times, 2011-01-05 (2). (in Chinese)
+[11] GB 15618—2018. 土壤环境质量 农用地土壤污染风险管控标准[S]. 北京, 中国环境出版集团, 2018.
+     GB 15618—2018. Soil environmental quality: Risk control standard for soil contamination of agricultural
+     land [S]. Beijing, China Environment Publishing Group, 2018. (in Chinese)
+[12] 赵 艳 红 , 廖 小 芳 , 周 瑞 阳 , 等 . 利 用 红 麻 KN250 的 不 育 细 胞 质 选 育 雄 性 不 育 系 的 方 法 . 中 国 ,
+    ZL201310714202.8 [P]. 2015-09-16.
+     Zhao Y H, Liao X F, Zhou R Y, et al. A method of breeding male sterile lines based on the male sterile
+     cytoplasm of KN250 variety. China, ZL201310714202.8 [P]. 2015-09-16. (in Chinese)
+[13] Liu D Y. Becoming an engineer [R]. Beijing, Chinese Academy of Engineering, 2008.
+                                                             （小五号宋体/Times New Roman，两端对齐）
+                             References（10.5 pt, Times New Roman, center）
+Please revise the document according to the following formatting requirements, including punctuation:
+  1) All references must use 9 pt Times New Roman, justify align.
+  2) For multiple authors, use commas ","; use "et al." for more than three.
+  3) Author names in English must be capitalized, with surnames preceding given names; given names should be
+     properly abbreviated without periods (e.g., "Smith J").
+  4) Title should be lowercase except for proper nouns and sentence initials.
+  5) Citation types should be marked with "[]", with a space after English text and numbers (e.g., "Paper Title
+     [J]").
+  6) Full English journal names and publishers must be used, with all words capitalized except articles,
+     prepositions, and conjunctions of three letters or fewer (e.g., "the," "in," "and").
+  7) Include DOI if available, and link identifiers should start with "https://doi.org/".
+
+
+
+[1] Journal Paper (Do not use Book Chapter Format)
+
+     [No.] Author’s Surname/Last Name, Author’s First Name Initial. Paper Title [J]. Journal Name, Published
+     Year, Series No, Volume No (Issue No), 000–000. (in Language/in press/or other information)
+
+     Example: Liu J G, Wang H, Shi Q H, et al. Analysis of yield gap and limiting factors for wheat on the
+     farmland [J]. Journal of China Agricultural University, 2012, 17 (2), 42–47. (in Chinese)
+     https://doi.org/xxxxx
+
+[2] Books/Translation monograph
+
+     [No.] Author’s Surname/Last Name, Author’s First Name Initial. Book Name [M]. Edition (The first edition
+     is unmarked). Publisher’s City Location, Publisher’s Name, Published Year. (in Language/in press/or other
+     information)
+
+     Example: ①Li G X, Zhang B Y, Yu Y Z. Soil Mechanics [M]. Beijing, Tsinghua University Press, 2013,
+     110–136. (in Chinese)
+     ②Lu R K. Chemical Analysis Methods of Soil Agriculture [M]. 2nd ed. Beijing, China Agricultural Science
+     and Technology Press, 2000, 110–136. (in Chinese)
+     ③Marachner N. Mineral Nutrition of Higher Plants [M], Li C J translated. Beijing, China Agricultural Press,
+     2001, 110–136. (in Chinese)
+
+     Note: The first letter of the title is capitalized except for the preposition. The first edition omitted. Try to
+     specify the page number of the reference, if you refer to content in different locations multiple times, use ","
+     as a separator
+
+[3] Book Chapter
+
+     [No.] Author’s Surname/Last Name, Author’s First Name Initial. Name of the chapter. [M]// In: Editor’s
+     Surname/Last Name, Editor’s First Name Initial. (Ed.), Book Title. Publisher’s City Location, Publisher’s
+     Name, Published Year, 000–000. (in Language/in press/or other information)
+
+     Example: Cao D X, Zhou Q M. Apple rootstock breeding [M]. In: Zhang Y H, ed. Encyclopedia of Chinese
+     Agriculture: The Volume of Fruit Trees. Beijing, Chinese Agricultural Press, 1993, 269–299. (in Chinese)
+
+     Note: In English, multiple editors use eds; the first letter of the title is capitalized except for the preposition.
+[4] Symposium
+
+    [No.] Author’s Surname/Last Name, Author’s First Name Initial.. Thesis Collection Title [C]// All editors.
+    Collection of papers. Place of publication, publisher, Published date, Starting–ending page number.
+
+    Example: Zhou C J. A new way to realize the safety production of large scale greenhouse in summer [C]. In:
+    He K, ed. Review and Prospect of China Agricultural Science and Technology Parks in the Past Decade.
+    Beijing, China Agricultural Science and Technology Press, 2004, 301–308. (in Chinese)
+
+    Note: In English, multiple editors use eds; the first letter of the title is capitalized except for the preposition.
+
+[5] Dissertation
+
+    [No.] Author’s Surname/Last Name, Author’s First Name Initial. Thesis Title [D]. Address, Unit (The degree
+    conferring), Year.
+
+    Example: Zhang L. Study on application characteristics of air circulator and the inter-row flow disturbance
+    system in solar greenhouse [D]. Beijing, China Agricultural University, 2017. (in Chinese)
+
+[6] Electronic/ Online literature
+
+    [No.] Author’s Surname/Last Name, Author’s First Name Initial. [Document and carrier type identification].
+    [Published date]. Paper Title. Available from: http://www.xxxxxxxxxxxxx [accessed date].
+
+    Example: ①McIntosh R A, Devos K M, Dubcovsky J, et al. Catalogue of gene symbols for wheat: 2007
+    supplement [DB/OL]. [2007-12-06]. Available from: http://shigen.lab.nig.ac.jp/wheat/komugi/top/top.jsp
+    [2025-01-01].
+
+    ②Xinhuanet. China Agricultural Sector Development Report 2021 [EB/OL]. [2021-05-25]. Available from:
+    http://www.xinhuanet.com [2025-01-01]. (in Chinese)
+
+    Note: The first letter of the title is capitalized except for the preposition; the end of the literature source or
+    available address has only a space between the built-in punctuation mark "." and the [citation date]; the
+    English literature source or accessible address should be prefixed with "Available from: "
+
+[7] Paper
+
+    [No.] Author’s Surname/Last Name, Author’s First Name Initial/ Unit. Title [N]. Newspaper name, Y-T-D
+    (Edition).
+
+    Example: State Forestry Administration. The Fourth China Desertification and Desertification Status
+    Bulletin [N]. China Green Times, 2011-01-05 (2). (in Chinese)
+
+    Note: The first letter of the title is capitalized except for the preposition.
+
+[8] Technical standard
+
+    [No.] Standard No.. Standard name [S]. Place of publication, publisher, Published date.
+
+    Example: GB 15618—2018. Soil environmental quality: Risk control standard for soil contamination of
+    agricultural land [S]. Beijing, China Environment Publishing Group, 2018. (in Chinese)
+
+[9] Patent literature
+
+    [No.] Patent applicants’ Surname/Last Name, Patent applicants’ First Name Initial. Patent number. Country
+     of patent, Types of patent documents, patent number [P]. Declaration date .
+
+     Example: Zhao Y H, Liao X F, Zhou R Y, et al. A method of breeding male sterile lines based on the male
+     sterile cytoplasm of KN250 variety. China, ZL201310714202.8 [P]. 2015-09-16. (in Chinese)
+
+[10] Report
+
+     [No.] Author’s Surname/Last Name, Author’s First Name Initial. Title of the paper [R]. Reporting, Organizer
+     of the conference, Year.
+
+     Example: Liu D Y. Becoming an engineer [R]. Beijing, Chinese Academy of Engineering, 2008.
+
+[11] Various literature of undefined types
+
+     [No.] Author’s Surname/Last Name, Author’s First Name Initial. Title [Z]. Place of publication, publisher,
+     Published date.
+
+Description: Literature type identifier
+
+     ① Literature type identifier: M—Monograph; C—Colloquium; J—Journal; D—Dissertation; R—Report;
+     S—Standard; P—Patent;
+     ② Electronic document type identifier: BD—Data Base; CP—Computer Program; EB—Electronic
+     Bulletin;
+     ③ Carrier type identification: MT—Magnetic Tape; DK—Disk; CD—Compact Disc; OL—On-line
+     Network.
+The specific references in the paper are as follows:
+                             References (10.5 pt, Times New Roman, center)
+[1] Liu J G, Wang H, Shi Q H, et al. Analysis of yield gap and limiting factors for wheat on the farmland [J].
+    Journal of China Agricultural University, 2012, 17 (2), 42–47. (in Chinese) https://doi.org/xxxxx
+[2] Li G X, Zhang B Y, Yu Y Z. Soil Mechanics [M]. Beijing, Tsinghua University Press, 2013, 110–136. (in
+    Chinese)
+[3] Lu R K. Chemical Analysis Methods of Soil Agriculture [M]. 2nd ed. Beijing, China Agricultural Science and
+    Technology Press, 2000, 110–136. (in Chinese)
+[4] Marachner N. Mineral Nutrition of Higher Plants [M], Li C J translated. Beijing, China Agricultural Press,
+    2001, 110–136. (in Chinese)
+[5] Cao D X, Zhou Q M. Apple rootstock breeding [M]. In: Zhang Y H, ed. Encyclopedia of Chinese Agriculture:
+    The Volume of Fruit Trees. Beijing, Chinese Agricultural Press, 1993, 269–299. (in Chinese)
+[6] Zhou C J. A new way to realize the safety production of large scale greenhouse in summer [C]. In: He K, ed.
+    Review and Prospect of China Agricultural Science and Technology Parks in the Past Decade. Beijing, China
+    Agricultural Science and Technology Press, 2004, 301–308. (in Chinese)
+[7] Zhang L. Study on application characteristics of air circulator and the inter-row flow disturbance system in
+    solar greenhouse [D]. Beijing, China Agricultural University, 2017. (in Chinese)
+[8] McIntosh R A, Devos K M, Dubcovsky J, et al. Catalogue of gene symbols for wheat: 2007 supplement
+    [DB/OL]. [2007-12-06]. Available from: http://shigen.lab.nig.ac.jp/wheat/komugi/top/top.jsp [2025-01-01].
+[9] Xinhuanet. China Agricultural Sector Development Report 2021 [EB/OL]. [2021-05-25]. Available from:
+    http://www.xinhuanet.com [2025-01-01]. (in Chinese)
+[10] State Forestry Administration. The Fourth China Desertification and Desertification Status Bulletin [N]. China
+    Green Times, 2011-01-05 (2). (in Chinese)
+[11] GB 15618—2018. Soil environmental quality: Risk control standard for soil contamination of agricultural
+    land [S]. Beijing, China Environment Publishing Group, 2018. (in Chinese)
+[12] Zhao Y H, Liao X F, Zhou R Y, et al. A method of breeding male sterile lines based on the male sterile
+    cytoplasm of KN250 variety. China, ZL201310714202.8 [P]. 2015-09-16. (in Chinese)
+[13] Liu D Y. Becoming an engineer [R]. Beijing, Chinese Academy of Engineering, 2008.
+                                                                            (9 pt Times New Roman, justify align)
+

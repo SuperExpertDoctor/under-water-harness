@@ -199,6 +199,7 @@ class ALRunner:
         pf_hist, call_hist = [], []
         calls = n_init  # init probes are real measurements
         converged = False
+        reverify_cells = 0  # stale cells pulled back for re-verification
         for it in range(max_iters):
             self.iter = it
             if drift_vel is not None and it > 0:
@@ -257,6 +258,7 @@ class ALRunner:
                     d2 = ((self.grid[None] - stale_pts[:, None]) ** 2).sum(-1)
                     stale_cells = np.unique(d2.argmin(1))
                     keep_n = np.union1d(keep_n, stale_cells)
+                    reverify_cells += len(stale_cells)
             # batch = confirm + clear + a reserved global-exploration share so
             # a cold start (no presence hits yet) cannot starve the search
             B = par["batch"]
@@ -311,4 +313,5 @@ class ALRunner:
         return {"calls": calls, "p_est": p_final, "pf_hist": pf_hist,
                 "call_hist": call_hist, "ghat": ghat_all,
                 "doe_pts": np.asarray(DoE), "doe_g": np.asarray(Gd),
-                "iters": it + 1, "converged": converged}
+                "iters": it + 1, "converged": converged,
+                "reverify_cells": reverify_cells}

@@ -66,16 +66,19 @@ def study_delta(reps, resdir):
     intent = json.load(open(intent_file)).get("clamped") or clamp_params({})
     rows = []
     for rep in range(reps):
-        for d in [0.05, 0.10, 0.15, 0.20, 0.30]:
+        for d in [0.05, 0.10, 0.15, 0.20, 0.30, 0.45, 0.60, 0.80]:
             f = EvidenceField(STATIC_LOBES, tilt=(0.15, 0.1))
             par = _params(**intent)
             par["delta"] = d
             r = ALRunner(f, grid, pw, par, seed=3000 + rep)
             out = r.run(n_init=N_INIT, n_mc=N_MC, max_iters=MAX_ITERS,
                         drift_vel=DRIFT_VEL, age_tau=AGE_TAU)
-            rows.append(_eval_row("机动目标", f"Δ={d:.2f}", rep, out, f,
-                                  grid, shape))
-            print(f"delta rep{rep} d={d}: calls={out['calls']}", flush=True)
+            row = _eval_row("机动目标", f"Δ={d:.2f}", rep, out, f,
+                            grid, shape)
+            row["reverify_cells"] = out.get("reverify_cells", 0)
+            rows.append(row)
+            print(f"delta rep{rep} d={d}: calls={out['calls']} "
+                  f"reverify={out.get('reverify_cells')}", flush=True)
     pd.DataFrame(rows).to_csv(os.path.join(resdir, "metrics.csv"),
                               index=False)
 

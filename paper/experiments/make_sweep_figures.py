@@ -43,30 +43,52 @@ def fig_delta():
         im, imad = figstyle.med_mad(g_.iou)
         rows.append({"delta": d, "calls_m": cm, "calls_err": cmad,
                      "iou_m": im, "iou_err": imad,
+                     "rev_m": g_.reverify_cells.mean(),
+                     "rev_err": g_.reverify_cells.std(),
                      "err_m": g_.rel_err.mean()})
     g = pd.DataFrame(rows).sort_values("delta")
-    fig, ax = plt.subplots(figsize=(3.3, 2.3), constrained_layout=True)
+    rng = np.random.default_rng(7)
+    fig, (ax, axr) = plt.subplots(
+        2, 1, figsize=(3.3, 3.4), sharex=True,
+        gridspec_kw={"height_ratios": [1.5, 1]}, constrained_layout=True)
+    # per-rep scatter so the reader sees the raw spread behind the median
+    jit = {d: rng.uniform(-0.006, 0.006, len(df[df.delta == d]))
+           for d in g.delta}
+    for d in g.delta:
+        sub = df[df.delta == d]
+        ax.scatter(d + jit[d], sub.calls, s=4, c="#D55E00", alpha=0.35,
+                   lw=0, zorder=1)
     ax.errorbar(g.delta, g.calls_m, yerr=g.calls_err, fmt="o-",
                 lw=1.2, ms=3.5, capsize=2.5, color="#D55E00",
-                label="探测次数")
-    ax.set_xlabel(r"证据老化权重阈值 $\Delta$")
+                label="探测次数（中位数）", zorder=3)
     ax.set_ylabel(r"探测次数 $N_\mathrm{call}$")
-    ax.set_ylim(0, 80)
+    ax.set_ylim(0, 200)
     ax2 = ax.twinx()
     ax2.grid(False)
     ax2.errorbar(g.delta, g.iou_m, yerr=g.iou_err, fmt="s--",
                  lw=1.0, ms=3, capsize=2.5, color="#0072B2",
-                 label="边界 IoU")
+                 label="边界 IoU", zorder=3)
     ax2.set_ylabel("边界 IoU")
-    ax2.set_ylim(0, 0.5)
+    ax2.set_ylim(0, 0.6)
     ax2.tick_params(axis="y", colors="#0072B2", labelsize=7.5)
     ax.axvline(0.10, ls=":", c="k", lw=0.8)
-    ax.set_xlim(0.04, 0.31)
-    ax.set_xticks([0.05, 0.10, 0.15, 0.20, 0.30])
     h1, l1 = ax.get_legend_handles_labels()
     h2, l2 = ax2.get_legend_handles_labels()
-    ax.legend(h1 + h2, l1 + l2, loc="upper center", framealpha=0.95,
-              edgecolor="0.5", borderpad=0.3)
+    ax.legend(h1 + h2, l1 + l2, loc="upper left", framealpha=0.95,
+              edgecolor="0.5", borderpad=0.3, fontsize=6.5)
+    ax.text(-0.16, 1.04, "(a)", transform=ax.transAxes, fontsize=8,
+            fontweight="bold")
+    # mechanism-activity panel: re-verification genuinely engages only for
+    # larger Delta — explains why the cost curve stays flat at small Delta
+    axr.bar(g.delta, g.rev_m, width=0.045, yerr=g.rev_err, capsize=2,
+            color="#009E73", alpha=0.85, error_kw=dict(lw=0.8))
+    axr.axvline(0.10, ls=":", c="k", lw=0.8)
+    axr.set_xlabel(r"证据老化权重阈值 $\Delta$")
+    axr.set_ylabel("复验单元格数（均值）")
+    axr.set_xlim(0, 0.85)
+    axr.set_xticks([0.05, 0.20, 0.30, 0.45, 0.60, 0.80])
+    axr.text(-0.16, 1.04, "(b)", transform=axr.transAxes, fontsize=8,
+             fontweight="bold")
     save(fig, "fig_delta_sensitivity")
     g.to_csv(os.path.join(CSV, "fig_delta_sensitivity.csv"), index=False)
 
